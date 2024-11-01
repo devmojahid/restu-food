@@ -1,92 +1,56 @@
-import * as React from "react";
-import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
+import { Button } from "@/Components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
-import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/Components/ui/button";
+export default function Pagination({ currentPage, totalPages, onPageChange }) {
+  const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
 
-const Pagination = ({ className, ...props }) => (
-  <nav
-    role="navigation"
-    aria-label="pagination"
-    className={cn("mx-auto flex w-full justify-center", className)}
-    {...props}
-  />
-);
-Pagination.displayName = "Pagination";
+  const visiblePages = pages.filter((page) => {
+    if (page === 1 || page === totalPages) return true;
+    if (page >= currentPage - 1 && page <= currentPage + 1) return true;
+    return false;
+  });
 
-const PaginationContent = React.forwardRef(({ className, ...props }, ref) => (
-  <ul
-    ref={ref}
-    className={cn("flex flex-row items-center gap-1", className)}
-    {...props}
-  />
-));
-PaginationContent.displayName = "PaginationContent";
+  return (
+    <div className="flex items-center space-x-2">
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+      >
+        <ChevronLeft className="h-4 w-4" />
+      </Button>
 
-const PaginationItem = React.forwardRef(({ className, ...props }, ref) => (
-  <li ref={ref} className={cn("", className)} {...props} />
-));
-PaginationItem.displayName = "PaginationItem";
+      {visiblePages.map((page, index) => {
+        // Add ellipsis
+        if (index > 0 && page - visiblePages[index - 1] > 1) {
+          return (
+            <span key={`ellipsis-${page}`} className="px-2 text-gray-500">
+              ...
+            </span>
+          );
+        }
 
-const PaginationLink = ({ className, isActive, size = "icon", ...props }) => (
-  <a
-    aria-current={isActive ? "page" : undefined}
-    className={cn(
-      buttonVariants({
-        variant: isActive ? "outline" : "ghost",
-        size,
-      }),
-      className
-    )}
-    {...props}
-  />
-);
-PaginationLink.displayName = "PaginationLink";
+        return (
+          <Button
+            key={page}
+            variant={currentPage === page ? "default" : "outline"}
+            onClick={() => onPageChange(page)}
+            className="w-10"
+          >
+            {page}
+          </Button>
+        );
+      })}
 
-const PaginationPrevious = ({ className, ...props }) => (
-  <PaginationLink
-    aria-label="Go to previous page"
-    size="default"
-    className={cn("gap-1 pl-2.5", className)}
-    {...props}
-  >
-    <ChevronLeft className="h-4 w-4" />
-    <span>Previous</span>
-  </PaginationLink>
-);
-PaginationPrevious.displayName = "PaginationPrevious";
-
-const PaginationNext = ({ className, ...props }) => (
-  <PaginationLink
-    aria-label="Go to next page"
-    size="default"
-    className={cn("gap-1 pr-2.5", className)}
-    {...props}
-  >
-    <span>Next</span>
-    <ChevronRight className="h-4 w-4" />
-  </PaginationLink>
-);
-PaginationNext.displayName = "PaginationNext";
-
-const PaginationEllipsis = ({ className, ...props }) => (
-  <span
-    aria-hidden
-    className={cn("flex h-9 w-9 items-center justify-center", className)}
-    {...props}
-  >
-    <MoreHorizontal className="h-4 w-4" />
-    <span className="sr-only">More pages</span>
-  </span>
-);
-PaginationEllipsis.displayName = "PaginationEllipsis";
-
-export {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-};
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+      >
+        <ChevronRight className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+}

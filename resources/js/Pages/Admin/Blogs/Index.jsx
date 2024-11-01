@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { Head, Link } from "@inertiajs/react";
-import Table from "./List/Index";
+import Table from "./Partials/List/Index";
 import AdminLayout from "@/Layouts/Admin/AdminLayout";
 import { Button } from "@/Components/ui/button";
 import { Home, FileText, Plus, ArrowLeft } from "lucide-react";
 import Breadcrumb from "@/Components/Admin/Breadcrumb";
 
-export default function Index() {
+export default function Index({ blogs }) {
   return (
     <AdminLayout>
       <Head title="List Blogs" />
@@ -32,7 +32,7 @@ export default function Index() {
             </Link>
           </div>
         </div>
-        <Table />
+        <Table blogs={blogs} />
       </div>
     </AdminLayout>
   );

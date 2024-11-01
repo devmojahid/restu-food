@@ -27,46 +27,35 @@ class BlogController extends Controller
 
     public function index(Request $request)
     {
-        $query = Blog::query();
+        $perPage = $request->input('per_page', 10);
+        $search = $request->input('search');
+        $status = $request->input('status');
 
-        // Handle sorting
-        // if ($sort = $request->get('sort')) {
-        //     [$column, $direction] = explode('.', $sort);
-        //     if (in_array($column, ['name', 'category', 'price', 'created_at'])) {
-        //         $query->orderBy($column, $direction === 'desc' ? 'desc' : 'asc');
-        //     }
-        // }
+        $query = Blog::query()->latest();
 
-        // // Handle filtering
-        // if ($filters = json_decode($request->get('filters'), true)) {
-        //     $query->where(function (Builder $query) use ($filters) {
-        //         foreach ($filters as $filter) {
-        //             if (!isset($filter['id']) || !isset($filter['value'])) {
-        //                 continue;
-        //             }
+        // Apply search filter
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('content', 'like', "%{$search}%")
+                    ->orWhere('slug', 'like', "%{$search}%");
+            });
+        }
 
-        //             $column = $filter['id'];
-        //             $value = $filter['value'];
+        // Apply status filter
+        if ($status && $status !== 'all') {
+            $query->where('is_published', $status === 'published');
+        }
 
-        //             if (is_array($value)) {
-        //                 $query->whereIn($column, $value);
-        //             } else {
-        //                 $query->where($column, 'like', "%{$value}%");
-        //             }
-        //         }
-        //     });
-        // }
+        $blogs = $query->paginate($perPage)->withQueryString();
 
-        // // Handle pagination
-        // $perPage = (int) $request->get('perPage', 10);
-        // $foods = $query->paginate($perPage);
-
-        // return Inertia::render('Foods/Index', [
-        //     'foods' => $foods->items(),
-        //     'pageCount' => $foods->lastPage(),
-        //     'filters' => $request->only(['sort', 'filters'])
-        // ]);
-        return Inertia::render('Admin/Blogs/Index');
+        return Inertia::render('Admin/Blogs/Index', [
+            'blogs' => $blogs,
+            'filters' => [
+                'search' => $search,
+                'status' => $status,
+            ],
+        ]);
     }
 
     public function bulkDelete(Request $request)
@@ -190,5 +179,21 @@ class BlogController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', 'Import failed: ' . $e->getMessage());
         }
+    }
+
+    public function bulkStatus(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:blogs,id',
+            'status' => 'required|boolean'
+        ]);
+
+        Blog::whereIn('id', $request->ids)->update([
+            'is_published' => $request->status,
+            'published_at' => $request->status ? now() : null
+        ]);
+
+        return back()->with('success', 'Blog status updated successfully');
     }
 }

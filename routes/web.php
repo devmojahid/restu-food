@@ -33,6 +33,8 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::delete('bulk-delete', [BlogController::class, 'bulkDelete'])->name('bulk-delete');
         Route::post('export', [BlogController::class, 'export'])->name('export');
         Route::post('import', [BlogController::class, 'import'])->name('import');
+        Route::delete('admin/blogs/bulk-delete', [BlogController::class, 'bulkDelete'])->name('admin.blogs.bulk-delete');
+        Route::put('bulk-status', [BlogController::class, 'bulkStatus'])->name('bulk-status');
     });
     /*
     * Settings
