@@ -4,6 +4,11 @@ export const routes = {
         path: "/admin/dashboard",
         icon: "LayoutDashboard"
     },
+    settings: {
+        name: "Settings",
+        path: "/admin/settings",
+        icon: "Settings"
+    },
     ecommerce: {
         name: "E-commerce",
         icon: "ShoppingBag",
@@ -37,32 +42,6 @@ export const routes = {
             blogCreate: {
                 name: "Blog Create",
                 path: "/admin/blogs/create",
-                icon: "Package"
-            },
-            orders: {
-                name: "Orders",
-                path: "/admin/orders",
-                icon: "ShoppingCart"
-            },
-            customers: {
-                name: "Customers",
-                path: "/admin/customers",
-                icon: "Users"
-            }
-        }
-    },
-    daraft: {
-        name: "Draft",
-        icon: "ShoppingBag",
-        submenu: {
-            productCreate: {
-                name: "Product Create",
-                path: "/drafts/product-create",
-                icon: "Package"
-            },
-            productList: {
-                name: "Product List",
-                path: "/drafts/product-list",
                 icon: "Package"
             }
         }

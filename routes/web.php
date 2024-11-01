@@ -15,7 +15,7 @@ Route::get('/', function () {
     ]);
 });
 
-Route::get('/dashboard', function () {
+Route::get('admin/dashboard', function () {
     return Inertia::render('Admin/Dashboard/Index');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -40,6 +40,9 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::group(['prefix' => 'settings', 'as' => 'settings.'], function () {
         // Route::get('/', [SettingsController::class, 'index'])->name('index');
         // Route::get('/', [SettingsController::class, 'index'])->name('index');
+        Route::get('/', function () {
+            return Inertia::render('Admin/Settings/Index');
+        })->name('index');
         Route::get('/store', function () {
             //
         })->name('store');
@@ -51,7 +54,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         // Route::post('/profile/update', [SettingsController::class, 'profileUpdate'])->name('profile.update');
         // Route::get('/email', [SettingsController::class, 'email'])->name('email');
         Route::get('/email', function () {
-            return Inertia::render('Backend/Settings/Email/Index');
+            return Inertia::render('Admin/Settings/Email/Index');
         })->name('email');
         // Route::post('/email/update', [SettingsController::class, 'emailUpdate'])->name('email.update');
         // Route::get('/security', [SettingsController::class, 'security'])->name('security');
