@@ -1,386 +1,141 @@
-import React, { useState, useCallback } from "react";
-import { Head, router, useForm, usePage } from "@inertiajs/react";
-import { DataTable } from "@/Components/ui/data-table/data-table";
-import { Badge } from "@/Components/ui/badge";
-import { format } from "date-fns";
-import {
-  Eye,
-  Edit,
-  Trash2,
-  Check,
-  X,
-  MoreVertical,
-  Calendar,
-  User,
-} from "lucide-react";
-import { Button } from "@/Components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/Components/ui/dropdown-menu";
-import toast from "react-hot-toast";
-import { DataTableHeader } from "@/Components/ui/data-table/data-table-header";
-import AdminLayout from "@/Layouts/Admin/AdminLayout";
-import debounce from "lodash/debounce";
+import { Card, CardContent } from "@/Components/ui/card";
+import { Download, Filter, MoreVertical } from "lucide-react";
 
-const Index = ({ blogs: initialBlogs, filters: initialFilters }) => {
-  const [blogs, setBlogs] = useState(initialBlogs);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const form = useForm({
-    search: initialFilters.search || "",
-    perPage: initialFilters.perPage || 10,
-    page: initialFilters.page || 1,
-    sort: initialFilters.sort || "",
-    direction: initialFilters.direction || "",
-    filters: initialFilters.filters || {},
-  });
-
-  const { csrf_token } = usePage().props;
-
-  // Filter configurations
-  const filterableColumns = [
+export default function ListBlogs() {
+  let blogsList = [
     {
-      id: "is_published",
-      title: "Status",
-      options: [
-        { label: "Published", value: "1" },
-        { label: "Draft", value: "0" },
-      ],
+      id: "1234",
+      customer: "John Doe",
+      product: "Premium Headphones",
+      amount: "$299.99",
+      status: "Completed",
     },
     {
-      id: "published_at",
-      title: "Published Date",
-      options: [
-        { label: "Last 7 Days", value: "7days" },
-        { label: "Last 30 Days", value: "30days" },
-        { label: "This Month", value: "this_month" },
-        { label: "Last Month", value: "last_month" },
-      ],
+      id: "1235",
+      customer: "Jane Smith",
+      product: "Wireless Mouse",
+      amount: "$49.99",
+      status: "Processing",
+    },
+    {
+      id: "1236",
+      customer: "Bob Johnson",
+      product: "Gaming Keyboard",
+      amount: "$129.99",
+      status: "Shipped",
+    },
+    {
+      id: "1237",
+      customer: "Alice Brown",
+      product: "USB-C Cable",
+      amount: "$19.99",
+      status: "Completed",
+    },
+    {
+      id: "1238",
+      customer: "Charlie Wilson",
+      product: "Smart Watch",
+      amount: "$199.99",
+      status: "Processing",
     },
   ];
-
-  // Searchable columns configuration
-  const searchableColumns = [
-    {
-      id: "title",
-      title: "Title",
-    },
-    {
-      id: "content",
-      title: "Content",
-    },
-    {
-      id: "user.name",
-      title: "Author",
-    },
-  ];
-
-  // Table columns configuration
-  const columns = [
-    {
-      accessorKey: "title",
-      header: "Title",
-      cell: ({ row }) => (
-        <div className="flex flex-col">
-          <span
-            className="font-medium hover:text-primary cursor-pointer"
-            onClick={() =>
-              router.visit(route("admin.blogs.show", row.original.id))
-            }
-          >
-            {row.original.title}
-          </span>
-          <span className="text-sm text-muted-foreground">
-            {row.original.slug}
-          </span>
-        </div>
-      ),
-      enableSorting: true,
-      enableHiding: false,
-    },
-    {
-      accessorKey: "user.name",
-      header: "Author",
-      cell: ({ row }) => (
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-            <User className="w-4 h-4 text-primary" />
-          </div>
-          <div className="flex flex-col">
-            <span className="font-medium">{row.original.user?.name}</span>
-            <span className="text-xs text-muted-foreground">
-              {row.original.user?.email}
-            </span>
-          </div>
-        </div>
-      ),
-    },
-    {
-      accessorKey: "is_published",
-      header: "Status",
-      cell: ({ row }) => (
-        <Badge
-          variant={row.original.is_published ? "success" : "secondary"}
-          className="w-24 cursor-pointer transition-colors hover:bg-opacity-80"
-          onClick={() => handleStatusToggle(row.original.id)}
-        >
-          {row.original.is_published ? (
-            <Check className="w-4 h-4 mr-1" />
-          ) : (
-            <X className="w-4 h-4 mr-1" />
-          )}
-          {row.original.is_published ? "Published" : "Draft"}
-        </Badge>
-      ),
-      filterFn: (row, id, value) => {
-        return value.includes(String(row.original.is_published));
-      },
-    },
-    {
-      accessorKey: "published_at",
-      header: () => (
-        <div className="flex items-center gap-2">
-          <Calendar className="w-4 h-4" />
-          <span>Published Date</span>
-        </div>
-      ),
-      cell: ({ row }) => (
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 text-muted-foreground">
-            <Calendar className="w-4 h-4" />
-          </div>
-          <span>
-            {row.original.published_at
-              ? format(new Date(row.original.published_at), "PPP")
-              : "-"}
-          </span>
-        </div>
-      ),
-      enableSorting: true,
-    },
-    {
-      id: "actions",
-      cell: ({ row }) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-[160px]">
-            <DropdownMenuItem
-              onClick={() =>
-                router.visit(route("admin.blogs.show", row.original.id))
-              }
-            >
-              <Eye className="w-4 h-4 mr-2" />
-              View
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() =>
-                router.visit(route("admin.blogs.edit", row.original.id))
-              }
-            >
-              <Edit className="w-4 h-4 mr-2" />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => handleDelete(row.original.id)}
-              className="text-destructive focus:text-destructive"
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ),
-    },
-  ];
-
-  // Handle server-side filtering with POST request
-  const handleFiltering = useCallback(
-    async (newData = {}) => {
-      setIsLoading(true);
-
-      form.post(route("admin.blogs.index"), {
-        preserveState: true,
-        preserveScroll: true,
-        onSuccess: (page) => {
-          setBlogs(page.props.blogs);
-          setIsLoading(false);
-        },
-        onError: (errors) => {
-          if (errors?.message === "CSRF token mismatch") {
-            window.location.reload();
-            return;
-          }
-          toast.error("Failed to filter blogs");
-          setIsLoading(false);
-        },
-        data: {
-          ...form.data,
-          ...newData,
-          _token: csrf_token,
-        },
-      });
-    },
-    [form, csrf_token]
-  );
-
-  // Handle pagination
-  const handlePaginationChange = useCallback(
-    ({ pageIndex, pageSize }) => {
-      handleFiltering({
-        page: pageIndex + 1,
-        perPage: pageSize,
-      });
-    },
-    [handleFiltering]
-  );
-
-  // Handle sorting
-  const handleSortingChange = useCallback(
-    (sorting) => {
-      if (sorting.length) {
-        handleFiltering({
-          sort: sorting[0].id,
-          direction: sorting[0].desc ? "desc" : "asc",
-        });
-      }
-    },
-    [handleFiltering]
-  );
-
-  // Handle filters
-  const handleFilterChange = useCallback(
-    (filters) => {
-      handleFiltering({
-        filters: filters.reduce((acc, filter) => {
-          acc[filter.id] = filter.value;
-          return acc;
-        }, {}),
-        page: 1,
-      });
-    },
-    [handleFiltering]
-  );
-
-  // Handle search with debounce
-  const debouncedSearch = useCallback(
-    debounce((value) => {
-      handleFiltering({
-        search: value,
-        page: 1,
-      });
-    }, 300),
-    [handleFiltering]
-  );
-
-  const handleSearch = useCallback(
-    (value) => {
-      form.setData("search", value);
-      debouncedSearch(value);
-    },
-    [form, debouncedSearch]
-  );
-
-  const handleBulkDelete = useCallback(async (selectedIds) => {
-    const toastId = toast.loading("Deleting selected items...");
-
-    router.delete(route("admin.blogs.bulk-delete"), {
-      data: { ids: selectedIds },
-      onSuccess: () => {
-        toast.success("Selected blogs deleted successfully", { id: toastId });
-      },
-      onError: () => {
-        toast.error("Failed to delete selected items", { id: toastId });
-      },
-    });
-  }, []);
-
-  const handleDelete = useCallback((id) => {
-    const toastId = toast.loading("Deleting blog post...");
-
-    router.delete(route("admin.blogs.destroy", id), {
-      onSuccess: () => {
-        toast.success("Blog deleted successfully", { id: toastId });
-      },
-      onError: () => {
-        toast.error("Failed to delete blog", { id: toastId });
-      },
-    });
-  }, []);
-
-  const handleStatusToggle = useCallback((id) => {
-    const toastId = toast.loading("Updating status...");
-
-    router.put(
-      route("admin.blogs.toggle-status", id),
-      {},
-      {
-        onSuccess: () => {
-          toast.success("Status updated successfully", { id: toastId });
-        },
-        onError: () => {
-          toast.error("Failed to update status", { id: toastId });
-        },
-      }
-    );
-  }, []);
-
   return (
-    <AdminLayout>
-      <Head title="Blog Posts" />
-
-      <div className="container mx-auto py-6 space-y-4">
-        <DataTableHeader
-          title="Blog Posts"
-          description="Manage your blog posts and articles"
-          onAdd={() => router.visit(route("admin.blogs.create"))}
-          onExport={(format) =>
-            router.post(route("admin.blogs.export"), { format })
-          }
-          onImport={(file) => {
-            const formData = new FormData();
-            formData.append("file", file);
-            router.post(route("admin.blogs.import"), formData);
-          }}
-          enableAdd={true}
-          enableExport={true}
-          enableImport={true}
-          enablePrint={true}
-        />
-
-        <DataTable
-          data={blogs.data}
-          columns={columns}
-          pageCount={Math.ceil(blogs.total / blogs.per_page)}
-          filterableColumns={filterableColumns}
-          searchableColumns={searchableColumns}
-          onPaginationChange={handlePaginationChange}
-          onSortingChange={handleSortingChange}
-          onFilterChange={handleFilterChange}
-          onGlobalFilter={handleSearch}
-          onBulkDelete={handleBulkDelete}
-          initialPageSize={initialFilters.perPage}
-          initialPageIndex={initialFilters.page - 1}
-          enableRowSelection
-          enableBulkActions
-          enableColumnResizing
-          enableSorting
-          stickyHeader
-          isLoading={isLoading}
-          className="bg-white shadow-sm border rounded-lg"
-        />
-      </div>
-    </AdminLayout>
+    <Card>
+      <CardContent className="shadow-md transition-colors duration-300 p-2">
+        <div className="p-4 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
+          <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">
+            Recent Orders
+          </h3>
+          <div className="flex space-x-2">
+            <button className="p-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 transition-colors duration-300">
+              <Download className="h-5 w-5" />
+            </button>
+            <button className="p-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 transition-colors duration-300">
+              <Filter className="h-5 w-5" />
+            </button>
+            <button className="p-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 transition-colors duration-300">
+              <MoreVertical className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 dark:bg-gray-700">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Order ID
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Customer
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Product
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Amount
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              {blogsList?.length > 0 ? (
+                blogsList?.map((item, index) => (
+                  <tr
+                    key={index}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                      {item?.id}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      {item?.customer}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      {item?.product}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      {item?.amount}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          item?.status === "Completed"
+                            ? "bg-green-100 text-green-800"
+                            : item.status === "Processing"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-blue-100 text-blue-800"
+                        }`}
+                      >
+                        {item?.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-2">
+                        View
+                      </button>
+                      <button className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
+                        Edit
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="6" className="text-center">
+                    No data found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        {/* </div> */}
+      </CardContent>
+    </Card>
   );
-};
-
-export default Index;
+}

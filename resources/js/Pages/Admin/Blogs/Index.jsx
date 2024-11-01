@@ -1,88 +1,39 @@
-import React from "react";
+import React, { useState } from "react";
 import { Head, Link } from "@inertiajs/react";
+import Table from "./List/Index";
+import AdminLayout from "@/Layouts/Admin/AdminLayout";
 import { Button } from "@/Components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/Components/ui/table";
-import { format } from "date-fns";
-import AdminLayout from "@/Layouts/AdminLayout";
+import { Home, FileText, Plus, ArrowLeft } from "lucide-react";
+import Breadcrumb from "@/Components/Admin/Breadcrumb";
 
-const BlogIndex = ({ blogs }) => {
+export default function Index() {
   return (
     <AdminLayout>
-      <Head title="Blogs" />
+      <Head title="List Blogs" />
+      <div className="container mx-auto py-6 px-2 sm:px-3 lg:px-4">
+        <Breadcrumb
+          items={[
+            { label: "Dashboard", href: "/admin/dashboard", icon: Home },
+            { label: "Blogs", href: "/admin/blogs", icon: FileText },
+          ]}
+        />
 
-      <div className="container mx-auto py-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-semibold">Blogs</h1>
-          <Link href={route("admin.blogs.create")}>
-            <Button>Create Blog</Button>
-          </Link>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 space-y-4 sm:space-y-0">
+          <h2 className="text-2xl font-bold text-gray-700 dark:text-gray-300">
+            List Blogs
+          </h2>
+          <div className="flex space-x-2">
+            <Button variant="outline" href="/admin/blogs">
+              <ArrowLeft className="mr-2 h-4 w-4" /> Back to Blogs
+            </Button>
+            <Link href="/admin/blogs/create">
+              <Plus className="mr-2 h-4 w-4" />
+              Create Blog
+            </Link>
+          </div>
         </div>
-
-        <div className="bg-white rounded-lg shadow">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Title</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Published At</TableHead>
-                <TableHead>Author</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {blogs.map((blog) => (
-                <TableRow key={blog.id}>
-                  <TableCell>{blog.title}</TableCell>
-                  <TableCell>
-                    <span
-                      className={`px-2 py-1 rounded text-sm ${
-                        blog.is_published
-                          ? "bg-green-100 text-green-800"
-                          : "bg-yellow-100 text-yellow-800"
-                      }`}
-                    >
-                      {blog.is_published ? "Published" : "Draft"}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    {blog.published_at
-                      ? format(new Date(blog.published_at), "PPP")
-                      : "-"}
-                  </TableCell>
-                  <TableCell>{blog.user.name}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Link
-                        href={route("admin.blogs.edit", blog.id)}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        Edit
-                      </Link>
-                      <Link
-                        href={route("admin.blogs.destroy", blog.id)}
-                        method="delete"
-                        as="button"
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        Delete
-                      </Link>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <Table />
       </div>
     </AdminLayout>
   );
-};
-
-export default BlogIndex;
+}

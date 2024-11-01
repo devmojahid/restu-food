@@ -14,6 +14,7 @@ use App\Imports\BlogsImport;
 use App\Services\Admin\BlogService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\Builder;
 
 class BlogController extends Controller
 {
@@ -26,36 +27,46 @@ class BlogController extends Controller
 
     public function index(Request $request)
     {
-        if ($request->isMethod('post')) {
-            try {
-                $result = $this->blogService->handleFiltering($request->all());
-                return response()->json($result);
-            } catch (\Exception $e) {
-                Log::error('Blog filtering failed: ' . $e->getMessage());
-                return response()->json([
-                    'error' => 'Failed to filter blogs: ' . $e->getMessage()
-                ], 500);
-            }
-        }
+        $query = Blog::query();
 
-        return $this->renderBlogList();
-    }
+        // Handle sorting
+        // if ($sort = $request->get('sort')) {
+        //     [$column, $direction] = explode('.', $sort);
+        //     if (in_array($column, ['name', 'category', 'price', 'created_at'])) {
+        //         $query->orderBy($column, $direction === 'desc' ? 'desc' : 'asc');
+        //     }
+        // }
 
-    protected function renderBlogList()
-    {
-        $blogs = $this->blogService->getAllPaginated();
+        // // Handle filtering
+        // if ($filters = json_decode($request->get('filters'), true)) {
+        //     $query->where(function (Builder $query) use ($filters) {
+        //         foreach ($filters as $filter) {
+        //             if (!isset($filter['id']) || !isset($filter['value'])) {
+        //                 continue;
+        //             }
 
-        return Inertia::render('Backend/Blogs/List/index', [
-            'blogs' => $blogs,
-            'filters' => [
-                'search' => '',
-                'perPage' => 10,
-                'page' => 1,
-                'sort' => '',
-                'direction' => '',
-                'filters' => [],
-            ],
-        ]);
+        //             $column = $filter['id'];
+        //             $value = $filter['value'];
+
+        //             if (is_array($value)) {
+        //                 $query->whereIn($column, $value);
+        //             } else {
+        //                 $query->where($column, 'like', "%{$value}%");
+        //             }
+        //         }
+        //     });
+        // }
+
+        // // Handle pagination
+        // $perPage = (int) $request->get('perPage', 10);
+        // $foods = $query->paginate($perPage);
+
+        // return Inertia::render('Foods/Index', [
+        //     'foods' => $foods->items(),
+        //     'pageCount' => $foods->lastPage(),
+        //     'filters' => $request->only(['sort', 'filters'])
+        // ]);
+        return Inertia::render('Admin/Blogs/Index');
     }
 
     public function bulkDelete(Request $request)
@@ -75,7 +86,7 @@ class BlogController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Admin/Blogs/Create/index');
+        return Inertia::render('Admin/Blogs/Create');
     }
 
     /**

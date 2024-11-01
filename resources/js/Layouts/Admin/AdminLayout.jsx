@@ -36,7 +36,6 @@ export default function AdminLayout({ children }) {
 
   return (
     <>
-      <Head></Head>
       <div
         className={`flex h-screen overflow-hidden bg-gradient-to-br ${
           theme === "light"
@@ -64,7 +63,7 @@ export default function AdminLayout({ children }) {
             theme={theme}
           />
           <main
-            className="flex-1 overflow-y-auto bg-white dark:bg-gray-900 p-6 transition-colors duration-500"
+            className="flex-1 overflow-y-auto bg-white dark:bg-gray-900 p-2 transition-colors duration-500"
             style={{ backgroundColor: "#F6F8FB" }}
           >
             {children}
