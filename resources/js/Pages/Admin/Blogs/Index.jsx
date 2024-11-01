@@ -23,10 +23,10 @@ export default function Index({ blogs }) {
             List Blogs
           </h2>
           <div className="flex space-x-2">
-            <Button variant="outline" href="/admin/blogs">
+            <Link className="link-button-secondary" href="/admin/blogs">
               <ArrowLeft className="mr-2 h-4 w-4" /> Back to Blogs
-            </Button>
-            <Link href="/admin/blogs/create">
+            </Link>
+            <Link className="link-button-primary" href="/admin/blogs/create">
               <Plus className="mr-2 h-4 w-4" />
               Create Blog
             </Link>
