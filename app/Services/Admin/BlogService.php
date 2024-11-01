@@ -7,7 +7,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
-class BlogService
+final class BlogService
 {
     protected $blogRepository;
     protected $cachePrefix = 'blogs:';
