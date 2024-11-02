@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\File;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 
 final class BlogService extends BaseService
 {
@@ -34,10 +36,10 @@ final class BlogService extends BaseService
                 $this->handleFileUploads($blog, $data['files']);
             }
 
-            DB::commit();
-            $this->clearCache();
 
-            return $blog;
+            DB::commit();
+
+            return $blog->fresh(['files']);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Blog creation failed', [
@@ -60,13 +62,13 @@ final class BlogService extends BaseService
             $blog->update($data);
 
             if (!empty($data['files'])) {
-                $this->handleFileUploads($blog, $data['files']);
+                $this->syncFileCollections($blog, $data['files']);
             }
 
             DB::commit();
             $this->clearCache();
 
-            return $blog->fresh();
+            return $blog->fresh(['files']);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Blog update failed', [
@@ -236,5 +238,63 @@ final class BlogService extends BaseService
             ]);
             throw $e;
         }
+    }
+
+    /**
+     * Add this method to handle file collections
+     */
+    public function findOrFail(int $id, array $relationships = []): Blog
+    {
+        $blog = parent::findOrFail($id, $relationships);
+
+        // Ensure files are properly loaded with URLs
+        if ($blog->relationLoaded('files')) {
+            $blog->files->each(function ($file) {
+                $this->addUrlToFile($file);
+            });
+        }
+
+        return $blog;
+    }
+
+    /**
+     * Add this method to handle file updates
+     */
+    protected function syncFileCollections(Blog $blog, array $files): void
+    {
+        $collections = [
+            'thumbnail' => Blog::COLLECTION_THUMBNAIL,
+            'featured_image' => Blog::COLLECTION_FEATURED,
+            'images' => Blog::COLLECTION_IMAGES,
+            'videos' => Blog::COLLECTION_VIDEOS,
+            'attachments' => Blog::COLLECTION_ATTACHMENTS
+        ];
+
+        foreach ($collections as $key => $collection) {
+            // If the key exists in the files array (even if empty/null)
+            if (array_key_exists($key, $files)) {
+                if (empty($files[$key])) {
+                    // If value is empty/null, remove all files from this collection
+                    $blog->removeFiles($collection);
+                } else {
+                    if (is_array($files[$key]) && !isset($files[$key][0])) {
+                        // Single file collection (like thumbnail)
+                        $blog->syncFiles([$files[$key]], $collection);
+                    } else {
+                        // Multiple files collection
+                        $blog->syncFiles($files[$key], $collection);
+                    }
+                }
+            }
+        }
+    }
+
+    // Add this method to handle file URLs
+    protected function addUrlToFile(File $file): File
+    {
+        if ($file->disk && $file->path) {
+            $file->url = Storage::disk($file->disk)->url($file->path);
+        }
+        return $file;
     }
 }

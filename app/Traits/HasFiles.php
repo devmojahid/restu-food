@@ -7,6 +7,7 @@ namespace App\Traits;
 use App\Models\File;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 trait HasFiles
@@ -29,25 +30,36 @@ trait HasFiles
             $fileModel = File::where('uuid', $file->uuid)->first();
 
             if (!$fileModel) {
-                Log::error('File not found', ['uuid' => $file->uuid]);
+                Log::error('File not found', [
+                    'uuid' => $file->uuid,
+                    'collection' => $collection,
+                    'model' => get_class($this),
+                    'model_id' => $this->id
+                ]);
                 return null;
             }
 
-            // Ensure we're setting the relationship data correctly
+            // Use transaction for data integrity
+            \DB::beginTransaction();
+
+            // Update file relationship
             $fileModel->forceFill([
                 'fileable_type' => get_class($this),
                 'fileable_id' => $this->id,
                 'collection' => $collection ?? $fileModel->collection
             ])->save();
 
+            \DB::commit();
+
             return $fileModel->fresh();
         } catch (\Exception $e) {
+            \DB::rollBack();
             Log::error('File attachment failed', [
+                'error' => $e->getMessage(),
                 'model_id' => $this->id,
                 'model_type' => get_class($this),
                 'file_uuid' => $file->uuid ?? null,
-                'collection' => $collection,
-                'error' => $e->getMessage()
+                'collection' => $collection
             ]);
             throw $e;
         }
@@ -85,15 +97,48 @@ trait HasFiles
      */
     public function syncFiles(array $files, string $collection = 'default'): void
     {
-        // Remove old files
-        $this->files()->where('collection', $collection)->delete();
+        try {
+            // Start transaction
+            \DB::beginTransaction();
 
-        // Add new files
-        foreach ($files as $index => $file) {
-            if (!empty($file['uuid'])) {
-                $fileModel = $this->attachFile((object)$file, $collection);
-                $fileModel->update(['order' => $index]);
+            // Remove old files from this collection
+            $this->removeFiles($collection);
+
+            // Add new files
+            foreach ($files as $index => $file) {
+                if (!empty($file['uuid'])) {
+                    $fileModel = File::where('uuid', $file['uuid'])->first();
+
+                    if ($fileModel) {
+                        // Update file relationship and order
+                        $fileModel->forceFill([
+                            'fileable_type' => get_class($this),
+                            'fileable_id' => $this->id,
+                            'collection' => $collection,
+                            'order' => $index
+                        ])->save();
+                    } else {
+                        \Log::warning('File not found during sync', [
+                            'uuid' => $file['uuid'],
+                            'collection' => $collection,
+                            'model' => get_class($this),
+                            'model_id' => $this->id
+                        ]);
+                    }
+                }
             }
+
+            \DB::commit();
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('File sync failed', [
+                'error' => $e->getMessage(),
+                'collection' => $collection,
+                'model' => get_class($this),
+                'model_id' => $this->id,
+                'files' => $files
+            ]);
+            throw $e;
         }
     }
 
@@ -132,7 +177,35 @@ trait HasFiles
      */
     public function removeFiles(string $collection): void
     {
-        $this->files()->where('collection', $collection)->delete();
+        try {
+            $files = $this->files()->where('collection', $collection)->get();
+
+            foreach ($files as $file) {
+                // Delete physical file if it exists
+                if ($file->disk && $file->path) {
+                    try {
+                        Storage::disk($file->disk)->delete($file->path);
+                    } catch (\Exception $e) {
+                        \Log::warning("Failed to delete physical file: {$e->getMessage()}", [
+                            'file_id' => $file->id,
+                            'path' => $file->path,
+                            'disk' => $file->disk
+                        ]);
+                    }
+                }
+
+                // Delete database record
+                $file->delete();
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to remove files from collection', [
+                'error' => $e->getMessage(),
+                'collection' => $collection,
+                'model' => get_class($this),
+                'model_id' => $this->id
+            ]);
+            throw $e;
+        }
     }
 
     /**
@@ -148,14 +221,39 @@ trait HasFiles
      */
     public function attachFiles(array $files, string $collection): Collection
     {
-        $attachedFiles = collect();
-        foreach ($files as $index => $file) {
-            if (!empty($file['uuid'])) {
-                $fileModel = $this->attachFile((object)$file, $collection);
-                $fileModel->update(['order' => $index]);
-                $attachedFiles->push($fileModel);
+        try {
+            \DB::beginTransaction();
+
+            $attachedFiles = collect();
+
+            foreach ($files as $index => $file) {
+                if (!empty($file['uuid'])) {
+                    $fileModel = File::where('uuid', $file['uuid'])->first();
+
+                    if ($fileModel) {
+                        $fileModel->forceFill([
+                            'fileable_type' => get_class($this),
+                            'fileable_id' => $this->id,
+                            'collection' => $collection,
+                            'order' => $index
+                        ])->save();
+
+                        $attachedFiles->push($fileModel);
+                    }
+                }
             }
+
+            \DB::commit();
+            return $attachedFiles;
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Failed to attach multiple files', [
+                'error' => $e->getMessage(),
+                'collection' => $collection,
+                'model' => get_class($this),
+                'model_id' => $this->id
+            ]);
+            throw $e;
         }
-        return $attachedFiles;
     }
 }

@@ -25,20 +25,17 @@ Route::get('admin/dashboard', function () {
     return Inertia::render('Admin/Dashboard/Index');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     /*
     * Blogs
     */
-    Route::group(['prefix' => 'blogs', 'as' => 'blogs.'], function () {
-        Route::any('/', [BlogController::class, 'index'])->name('index');
-        Route::resource('/', BlogController::class)->except(['index']);
-        Route::delete('bulk-delete', [BlogController::class, 'bulkDelete'])->name('bulk-delete');
-        Route::delete('admin/blogs/bulk-delete', [BlogController::class, 'bulkDelete'])->name('admin.blogs.bulk-delete');
-        Route::put('bulk-status', [BlogController::class, 'bulkStatus'])->name('bulk-status');
-    });
+    Route::resource('blogs', BlogController::class);
+    Route::get('blogs/{blog}/preview', [BlogController::class, 'preview'])->name('blogs.preview');
+    Route::delete('blogs/bulk-delete', [BlogController::class, 'bulkDelete'])->name('blogs.bulk-delete');
+    Route::put('blogs/bulk-status', [BlogController::class, 'bulkUpdateStatus'])->name('blogs.bulk-status');
     /*
     * Settings
     */

@@ -6,11 +6,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\BlogRequest;
+use App\Models\Blog;
 use App\Services\Admin\BlogService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 
 final class BlogController extends Controller
 {
@@ -51,24 +53,58 @@ final class BlogController extends Controller
                 'attachments' => $request->input('attachments', [])
             ];
 
-            $this->blogService->store($data);
+            $blog = $this->blogService->store($data);
 
             return redirect()
-                ->route('admin.blogs.index')
-                ->with('success', 'Blog created successfully.');
+                ->route('admin.blogs.edit', $blog)
+                ->with('toast', [
+                    'type' => 'success',
+                    'message' => 'Blog created successfully. You can now continue editing.'
+                ]);
         } catch (\Exception $e) {
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', 'Error creating blog: ' . $e->getMessage());
+                ->with('toast', [
+                    'type' => 'error',
+                    'message' => 'Error creating blog: ' . $e->getMessage()
+                ]);
         }
     }
 
     public function edit(int $id): Response
     {
-        return Inertia::render('Admin/Blogs/Edit', [
-            'blog' => $this->blogService->findOrFail($id)
-        ]);
+        try {
+            $blog = $this->blogService->findOrFail($id, ['user', 'files']);
+
+            // Transform blog data with organized file collections
+            $blogData = [
+                ...$blog->toArray(),
+                'thumbnail' => $blog->getFile(Blog::COLLECTION_THUMBNAIL),
+                'featured_image' => $blog->getFile(Blog::COLLECTION_FEATURED),
+                'images' => $blog->getFiles(Blog::COLLECTION_IMAGES),
+                'videos' => $blog->getFiles(Blog::COLLECTION_VIDEOS),
+                'attachments' => $blog->getFiles(Blog::COLLECTION_ATTACHMENTS),
+            ];
+
+            return Inertia::render('Admin/Blogs/Edit', [
+                'blog' => $blogData,
+                'maxFiles' => [
+                    'thumbnail' => 1,
+                    'featured_image' => 1,
+                    'images' => 10,
+                    'videos' => 5,
+                    'attachments' => 20,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return redirect()
+                ->route('admin.blogs.index')
+                ->with('toast', [
+                    'type' => 'error',
+                    'message' => 'Blog not found or error loading blog: ' . $e->getMessage()
+                ]);
+        }
     }
 
     public function update(BlogRequest $request, int $id): RedirectResponse
@@ -86,13 +122,19 @@ final class BlogController extends Controller
             $this->blogService->update($id, $data);
 
             return redirect()
-                ->route('admin.blogs.index')
-                ->with('success', 'Blog updated successfully.');
+                ->back()
+                ->with('toast', [
+                    'type' => 'success',
+                    'message' => 'Blog updated successfully.'
+                ]);
         } catch (\Exception $e) {
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', 'Error updating blog: ' . $e->getMessage());
+                ->with('toast', [
+                    'type' => 'error',
+                    'message' => 'Error updating blog: ' . $e->getMessage()
+                ]);
         }
     }
 
@@ -139,5 +181,13 @@ final class BlogController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', 'Error updating status: ' . $e->getMessage());
         }
+    }
+
+    public function preview(int $id): Response
+    {
+        $blog = $this->blogService->findOrFail($id);
+        return Inertia::render('Admin/Blogs/Preview', [
+            'blog' => $blog
+        ]);
     }
 }

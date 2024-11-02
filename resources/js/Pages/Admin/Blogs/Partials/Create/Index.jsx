@@ -164,16 +164,14 @@ export default function CreateBlog() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    post("/admin/blogs", {
+    post(route("admin.blogs.store"), {
       preserveState: true,
       preserveScroll: true,
       onSuccess: () => {
         setIsSubmitting(false);
-        toast.success("Blog post created successfully!");
       },
       onError: () => {
         setIsSubmitting(false);
-        toast.error("An error occurred while creating the blog post.");
       },
     });
   };

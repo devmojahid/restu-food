@@ -3,6 +3,7 @@ import Sidebar from "./Partials/Sidebar/Sidebar";
 import Header from "./Partials/Header/Header";
 import { Head, usePage } from "@inertiajs/react";
 import { Toaster } from "react-hot-toast";
+import Toast from "@/Components/Toast";
 
 export default function AdminLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -57,6 +58,7 @@ export default function AdminLayout({ children }) {
           },
         }}
       />
+      <Toast />
       <div
         className={`flex h-screen overflow-hidden bg-gradient-to-br ${
           theme === "light"
