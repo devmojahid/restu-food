@@ -306,12 +306,12 @@ const FileUploader = ({
 
       if (response.data.success) {
         const newFile = response.data.file;
-        setPreviews((prev) => [...prev, newFile]);
-        // Pass all files to parent component
-        onUpload?.(maxFiles === 1 ? newFile : [...previews, newFile]);
+        return newFile;
       }
+      return null;
     } catch (error) {
       console.error("Upload failed:", error);
+      return null;
     }
   };
 
@@ -320,34 +320,41 @@ const FileUploader = ({
       if (previews.length >= maxFiles) return;
 
       const remainingSlots = maxFiles - previews.length;
-      const newFiles = acceptedFiles.slice(0, remainingSlots);
+      const filesToUpload = acceptedFiles.slice(0, remainingSlots);
 
-      setFiles((prev) => [...prev, ...newFiles]);
+      setFiles((prev) => [...prev, ...filesToUpload]);
       setIsUploading(true);
 
       try {
-        for (const file of newFiles) {
+        const uploadPromises = filesToUpload.map(async (file) => {
           setProgress((prev) => ({
             ...prev,
             [file.name]: 0,
           }));
 
-          await uploadFile(file);
+          return uploadFile(file);
+        });
 
-          setFiles((prev) => prev.filter((f) => f.name !== file.name));
-          setProgress((prev) => {
-            const newProgress = { ...prev };
-            delete newProgress[file.name];
-            return newProgress;
-          });
-        }
+        const uploadedFiles = await Promise.all(uploadPromises);
+        const successfulUploads = uploadedFiles.filter(Boolean);
+
+        setPreviews((prev) => [...prev, ...successfulUploads]);
+
+        onUpload?.(
+          maxFiles === 1
+            ? successfulUploads[0]
+            : [...previews, ...successfulUploads]
+        );
+
+        setFiles([]);
+        setProgress({});
       } catch (error) {
         console.error("Upload failed:", error);
       } finally {
         setIsUploading(false);
       }
     },
-    [maxFiles, previews.length, collection, onUpload]
+    [maxFiles, previews, collection, onUpload]
   );
 
   const removeFile = async (fileToRemove) => {
