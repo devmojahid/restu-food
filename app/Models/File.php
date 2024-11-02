@@ -1,15 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
-class File extends Model
+final class File extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'original_name',
@@ -23,6 +26,7 @@ class File extends Model
         'collection',
         'meta',
         'order',
+        'user_id'
     ];
 
     protected $casts = [
@@ -31,32 +35,39 @@ class File extends Model
         'order' => 'integer',
     ];
 
-    protected static function booted()
+    protected static function booted(): void
     {
         static::creating(function ($file) {
             $file->uuid = (string) Str::uuid();
         });
+
+        static::deleting(function ($file) {
+            Storage::disk($file->disk)->delete($file->path);
+        });
     }
 
-    /**
-     * Get the owning fileable model (product, user, etc.).
-     */
     public function fileable()
     {
         return $this->morphTo();
     }
 
-    public function getUrlAttribute()
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    // Helper methods
+    public function getUrl(): string
     {
         return Storage::disk($this->disk)->url($this->path);
     }
 
-    public function getFullPathAttribute()
+    public function getFullPath(): string
     {
         return Storage::disk($this->disk)->path($this->path);
     }
 
-    public function getSizeForHumansAttribute()
+    public function getSizeForHumans(): string
     {
         $bytes = $this->size;
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
@@ -66,13 +77,5 @@ class File extends Model
         }
 
         return round($bytes, 2) . ' ' . $units[$i];
-    }
-
-    /**
-     * Get the user who uploaded the file.
-     */
-    public function user()
-    {
-        return $this->belongsTo(User::class);
     }
 }

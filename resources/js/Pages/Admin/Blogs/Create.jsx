@@ -20,20 +20,6 @@ const CreateBlog = () => {
           ]}
         />
 
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 space-y-4 sm:space-y-0">
-          <h2 className="text-2xl font-bold text-gray-700 dark:text-gray-300">
-            Create Blog Post
-          </h2>
-          <div className="flex space-x-2">
-            <Button variant="outline" href="/admin/blogs">
-              <ArrowLeft className="mr-2 h-4 w-4" /> Back to Blogs
-            </Button>
-            <Button type="submit" form="blog-form" disabled={isSubmitting}>
-              <Save className="mr-2 h-4 w-4" />
-              {isSubmitting ? "Saving..." : "Save Post"}
-            </Button>
-          </div>
-        </div>
         <Form />
       </div>
     </AdminLayout>

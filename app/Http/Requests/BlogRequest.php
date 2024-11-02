@@ -13,20 +13,13 @@ class BlogRequest extends FormRequest
 
     public function rules(): array
     {
-        $rules = [
+        return [
             'title' => 'required|string|max:255',
+            'slug' => 'nullable|string|max:255|unique:blogs,slug,' . $this->route('blog'),
             'content' => 'required|string',
-            'featured_image' => 'nullable|image|max:2048',
             'is_published' => 'boolean',
+            'user_id' => 'nullable',
             'published_at' => 'nullable|date',
-            'tags' => 'nullable|array',
-            'tags.*' => 'exists:taxonomies,id'
         ];
-
-        if ($this->isMethod('post')) {
-            $rules['featured_image'] = 'required|' . $rules['featured_image'];
-        }
-
-        return $rules;
     }
 }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\BlogController;
+use App\Http\Controllers\Admin\FileController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -13,6 +14,11 @@ Route::get('/', function () {
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
     ]);
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::post('admin/files/upload', [FileController::class, 'upload']);
+    Route::delete('admin/files/{file}', [FileController::class, 'destroy']);
 });
 
 Route::get('admin/dashboard', function () {
@@ -29,10 +35,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::group(['prefix' => 'blogs', 'as' => 'blogs.'], function () {
         Route::any('/', [BlogController::class, 'index'])->name('index');
         Route::resource('/', BlogController::class)->except(['index']);
-        Route::put('{id}/toggle-status', [BlogController::class, 'toggleStatus'])->name('toggle-status');
         Route::delete('bulk-delete', [BlogController::class, 'bulkDelete'])->name('bulk-delete');
-        Route::post('export', [BlogController::class, 'export'])->name('export');
-        Route::post('import', [BlogController::class, 'import'])->name('import');
         Route::delete('admin/blogs/bulk-delete', [BlogController::class, 'bulkDelete'])->name('admin.blogs.bulk-delete');
         Route::put('bulk-status', [BlogController::class, 'bulkStatus'])->name('bulk-status');
     });

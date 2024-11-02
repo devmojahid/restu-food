@@ -1,118 +1,207 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Admin;
 
 use App\Models\Blog;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Cache;
+use App\Services\BaseService;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-final class BlogService
+final class BlogService extends BaseService
 {
-    protected $blogRepository;
-    protected $cachePrefix = 'blogs:';
-    protected $cacheDuration = 30; // minutes
+    protected string $model = Blog::class;
+    protected string $cachePrefix = 'blogs:';
+    protected array $searchableFields = ['title', 'content', 'slug'];
+    protected array $filterableFields = ['is_published', 'user_id'];
+    protected array $sortableFields = ['title', 'created_at', 'published_at'];
+    protected array $relationships = ['user'];
 
-    public function getAllPaginated(array $filters = [], int $perPage = 10): LengthAwarePaginator
-    {
-        $cacheKey = $this->getCacheKey($filters, $perPage);
-
-        return Cache::remember(
-            $cacheKey,
-            now()->addMinutes($this->cacheDuration),
-            fn() => $this->blogRepository->getAllPaginated($filters, $perPage)
-        );
-    }
-
-    public function find(int $id): ?Blog
-    {
-        $cacheKey = "{$this->cachePrefix}single:{$id}";
-
-        return Cache::remember(
-            $cacheKey,
-            now()->addMinutes($this->cacheDuration),
-            fn() => $this->blogRepository->find($id)
-        );
-    }
-
-    public function create(array $data): Blog
-    {
-        $blog = $this->blogRepository->create($data);
-        $this->clearCache();
-        return $blog;
-    }
-
-    public function update(int $id, array $data): bool
-    {
-        $result = $this->blogRepository->update($id, $data);
-        $this->clearCache();
-        return $result;
-    }
-
-    public function delete(int $id): bool
-    {
-        $result = $this->blogRepository->delete($id);
-        $this->clearCache();
-        return $result;
-    }
-
-    public function toggleStatus(int $id): bool
-    {
-        $result = $this->blogRepository->toggleStatus($id);
-        $this->clearCache();
-        return $result;
-    }
-
-    public function bulkDelete(array $ids): bool
-    {
-        $result = $this->blogRepository->bulkDelete($ids);
-        $this->clearCache();
-        return $result;
-    }
-
-    public function handleFiltering(array $params): array
+    /**
+     * Store a new blog
+     */
+    public function store(array $data): Blog
     {
         try {
-            $blogs = $this->getAllPaginated(
-                [
-                    'search' => $params['search'] ?? null,
-                    'filters' => $params['filters'] ?? [],
-                    'sort' => $params['sort'] ?? null,
-                    'direction' => $params['direction'] ?? null,
-                ],
-                $params['perPage'] ?? 10
-            );
+            DB::beginTransaction();
 
-            return [
-                'blogs' => $blogs,
-                'filters' => $params
-            ];
+            $blog = $this->model::create($data);
+
+            if (!empty($data['files'])) {
+                $this->handleFileUploads($blog, $data['files']);
+            }
+
+            DB::commit();
+            $this->clearCache();
+
+            return $blog;
         } catch (\Exception $e) {
-            Log::error('Blog filtering failed: ' . $e->getMessage());
+            DB::rollBack();
+            Log::error('Blog creation failed', [
+                'error' => $e->getMessage(),
+                'data' => $data
+            ]);
             throw $e;
         }
     }
 
-    protected function getCacheKey(array $filters, int $perPage): string
+    /**
+     * Update a blog
+     */
+    public function update(int $id, array $data): Blog
     {
-        $filterKey = md5(serialize($filters) . $perPage);
-        return "{$this->cachePrefix}list:{$filterKey}";
-    }
+        try {
+            DB::beginTransaction();
 
-    protected function clearCache(): void
-    {
-        // Clear all blog-related cache
-        $keys = Cache::get("{$this->cachePrefix}keys", []);
-        foreach ($keys as $key) {
-            Cache::forget($key);
+            $blog = $this->findOrFail($id);
+            $blog->update($data);
+
+            if (!empty($data['files'])) {
+                $this->handleFileUploads($blog, $data['files']);
+            }
+
+            DB::commit();
+            $this->clearCache();
+
+            return $blog->fresh();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Blog update failed', [
+                'id' => $id,
+                'error' => $e->getMessage(),
+                'data' => $data
+            ]);
+            throw $e;
         }
-        Cache::forget("{$this->cachePrefix}keys");
     }
 
-    protected function rememberCacheKey(string $key): void
+    /**
+     * Handle file uploads for different collections
+     */
+    protected function handleFileUploads(Blog $blog, array $files): void
     {
-        $keys = Cache::get("{$this->cachePrefix}keys", []);
-        $keys[] = $key;
-        Cache::put("{$this->cachePrefix}keys", array_unique($keys), now()->addDays(1));
+        $collections = [
+            'thumbnail' => Blog::COLLECTION_THUMBNAIL,
+            'images' => Blog::COLLECTION_IMAGES,
+            'videos' => Blog::COLLECTION_VIDEOS,
+            'attachments' => Blog::COLLECTION_ATTACHMENTS
+        ];
+
+        foreach ($collections as $key => $collection) {
+            if (!empty($files[$key])) {
+                if (is_array($files[$key])) {
+                    foreach ($files[$key] as $index => $file) {
+                        if (!empty($file['uuid'])) {
+                            $fileModel = $blog->attachFile((object)$file, $collection);
+                            $fileModel->update(['order' => $index]);
+                        }
+                    }
+                } else if (!empty($files[$key]['uuid'])) {
+                    $blog->files()->where('collection', $collection)->delete();
+                    $blog->attachFile((object)$files[$key], $collection);
+                }
+            }
+        }
+    }
+
+    /**
+     * Handle after create hook
+     */
+    protected function afterCreate(Model $model, array $data): void
+    {
+        if (!empty($data['files'])) {
+            $this->handleFileUploads($model, $data['files']);
+        }
+    }
+
+    /**
+     * Handle after update hook
+     */
+    protected function afterUpdate(Model $model, array $data): void
+    {
+        if (!empty($data['files'])) {
+            $this->handleFileUploads($model, $data['files']);
+        }
+    }
+
+    /**
+     * Handle before delete hook
+     */
+    protected function beforeDelete(Model $model): void
+    {
+        // Delete associated files
+        $model->files()->delete();
+    }
+
+    /**
+     * Update blog status
+     */
+    public function updateStatus(int $id, bool $status): Blog
+    {
+        $blog = $this->findOrFail($id);
+        $blog->update([
+            'is_published' => $status,
+            'published_at' => $status ? now() : null
+        ]);
+
+        $this->clearCache();
+        return $blog;
+    }
+
+    /**
+     * Override bulkUpdateStatus to handle blog-specific status updates
+     */
+    public function bulkUpdateStatus(array $ids, bool $status, string $field = 'is_published'): bool
+    {
+        try {
+            DB::beginTransaction();
+
+            $this->model::whereIn('id', $ids)->update([
+                $field => $status,
+                'published_at' => $status ? now() : null
+            ]);
+
+            DB::commit();
+            $this->clearCache();
+
+            return true;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Bulk status update failed', [
+                'ids' => $ids,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Bulk delete blogs with their files
+     */
+    public function bulkDelete(array $ids): bool
+    {
+        try {
+            DB::beginTransaction();
+
+            $blogs = $this->model::whereIn('id', $ids)->get();
+            foreach ($blogs as $blog) {
+                $blog->files()->delete();
+                $blog->delete();
+            }
+
+            DB::commit();
+            $this->clearCache();
+
+            return true;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Bulk delete failed', [
+                'ids' => $ids,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
     }
 }

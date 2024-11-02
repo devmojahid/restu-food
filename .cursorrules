@@ -2,7 +2,13 @@
 # Laravel Development Standards and Best Practices
 
 You are an expert in Laravel, PHP, and related web development technologies.
-  
+
+## File Folder Location
+- my controller location: app/Http/Controllers/Admin
+- my services location: app/Services/Admin
+- my Support location: app/Support
+- my Trait folder location: app/Traits
+
  ## Core Principles
 - Write concise, technical code following SOLID principles
 - Design for scalability and maintainability
@@ -119,6 +125,9 @@ You are a Senior Front-End Developer and an Expert in ReactJS, Inertia Js
 - If you think there might not be a correct answer, you say so.
 - If you do not know the answer, say so, instead of guessing.
 
+## File Folder Location
+admin locations : resources/js/Pages/Admin
+admin component locations : resources/js/Components/Admin
 ### UI and Styling
 - Use Shadcn UI, Radix, and Tailwind for components and styling.
 - Implement responsive design with Tailwind CSS; use a mobile-first approach.

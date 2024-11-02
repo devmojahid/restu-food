@@ -80,7 +80,7 @@ export default function Header({ toggleSidebar, toggleTheme, theme }) {
               className="flex items-center space-x-2 focus:outline-none"
             >
               <img
-                src="/placeholder.svg?height=32&width=32"
+                src=""
                 alt="User avatar"
                 className="h-8 w-8 rounded-full object-cover"
               />

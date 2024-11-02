@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Sidebar from "./Partials/Sidebar/Sidebar";
 import Header from "./Partials/Header/Header";
 import { Head, usePage } from "@inertiajs/react";
+import { Toaster } from "react-hot-toast";
 
 export default function AdminLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -36,6 +37,26 @@ export default function AdminLayout({ children }) {
 
   return (
     <>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: "#333",
+            color: "#fff",
+          },
+          success: {
+            style: {
+              background: "green",
+            },
+          },
+          error: {
+            style: {
+              background: "red",
+            },
+          },
+        }}
+      />
       <div
         className={`flex h-screen overflow-hidden bg-gradient-to-br ${
           theme === "light"

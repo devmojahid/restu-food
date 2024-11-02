@@ -1,6 +1,6 @@
 import React from "react";
-import BlankLayout from "../BlankLayout";
 import { Button } from "@/Components/ui/button";
+import BlankLayout from "@/Layouts/Blank/BlankLayout";
 
 const Index = () => {
   return (
