@@ -136,96 +136,118 @@ const getFileTypeLabel = (mimeType) => {
 const FilePreview = ({
   file,
   index,
-  maxFiles,
   onRemove,
   isDeleting,
   disabled,
+  totalFiles,
 }) => {
   const FileTypeIcon = getFileTypeIcon(file.mime_type);
-  const fileTypeLabel = getFileTypeLabel(file.mime_type);
   const canPreview =
-    file.mime_type.startsWith("image/") || file.mime_type.startsWith("video/");
+    file.mime_type?.startsWith("image/") ||
+    file.mime_type?.startsWith("video/");
+
+  // Simplified height calculation
+  const getPreviewHeight = () => {
+    if (totalFiles === 1) return "h-40"; // 160px
+    if (totalFiles === 2) return "h-36"; // 140px
+    if (totalFiles === 3) return "h-32"; // 120px
+    return "h-28"; // 100px
+  };
+
+  // Add handlePreview function
+  const handlePreview = (e) => {
+    e.preventDefault(); // Prevent form submission
+    e.stopPropagation(); // Prevent event bubbling
+
+    if (file?.url) {
+      window.open(file.url, "_blank", "noopener,noreferrer");
+    }
+  };
 
   return (
-    <div className="group relative aspect-square rounded-lg overflow-hidden bg-background/50 border-2 border-border hover:border-primary/50 transition-all duration-300 ease-in-out">
-      <div className="relative w-full h-full">
+    <div className="group relative rounded-lg overflow-hidden border border-border hover:border-primary/50 transition-all duration-300">
+      {/* Mobile View - Simple version */}
+      <div className="block sm:hidden aspect-square">
         {canPreview ? (
-          file.mime_type.startsWith("image/") ? (
-            <img
-              src={file.url}
-              alt={file.original_name}
-              className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
-            />
-          ) : (
-            <video
-              src={file.url}
-              className="w-full h-full object-cover"
-              controls={false}
-              muted
-              loop
-              onMouseOver={(e) => e.target.play()}
-              onMouseOut={(e) => e.target.pause()}
-            />
-          )
+          <img
+            src={file.url}
+            alt={file.original_name}
+            className="w-full h-full object-cover"
+          />
         ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center bg-muted p-4">
-            <FileTypeIcon className="w-1/3 h-1/3 text-muted-foreground mb-2" />
-            <span className="text-sm text-muted-foreground text-center">
-              {fileTypeLabel}
-            </span>
+          <div className="w-full h-full flex items-center justify-center bg-muted/50">
+            <FileTypeIcon className="w-1/3 h-1/3 text-muted-foreground/70" />
           </div>
         )}
+        <Button
+          variant="destructive"
+          size="icon"
+          className="absolute top-2 right-2"
+          onClick={() => onRemove(file)}
+          disabled={isDeleting || disabled}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
 
-        {/* Enhanced Overlay with Actions */}
-        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center">
-          <div className="space-y-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              className="w-32"
-              onClick={() => window.open(file.url, "_blank")}
-            >
-              {canPreview ? (
-                <>
-                  <Eye className="h-4 w-4 mr-2" />
-                  Preview
-                </>
-              ) : (
-                <>
-                  <Download className="h-4 w-4 mr-2" />
-                  Download
-                </>
-              )}
-            </Button>
+      {/* Desktop/Tablet View - Enhanced but minimal */}
+      <div className={cn("hidden sm:block", getPreviewHeight())}>
+        <div className="relative w-full h-full group">
+          {/* Main Content */}
+          {canPreview ? (
+            file.mime_type?.startsWith("image/") ? (
+              <img
+                src={file.url}
+                alt={file.original_name}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            ) : (
+              <video
+                src={file.url}
+                className="w-full h-full object-cover"
+                controls={false}
+                muted
+                loop
+                onMouseOver={(e) => e.target.play()}
+                onMouseOut={(e) => e.target.pause()}
+              />
+            )
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-muted/50">
+              <FileTypeIcon className="w-1/4 h-1/4 text-muted-foreground/70 group-hover:text-primary transition-colors duration-300" />
+            </div>
+          )}
+
+          {/* Hover Overlay with Just Two Buttons */}
+          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-2">
+            {canPreview && (
+              <Button
+                variant="secondary"
+                size="sm"
+                className="bg-white/90 hover:bg-white"
+                onClick={handlePreview}
+                type="button"
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+            )}
             <Button
               variant="destructive"
               size="sm"
-              className="w-32"
-              onClick={() => onRemove(file)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onRemove(file);
+              }}
               disabled={isDeleting || disabled}
+              type="button"
             >
               {isDeleting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <>
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Remove
-                </>
+                <Trash2 className="h-4 w-4" />
               )}
             </Button>
-          </div>
-
-          {/* Enhanced File Info */}
-          <div className="absolute bottom-0 left-0 right-0 p-3 bg-black/80 backdrop-blur-sm">
-            <p className="text-sm font-medium text-white truncate">
-              {file.original_name}
-            </p>
-            <div className="flex items-center justify-between mt-1">
-              <span className="text-xs text-white/70">
-                {formatFileSize(file.size)}
-              </span>
-              <span className="text-xs text-white/70">{fileTypeLabel}</span>
-            </div>
           </div>
         </div>
       </div>
@@ -401,34 +423,29 @@ const FileUploader = ({
   );
 
   return (
-    <div className={cn("space-y-6", className)}>
-      {/* File Type Indicator */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <fileConfig.icon className="h-5 w-5 text-muted-foreground" />
-          <span className="text-sm text-muted-foreground">
-            {fileType.charAt(0).toUpperCase() + fileType.slice(1)} Uploader
-          </span>
-        </div>
-        {maxFiles > 1 && (
-          <span className="text-xs text-muted-foreground">
-            {previews.length} of {maxFiles} files
-          </span>
-        )}
-      </div>
-
-      {/* Preview Grid */}
+    <div className={cn("space-y-4", className)}>
+      {/* Preview Grid - Updated with max 3 columns */}
       {previews.length > 0 && (
-        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+        <div
+          className={cn(
+            "grid gap-3",
+            previews.length === 1
+              ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3"
+              : previews.length === 2
+              ? "grid-cols-2 sm:grid-cols-2 md:grid-cols-3"
+              : "grid-cols-2 sm:grid-cols-3 md:grid-cols-3", // Maximum 3 columns
+            "auto-rows-fr"
+          )}
+        >
           {previews.map((preview, index) => (
             <FilePreview
               key={preview.id}
               file={preview}
               index={index}
-              maxFiles={maxFiles}
               onRemove={() => removeFile(preview)}
               isDeleting={isDeleting}
               disabled={disabled}
+              totalFiles={previews.length}
             />
           ))}
         </div>
