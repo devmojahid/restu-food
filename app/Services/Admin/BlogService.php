@@ -9,6 +9,7 @@ use App\Services\BaseService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\File;
 
 final class BlogService extends BaseService
 {
@@ -82,27 +83,59 @@ final class BlogService extends BaseService
      */
     protected function handleFileUploads(Blog $blog, array $files): void
     {
-        $collections = [
-            'thumbnail' => Blog::COLLECTION_THUMBNAIL,
-            'images' => Blog::COLLECTION_IMAGES,
-            'videos' => Blog::COLLECTION_VIDEOS,
-            'attachments' => Blog::COLLECTION_ATTACHMENTS
-        ];
+        try {
+            $collections = [
+                'thumbnail' => Blog::COLLECTION_THUMBNAIL,
+                'images' => Blog::COLLECTION_IMAGES,
+                'videos' => Blog::COLLECTION_VIDEOS,
+                'attachments' => Blog::COLLECTION_ATTACHMENTS
+            ];
 
-        foreach ($collections as $key => $collection) {
-            if (!empty($files[$key])) {
-                if (is_array($files[$key])) {
-                    foreach ($files[$key] as $index => $file) {
-                        if (!empty($file['uuid'])) {
-                            $fileModel = $blog->attachFile((object)$file, $collection);
-                            $fileModel->update(['order' => $index]);
+            foreach ($collections as $key => $collection) {
+                if (!empty($files[$key])) {
+                    // Handle single file uploads (like thumbnail)
+                    if (is_array($files[$key]) && !isset($files[$key][0])) {
+                        // Single file as associative array
+                        if (!empty($files[$key]['uuid'])) {
+                            // First delete existing files in this collection
+                            $blog->files()->where('collection', $collection)->delete();
+                            // Then attach the new file with explicit relationship data
+                            $fileModel = File::where('uuid', $files[$key]['uuid'])->first();
+                            if ($fileModel) {
+                                $fileModel->update([
+                                    'fileable_type' => get_class($blog),
+                                    'fileable_id' => $blog->id,
+                                    'collection' => $collection
+                                ]);
+                            }
                         }
                     }
-                } else if (!empty($files[$key]['uuid'])) {
-                    $blog->files()->where('collection', $collection)->delete();
-                    $blog->attachFile((object)$files[$key], $collection);
+                    // Handle multiple file uploads (like videos, images, attachments)
+                    else if (is_array($files[$key])) {
+                        foreach ($files[$key] as $index => $file) {
+                            if (!empty($file['uuid'])) {
+                                $fileModel = File::where('uuid', $file['uuid'])->first();
+                                if ($fileModel) {
+                                    $fileModel->update([
+                                        'fileable_type' => get_class($blog),
+                                        'fileable_id' => $blog->id,
+                                        'collection' => $collection,
+                                        'order' => $index
+                                    ]);
+                                }
+                            }
+                        }
+                    }
                 }
             }
+        } catch (\Exception $e) {
+            Log::error('File upload handling failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'blog_id' => $blog->id,
+                'files' => $files
+            ]);
+            throw $e;
         }
     }
 

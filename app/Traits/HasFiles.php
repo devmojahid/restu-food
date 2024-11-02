@@ -19,21 +19,38 @@ trait HasFiles
     /**
      * Attach a file to the model
      */
-    public function attachFile($file, ?string $collection = null): File
+    public function attachFile($file, ?string $collection = null): ?File
     {
-        if (!isset($file->uuid)) {
-            throw new \InvalidArgumentException('File UUID is required');
+        try {
+            if (!isset($file->uuid)) {
+                throw new \InvalidArgumentException('File UUID is required');
+            }
+
+            $fileModel = File::where('uuid', $file->uuid)->first();
+
+            if (!$fileModel) {
+                Log::error('File not found', ['uuid' => $file->uuid]);
+                return null;
+            }
+
+            // Ensure we're setting the relationship data correctly
+            $fileModel->forceFill([
+                'fileable_type' => get_class($this),
+                'fileable_id' => $this->id,
+                'collection' => $collection ?? $fileModel->collection
+            ])->save();
+
+            return $fileModel->fresh();
+        } catch (\Exception $e) {
+            Log::error('File attachment failed', [
+                'model_id' => $this->id,
+                'model_type' => get_class($this),
+                'file_uuid' => $file->uuid ?? null,
+                'collection' => $collection,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
         }
-
-        $fileModel = File::where('uuid', $file->uuid)->firstOrFail();
-
-        $fileModel->update([
-            'fileable_type' => get_class($this),
-            'fileable_id' => $this->id,
-            'collection' => $collection ?? $fileModel->collection
-        ]);
-
-        return $fileModel->fresh();
     }
 
     /**
