@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
+use App\Models\User;
 
 final class UserController extends Controller
 {
@@ -35,6 +36,105 @@ final class UserController extends Controller
         ]);
     }
 
+    public function create(): Response
+    {
+        $data = [
+            'roles' => $this->userService->getAllRoles()
+        ];
+        return Inertia::render('Admin/Users/Create', $data);
+    }
+
+    public function store(UserRequest $request): RedirectResponse
+    {
+        try {
+            $data = $request->validated();
+            $data['files'] = [
+                'avatar' => $request->input('avatar'),
+            ];
+
+            $user = $this->userService->store($data);
+
+            return redirect()
+                ->route('app.users.edit', $user)
+                ->with('toast', [
+                    'type' => 'success',
+                    'message' => 'User created successfully.'
+                ]);
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('toast', [
+                    'type' => 'error',
+                    'message' => 'Error creating user: ' . $e->getMessage()
+                ]);
+        }
+    }
+
+    public function show(User $user): Response
+    {
+        $user->load(['roles', 'files']);
+
+        return Inertia::render('Admin/Users/Show', [
+            'user' => $user
+        ]);
+    }
+
+    public function edit(User $user): Response
+    {
+        $user->load(['roles', 'files']);
+
+        return Inertia::render('Admin/Users/Edit', [
+            'user' => $user,
+            'roles' => $this->userService->getAllRoles(),
+        ]);
+    }
+
+    public function update(UserRequest $request, User $user): RedirectResponse
+    {
+        try {
+            $data = $request->validated();
+            $data['files'] = [
+                'avatar' => $request->input('avatar'),
+            ];
+
+            $this->userService->update($user->id, $data);
+
+            return redirect()
+                ->back()
+                ->with('toast', [
+                    'type' => 'success',
+                    'message' => 'User updated successfully.'
+                ]);
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('toast', [
+                    'type' => 'error',
+                    'message' => 'Error updating user: ' . $e->getMessage()
+                ]);
+        }
+    }
+
+    public function destroy(User $user): RedirectResponse
+    {
+        try {
+            $this->userService->delete($user->id);
+            return redirect()
+                ->route('app.users.index')
+                ->with('toast', [
+                    'type' => 'success',
+                    'message' => 'User deleted successfully.'
+                ]);
+        } catch (\Exception $e) {
+            return back()->with('toast', [
+                'type' => 'error',
+                'message' => 'Error deleting user: ' . $e->getMessage()
+            ]);
+        }
+    }
+
     public function bulkDelete(Request $request): RedirectResponse
     {
         try {
@@ -45,9 +145,15 @@ final class UserController extends Controller
 
             $this->userService->bulkDelete($validated['ids']);
 
-            return back()->with('success', 'Selected users deleted successfully');
+            return back()->with('toast', [
+                'type' => 'success',
+                'message' => 'Selected users deleted successfully'
+            ]);
         } catch (\Exception $e) {
-            return back()->with('error', 'Error deleting users: ' . $e->getMessage());
+            return back()->with('toast', [
+                'type' => 'error',
+                'message' => 'Error deleting users: ' . $e->getMessage()
+            ]);
         }
     }
 
@@ -62,9 +168,15 @@ final class UserController extends Controller
 
             $this->userService->bulkUpdateStatus($validated['ids'], $validated['status']);
 
-            return back()->with('success', 'User status updated successfully');
+            return back()->with('toast', [
+                'type' => 'success',
+                'message' => 'User status updated successfully'
+            ]);
         } catch (\Exception $e) {
-            return back()->with('error', 'Error updating status: ' . $e->getMessage());
+            return back()->with('toast', [
+                'type' => 'error',
+                'message' => 'Error updating status: ' . $e->getMessage()
+            ]);
         }
     }
 }

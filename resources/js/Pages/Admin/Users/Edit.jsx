@@ -2,26 +2,26 @@ import React from "react";
 import { Head } from "@inertiajs/react";
 import Form from "./Partials/Edit/Index";
 import AdminLayout from "@/Layouts/Admin/AdminLayout";
-import { Home, FileText, Edit as EditIcon } from "lucide-react";
+import { Users, Home } from "lucide-react";
 import Breadcrumb from "@/Components/Admin/Breadcrumb";
 
-const EditBlog = ({ blog }) => {
+const EditUser = ({ user, roles }) => {
   return (
     <AdminLayout>
-      <Head title={`Edit Blog: ${blog.title}`} />
+      <Head title={`Edit User - ${user.name}`} />
       <div className="container mx-auto py-6 px-2 sm:px-3 lg:px-4">
         <Breadcrumb
           items={[
             { label: "Dashboard", href: "dashboard", icon: Home },
-            { label: "Blogs", href: "app.blogs.index", icon: FileText },
-            { label: `Edit: ${blog.title}`, icon: EditIcon },
+            { label: "Users", href: "app.users.index", icon: Users },
+            { label: `Edit ${user.name}` },
           ]}
         />
 
-        <Form blog={blog} />
+        <Form user={user} roles={roles} />
       </div>
     </AdminLayout>
   );
 };
 
-export default EditBlog;
+export default EditUser;

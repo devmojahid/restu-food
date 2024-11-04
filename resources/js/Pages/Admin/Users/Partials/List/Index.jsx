@@ -169,7 +169,7 @@ export default function ListUsers({ users, roles }) {
     handlePageChange,
     handleSortChange,
   } = useDataTable({
-    routeName: "users.index",
+    routeName: "app.users.index",
     initialFilters,
     onSuccess: () => {
       toast({

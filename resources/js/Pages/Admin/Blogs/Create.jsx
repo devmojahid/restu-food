@@ -15,7 +15,7 @@ const CreateBlog = () => {
         <Breadcrumb
           items={[
             { label: "Dashboard", href: "dashboard", icon: Home },
-            { label: "Blogs", href: "blogs", icon: FileText },
+            { label: "Blogs", href: "app.blogs.index", icon: FileText },
             { label: "Create Blog", icon: Plus },
           ]}
         />

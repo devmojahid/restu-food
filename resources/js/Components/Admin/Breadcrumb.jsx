@@ -1,5 +1,6 @@
 import React from "react";
 import { ChevronRight } from "lucide-react";
+import { Link } from "@inertiajs/react";
 
 const Breadcrumb = ({ items }) => {
   return (
@@ -11,13 +12,13 @@ const Breadcrumb = ({ items }) => {
             {index === items.length - 1 ? (
               <span className="font-medium text-foreground">{item.label}</span>
             ) : (
-              <a
-                href={item.href}
+              <Link
+                href={route(item.href)}
                 className="hover:text-primary transition-colors"
               >
                 {item.icon && <item.icon className="h-4 w-4 mr-1 inline" />}
                 {item.label}
-              </a>
+              </Link>
             )}
           </li>
         ))}

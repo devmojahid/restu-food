@@ -37,11 +37,12 @@ Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
     /*
     * Blogs
     */
-    Route::resource('blogs', BlogController::class);
-    Route::get('blogs/{blog}/preview', [BlogController::class, 'preview'])->name('blogs.preview');
-    Route::delete('blogs/bulk-delete', [BlogController::class, 'bulkDelete'])->name('blogs.bulk-delete');
-    Route::put('blogs/bulk-status', [BlogController::class, 'bulkUpdateStatus'])->name('blogs.bulk-status');
-
+    Route::name('app.')->group(function () {
+        Route::resource('blogs', BlogController::class);
+        Route::get('blogs/{blog}/preview', [BlogController::class, 'preview'])->name('blogs.preview');
+        Route::delete('blogs/bulk-delete', [BlogController::class, 'bulkDelete'])->name('blogs.bulk-delete');
+        Route::put('blogs/bulk-status', [BlogController::class, 'bulkUpdateStatus'])->name('blogs.bulk-status');
+    });
     /**
      * Users Management
      */
@@ -55,6 +56,15 @@ Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
         Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
         Route::delete('/bulk-delete', [UserController::class, 'bulkDelete'])->name('bulk-delete');
         Route::put('/bulk-status', [UserController::class, 'bulkUpdateStatus'])->name('bulk-status');
+    });
+
+    /**
+     * Roles Management
+     */
+    Route::name('app.')->group(function () {
+        Route::resource('roles', RoleController::class);
+        Route::put('roles/{role}/permissions', [RoleController::class, 'updatePermissions'])
+            ->name('roles.permissions.update');
     });
     /*
     * Settings
@@ -131,9 +141,6 @@ Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
         // Route::post('/localization/update', [SettingsController::class, 'localizationUpdate'])->name('localization.update');
         // Add more routes as needed
     });
-    Route::resource('roles', RoleController::class);
-    Route::put('roles/{role}/permissions', [RoleController::class, 'updatePermissions'])
-        ->name('roles.permissions.update');
 });
 
 
