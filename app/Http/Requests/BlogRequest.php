@@ -15,7 +15,7 @@ class BlogRequest extends FormRequest
     {
         return [
             'title' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:blogs,slug,' . $this->route('blog'),
+            'slug' => 'nullable|string|max:255|unique:blogs,slug,' . $this->route('app.blog'),
             'content' => 'required|string',
             'is_published' => 'boolean',
             'user_id' => 'nullable',

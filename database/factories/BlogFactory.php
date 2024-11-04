@@ -18,7 +18,6 @@ class BlogFactory extends Factory
             'title' => $title,
             'slug' => Str::slug($title),
             'content' => fake()->paragraphs(rand(3, 7), true),
-            'featured_image' => fake()->imageUrl(640, 480, 'cats'),
             'is_published' => $isPublished,
             'published_at' => $isPublished ? fake()->dateTimeBetween('-1 year', 'now') : null,
         ];

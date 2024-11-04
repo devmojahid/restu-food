@@ -76,14 +76,6 @@ export const TableContent = ({
                 {column.cell(row)}
               </td>
             ))}
-            <td
-              className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex justify-end">
-                <RowActions row={row} />
-              </div>
-            </td>
           </tr>
         ))
       ) : (

@@ -311,7 +311,7 @@ const FileUploader = ({
     }
 
     try {
-      const response = await axios.post("/admin/files/upload", formData, {
+      const response = await axios.post("app/app/files/upload", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -384,7 +384,7 @@ const FileUploader = ({
 
     setIsDeleting(true);
     try {
-      const response = await axios.delete(`/admin/files/${fileToRemove.id}`);
+      const response = await axios.delete(`app/files/${fileToRemove.id}`);
 
       if (response.data.success) {
         const updatedPreviews = previews.filter(

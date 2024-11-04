@@ -36,7 +36,7 @@ export default function SecuritySettings() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    post(route("admin.settings.security.update"));
+    post(route("settings.security.update"));
   };
 
   return (

@@ -88,7 +88,7 @@ export default function ListBlogs({ blogs }) {
     handleSelectionChange,
     handlePageChange,
   } = useDataTable({
-    routeName: "admin.blogs.index",
+    routeName: "blogs.index",
     initialFilters,
     onSuccess: () => {
       toast({

@@ -56,7 +56,7 @@ final class BlogController extends Controller
             $blog = $this->blogService->store($data);
 
             return redirect()
-                ->route('admin.blogs.edit', $blog)
+                ->route('app.blogs.edit', $blog)
                 ->with('toast', [
                     'type' => 'success',
                     'message' => 'Blog created successfully. You can now continue editing.'
@@ -99,7 +99,7 @@ final class BlogController extends Controller
             ]);
         } catch (\Exception $e) {
             return redirect()
-                ->route('admin.blogs.index')
+                ->route('app.blogs.index')
                 ->with('toast', [
                     'type' => 'error',
                     'message' => 'Blog not found or error loading blog: ' . $e->getMessage()
@@ -143,7 +143,7 @@ final class BlogController extends Controller
         try {
             $this->blogService->delete($id);
             return redirect()
-                ->route('admin.blogs.index')
+                ->route('app.blogs.index')
                 ->with('success', 'Blog deleted successfully.');
         } catch (\Exception $e) {
             return back()->with('error', 'Error deleting blog: ' . $e->getMessage());

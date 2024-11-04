@@ -45,7 +45,7 @@ export default function FileUploader({
 
       try {
         const data = await apiClient.upload(
-          "/admin/files/upload",
+          "files/upload",
           formData,
           (progressEvent) => {
             const progress = (progressEvent.loaded / progressEvent.total) * 100;

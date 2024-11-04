@@ -9,9 +9,10 @@ import {
   Sun,
   Moon,
 } from "lucide-react";
-import { Link } from "@inertiajs/react";
+import { Link, usePage } from "@inertiajs/react";
 
 export default function Header({ toggleSidebar, toggleTheme, theme }) {
+  const { auth } = usePage().props;
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
 
@@ -85,20 +86,20 @@ export default function Header({ toggleSidebar, toggleTheme, theme }) {
                 className="h-8 w-8 rounded-full object-cover"
               />
               <span className="hidden md:inline-block font-medium text-gray-700 dark:text-gray-300">
-                John Doe
+                {auth?.user?.name}
               </span>
               <ChevronDown className="h-4 w-4 text-gray-500" />
             </button>
             {userMenuOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5">
                 <Link
-                  href={route("admin.profile.edit")}
+                  href={route("profile.edit")}
                   className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   Your Profile
                 </Link>
                 <Link
-                  href={route("admin.settings.index")}
+                  href={route("settings.index")}
                   className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   Settings

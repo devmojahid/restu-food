@@ -16,5 +16,12 @@ export default defineConfig({
     ],
     server: {
         host: 'restu-food.test',
-    }
+    },
+    css: {
+        preprocessorOptions: {
+            scss: {
+                api: 'modern-compiler'
+            },
+        },
+    },
 });

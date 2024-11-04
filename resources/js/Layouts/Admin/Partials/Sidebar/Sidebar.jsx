@@ -15,7 +15,7 @@ export default function Sidebar({ sidebarOpen, closeSidebar }) {
       <div className="flex flex-col h-screen">
         <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
           <Link
-            href="/admin/dashboard"
+            href="dashboard"
             className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent"
           >
             NextGen

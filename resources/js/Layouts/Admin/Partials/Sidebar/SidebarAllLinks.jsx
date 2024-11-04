@@ -9,7 +9,11 @@ const DynamicIcon = ({ name }) => {
 };
 
 export default function SidebarAllLinks({ closeSidebar }) {
-  const { url } = usePage();
+  const {
+    url,
+    props: { auth },
+  } = usePage();
+  const userRoles = auth.roles;
   const [openSubmenu, setOpenSubmenu] = useState("");
 
   // Check if current URL matches any submenu items and open parent menu
@@ -36,10 +40,33 @@ export default function SidebarAllLinks({ closeSidebar }) {
     setOpenSubmenu(openSubmenu === key ? "" : key);
   };
 
+  const hasRequiredRole = (item) => {
+    // If no roles specified, show to everyone
+    if (!item.role) return true;
+
+    // Check if user has any of the required roles
+    return userRoles.some((userRole) =>
+      Array.isArray(item.role)
+        ? item.role.includes(userRole)
+        : item.role === userRole
+    );
+  };
+
   const renderMenuItem = (key, item) => {
+    // Skip rendering if user doesn't have required role
+    if (!hasRequiredRole(item)) return null;
+
     const active = isActive(item.path);
 
     if (item.submenu) {
+      // Check if any submenu items are accessible to the user
+      const hasAccessibleSubmenuItems = Object.values(
+        item.submenu
+      ).some((subItem) => hasRequiredRole(subItem));
+
+      // Don't render the submenu if user has no access to any of its items
+      if (!hasAccessibleSubmenuItems) return null;
+
       return (
         <div key={key}>
           <button
@@ -59,23 +86,27 @@ export default function SidebarAllLinks({ closeSidebar }) {
           </button>
           {openSubmenu === key && (
             <ul className="mt-2 space-y-1 px-4">
-              {Object.entries(item.submenu).map(([subKey, subItem]) => (
-                <li key={subKey}>
-                  <Link
-                    href={subItem.path}
-                    className={`flex items-center w-full px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 
-                      ${
-                        isActive(subItem.path)
-                          ? "bg-blue-500 text-white"
-                          : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-                      }`}
-                    onClick={() => closeSidebar()}
-                  >
-                    <DynamicIcon name={subItem.icon} />
-                    {subItem.name}
-                  </Link>
-                </li>
-              ))}
+              {Object.entries(item.submenu).map(
+                ([subKey, subItem]) =>
+                  // Only render submenu items user has access to
+                  hasRequiredRole(subItem) && (
+                    <li key={subKey}>
+                      <Link
+                        href={subItem.path}
+                        className={`flex items-center w-full px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 
+                        ${
+                          isActive(subItem.path)
+                            ? "bg-blue-500 text-white"
+                            : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                        }`}
+                        onClick={() => closeSidebar()}
+                      >
+                        <DynamicIcon name={subItem.icon} />
+                        {subItem.name}
+                      </Link>
+                    </li>
+                  )
+              )}
             </ul>
           )}
         </div>

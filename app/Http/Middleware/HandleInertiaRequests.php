@@ -34,8 +34,10 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user(),
+                'roles' => $request->user() ? $request->user()->roles->pluck('name') : [],
+                'permissions' => $request->user() ? $request->user()->getAllPermissions()->pluck('name') : []
             ],
-            'ziggy' => fn () => [
+            'ziggy' => fn() => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
             ],

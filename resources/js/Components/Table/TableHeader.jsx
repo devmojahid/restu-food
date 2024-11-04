@@ -46,11 +46,6 @@ export const TableHeader = ({ columns, selectedItems, onSelectAll, data }) => {
             </div>
           </th>
         ))}
-        <th className="px-3 sm:px-6 py-3 text-left w-[100px] sm:w-[120px]">
-          <span className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-            Actions
-          </span>
-        </th>
       </tr>
     </thead>
   );

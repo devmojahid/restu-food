@@ -1,13 +1,32 @@
 export const routes = {
     dashboard: {
         name: "Dashboard",
-        path: "/admin/dashboard",
-        icon: "LayoutDashboard"
+        path: "/app/dashboard",
+        icon: "LayoutDashboard",
+        role: ["Admin", "Customer"]
     },
     settings: {
         name: "Settings",
-        path: "/admin/settings",
-        icon: "Settings"
+        path: "/app/settings",
+        icon: "Settings",
+        role: "Admin"
+    },
+    users: {
+        name: "Users",
+        icon: "Users",
+        role: "Admin",
+        submenu: {
+            users: {
+                name: "Users",
+                path: "/app/users",
+                icon: "Users"
+            },
+            roles: {
+                name: "Roles",
+                path: "/app/roles",
+                icon: "FolderKey"
+            }
+        }
     },
     ecommerce: {
         name: "E-commerce",
@@ -20,12 +39,12 @@ export const routes = {
             },
             orders: {
                 name: "Orders",
-                path: "/admin/orders",
+                path: "orders",
                 icon: "ShoppingCart"
             },
             customers: {
                 name: "Customers",
-                path: "/admin/customers",
+                path: "customers",
                 icon: "Users"
             }
         }
@@ -36,12 +55,12 @@ export const routes = {
         submenu: {
             blog: {
                 name: "Blog",
-                path: "/admin/blogs",
+                path: "/app/blogs",
                 icon: "Package"
             },
             blogCreate: {
                 name: "Blog Create",
-                path: "/admin/blogs/create",
+                path: "/app/blogs/create",
                 icon: "Package"
             }
         }

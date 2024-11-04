@@ -1,79 +1,45 @@
 import { Head } from "@inertiajs/react";
 import AdminLayout from "@/Layouts/Admin/AdminLayout";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/Components/ui/table";
+import ListUsers from "./Partials/List/Index";
 import { Button } from "@/Components/ui/button";
-import { useState } from "react";
-import { useForm } from "@inertiajs/react";
+import { ArrowLeft, Plus } from "lucide-react";
+import { Link } from "@inertiajs/react";
+import Breadcrumb from "@/Components/Admin/Breadcrumb";
 
-const Users = ({ users }) => {
-  const [selectedUser, setSelectedUser] = useState(null);
-  const { delete: destroy } = useForm();
-
-  const handleDelete = (userId) => {
-    if (confirm("Are you sure you want to delete this user?")) {
-      destroy(route("admin.users.destroy", userId));
-    }
-  };
+export default function Index({ users, filters, roles }) {
+  const breadcrumbItems = [
+    { label: "Dashboard", href: "/app/dashboard" },
+    { label: "Users", href: "/app/users" },
+  ];
 
   return (
-    <>
-      <Head title="Users Management" />
+    <AdminLayout>
+      <Head title="Users List" />
 
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold">Users</h2>
-          <Button asChild>
-            <Link href={route("admin.users.create")}>Add User</Link>
-          </Button>
+      <div className="container mx-auto py-6 px-2 sm:px-3 lg:px-4">
+        <Breadcrumb items={breadcrumbItems} />
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 space-y-4 sm:space-y-0">
+          <h2 className="text-2xl font-bold text-gray-700 dark:text-gray-300">
+            List Users
+          </h2>
+          <div className="flex space-x-2">
+            <Link
+              className="link-button-secondary"
+              href={route("app.users.index")}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" /> Back to Users
+            </Link>
+            <Link
+              className="link-button-primary"
+              href={route("app.users.create")}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Create Users
+            </Link>
+          </div>
         </div>
-
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>{user.name}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>{user.status}</TableCell>
-                <TableCell>
-                  <div className="flex space-x-2">
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={route("admin.users.edit", user.id)}>
-                        Edit
-                      </Link>
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDelete(user.id)}
-                    >
-                      Delete
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <ListUsers users={users} roles={roles} />
       </div>
-    </>
+    </AdminLayout>
   );
-};
-
-Users.layout = (page) => <AdminLayout children={page} />;
-
-export default Users;
+}

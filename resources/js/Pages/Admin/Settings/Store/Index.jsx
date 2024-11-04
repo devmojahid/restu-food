@@ -25,7 +25,7 @@ export default function StoreSettings() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    post(route("admin.settings.store.update"), {
+    post(route("settings.store.update"), {
       preserveScroll: true,
     });
   };

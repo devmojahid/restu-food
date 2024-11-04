@@ -22,22 +22,32 @@ import {
 import { router } from "@inertiajs/react";
 import { useToast } from "@/hooks/use-toast";
 
-export const RowActions = ({ row }) => {
+export const RowActions = ({
+  row,
+  actions = {
+    view: null, // route name for view action
+    edit: null, // route name for edit action
+    delete: null, // route name for delete action
+  },
+  resourceName = "item", // For alert dialog text
+}) => {
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const { toast } = useToast();
 
   const handleDelete = () => {
-    router.delete(route("admin.blogs.destroy", row.id), {
+    if (!actions.delete) return;
+
+    router.delete(route(actions.delete, row.id), {
       onSuccess: () => {
         toast({
           title: "Success",
-          description: "Blog deleted successfully",
+          description: `${resourceName} deleted successfully`,
         });
       },
       onError: () => {
         toast({
           title: "Error",
-          description: "Failed to delete blog",
+          description: `Failed to delete ${resourceName}`,
           variant: "destructive",
         });
       },
@@ -57,55 +67,68 @@ export const RowActions = ({ row }) => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-[160px]">
-          <DropdownMenuItem asChild>
-            <Link
-              href={route("admin.blogs.show", row.id)}
-              className="flex items-center"
-            >
-              <Eye className="mr-2 h-4 w-4" />
-              View
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link
-              href={route("admin.blogs.edit", row.id)}
-              className="flex items-center"
-            >
-              <Pencil className="mr-2 h-4 w-4" />
-              Edit
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            className="flex items-center text-red-600 focus:text-red-600"
-            onSelect={() => setShowDeleteAlert(true)}
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete
-          </DropdownMenuItem>
+          {actions.view && (
+            <DropdownMenuItem asChild>
+              <Link
+                href={route(actions.view, row.id)}
+                className="flex items-center"
+              >
+                <Eye className="mr-2 h-4 w-4" />
+                View
+              </Link>
+            </DropdownMenuItem>
+          )}
+          {actions.edit && (
+            <DropdownMenuItem asChild>
+              <Link
+                href={route(actions.edit, row.id)}
+                className="flex items-center"
+              >
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit
+              </Link>
+            </DropdownMenuItem>
+          )}
+          {actions.delete && (
+            <>
+              {(actions.view || actions.edit) && <DropdownMenuSeparator />}
+              <DropdownMenuItem
+                className="flex items-center text-red-600 focus:text-red-600"
+                onSelect={() => setShowDeleteAlert(true)}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              blog "{row.title}" and remove all associated data.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-red-600 focus:ring-red-600 hover:bg-red-700"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {actions.delete && (
+        <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the
+                {row.title
+                  ? ` ${resourceName} "${row.title}"`
+                  : ` selected ${resourceName}`}{" "}
+                and remove all associated data.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDelete}
+                className="bg-red-600 focus:ring-red-600 hover:bg-red-700"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </>
   );
 };

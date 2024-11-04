@@ -9,12 +9,12 @@ import Breadcrumb from "@/Components/Admin/Breadcrumb";
 export default function Index({ blogs }) {
   return (
     <AdminLayout>
-      <Head title="List Blogs" />
+      <Head title="Blogs List" />
       <div className="container mx-auto py-6 px-2 sm:px-3 lg:px-4">
         <Breadcrumb
           items={[
-            { label: "Dashboard", href: "/admin/dashboard", icon: Home },
-            { label: "Blogs", href: "/admin/blogs", icon: FileText },
+            { label: "Dashboard", href: "dashboard", icon: Home },
+            { label: "Blogs", href: "blogs", icon: FileText },
           ]}
         />
 
@@ -23,10 +23,10 @@ export default function Index({ blogs }) {
             List Blogs
           </h2>
           <div className="flex space-x-2">
-            <Link className="link-button-secondary" href="/admin/blogs">
+            <Link className="link-button-secondary" href="blogs">
               <ArrowLeft className="mr-2 h-4 w-4" /> Back to Blogs
             </Link>
-            <Link className="link-button-primary" href="/admin/blogs/create">
+            <Link className="link-button-primary" href="blogs/create">
               <Plus className="mr-2 h-4 w-4" />
               Create Blog
             </Link>

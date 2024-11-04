@@ -1,12 +1,9 @@
 <?php
 
-use App\Http\Controllers\Admin\{
-    BlogController,
-    DashboardController,
-    FileController,
-    RoleController,
-    UserController
-};
+use App\Http\Controllers\Admin\BlogController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\FileController;
+use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -22,15 +19,15 @@ Route::get('/', function () {
 });
 
 Route::middleware(['auth'])->group(function () {
-    Route::post('app/files/upload', [FileController::class, 'upload']);
-    Route::delete('app/files/{file}', [FileController::class, 'destroy']);
+    Route::post('admin/files/upload', [FileController::class, 'upload']);
+    Route::delete('admin/files/{file}', [FileController::class, 'destroy']);
 });
 
-// Route::get('admin/dashboard', function () {
-//     return Inertia::render('Admin/Dashboard/Index');
-// })->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('admin/dashboard', function () {
+    return Inertia::render('Admin/Dashboard/Index');
+})->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
+Route::prefix('admin')->name('')->middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -41,21 +38,6 @@ Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
     Route::get('blogs/{blog}/preview', [BlogController::class, 'preview'])->name('blogs.preview');
     Route::delete('blogs/bulk-delete', [BlogController::class, 'bulkDelete'])->name('blogs.bulk-delete');
     Route::put('blogs/bulk-status', [BlogController::class, 'bulkUpdateStatus'])->name('blogs.bulk-status');
-
-    /**
-     * Users Management
-     */
-    Route::group(['prefix' => 'users', 'as' => 'app.users.'], function () {
-        Route::get('/', [UserController::class, 'index'])->name('index');
-        Route::get('/create', [UserController::class, 'create'])->name('create');
-        Route::post('/', [UserController::class, 'store'])->name('store');
-        Route::get('/{user}', [UserController::class, 'show'])->name('show');
-        Route::get('/{user}/edit', [UserController::class, 'edit'])->name('edit');
-        Route::put('/{user}', [UserController::class, 'update'])->name('update');
-        Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
-        Route::delete('/bulk-delete', [UserController::class, 'bulkDelete'])->name('bulk-delete');
-        Route::put('/bulk-status', [UserController::class, 'bulkUpdateStatus'])->name('bulk-status');
-    });
     /*
     * Settings
     */
@@ -132,13 +114,14 @@ Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
         // Add more routes as needed
     });
     Route::resource('roles', RoleController::class);
-    Route::put('roles/{role}/permissions', [RoleController::class, 'updatePermissions'])
-        ->name('roles.permissions.update');
 });
 
 
-Route::middleware(['auth', 'role:Admin|Branch Manager|Kitchen Staff|Delivery Personnel|Customer'])->group(function () {
-    Route::get('app/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+
+
+Route::middleware(['auth', 'check_role:Admin|Branch Manager|Kitchen Staff|Delivery Personnel|Customer'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 });
 
 require __DIR__ . '/auth.php';

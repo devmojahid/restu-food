@@ -164,7 +164,7 @@ export default function CreateBlog() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    post(route("admin.blogs.store"), {
+    post(route("blogs.store"), {
       preserveState: true,
       preserveScroll: true,
       onSuccess: () => {

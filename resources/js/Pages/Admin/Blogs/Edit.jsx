@@ -12,8 +12,8 @@ const EditBlog = ({ blog }) => {
       <div className="container mx-auto py-6 px-2 sm:px-3 lg:px-4">
         <Breadcrumb
           items={[
-            { label: "Dashboard", href: "/admin/dashboard", icon: Home },
-            { label: "Blogs", href: "/admin/blogs", icon: FileText },
+            { label: "Dashboard", href: "dashboard", icon: Home },
+            { label: "Blogs", href: "blogs", icon: FileText },
             { label: `Edit: ${blog.title}`, icon: EditIcon },
           ]}
         />

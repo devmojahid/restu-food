@@ -87,7 +87,7 @@ function StatCard({ title, value, change, icon: Icon, trend }) {
   );
 }
 
-export default function Dashboard() {
+export default function Dashboard(data) {
   const [activeModule, setActiveModule] = useState("E-commerce");
   const [chartView, setChartView] = useState("revenue");
   const [dateRange, setDateRange] = useState("This Week");

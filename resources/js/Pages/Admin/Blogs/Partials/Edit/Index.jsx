@@ -129,7 +129,7 @@ export default function EditBlog({ blog }) {
     e.preventDefault();
     setIsSubmitting(true);
 
-    put(`/admin/blogs/${blog.id}`, {
+    put(`blogs/${blog.id}`, {
       preserveState: true,
       preserveScroll: true,
       onSuccess: () => {

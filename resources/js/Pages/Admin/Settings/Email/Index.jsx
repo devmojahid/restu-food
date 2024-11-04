@@ -49,7 +49,7 @@ export default function EmailSettings() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    post(route("admin.settings.email.update"));
+    post(route("settings.email.update"));
   };
 
   return (
