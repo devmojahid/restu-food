@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\{
     BlogController,
+    CategoryController,
     DashboardController,
     FileController,
     RoleController,
@@ -14,7 +15,7 @@ use Inertia\Inertia;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
+        +'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
@@ -42,6 +43,42 @@ Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
         Route::get('blogs/{blog}/preview', [BlogController::class, 'preview'])->name('blogs.preview');
         Route::delete('blogs/bulk-delete', [BlogController::class, 'bulkDelete'])->name('blogs.bulk-delete');
         Route::put('blogs/bulk-status', [BlogController::class, 'bulkUpdateStatus'])->name('blogs.bulk-status');
+        /*
+        * Categories
+        */
+        Route::name('app.')->group(function () {
+            // Categories routes with permissions
+            Route::group(['prefix' => 'categories', 'as' => 'categories.'], function () {
+                Route::get('/', [CategoryController::class, 'index'])->name('index');
+                Route::post('/', [CategoryController::class, 'store'])
+                    ->middleware('permission:create categories')
+                    ->name('store');
+                Route::get('/{category}', [CategoryController::class, 'show'])
+                    ->middleware('permission:view categories')
+                    ->name('show');
+                Route::put('/{category}', [CategoryController::class, 'update'])
+                    ->middleware('permission:edit categories')
+                    ->name('update');
+                Route::delete('/{category}', [CategoryController::class, 'destroy'])
+                    ->middleware('permission:delete categories')
+                    ->name('destroy');
+                Route::put('/reorder', [CategoryController::class, 'reorder'])
+                    ->middleware('permission:edit categories')
+                    ->name('reorder');
+                Route::put('/{category}/move', [CategoryController::class, 'move'])
+                    ->middleware('permission:edit categories')
+                    ->name('move');
+                Route::put('/{category}/status', [CategoryController::class, 'updateStatus'])
+                    ->middleware('permission:edit categories')
+                    ->name('status');
+                Route::delete('/bulk-delete', [CategoryController::class, 'bulkDelete'])
+                    ->middleware('permission:delete categories')
+                    ->name('bulk-delete');
+                Route::put('/bulk-status', [CategoryController::class, 'bulkUpdateStatus'])
+                    ->middleware('permission:edit categories')
+                    ->name('bulk-status');
+            });
+        });
     });
     /**
      * Users Management
@@ -140,6 +177,16 @@ Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
         })->name('notifications');
         // Route::post('/localization/update', [SettingsController::class, 'localizationUpdate'])->name('localization.update');
         // Add more routes as needed
+    });
+
+    /**
+     * Categories Management
+     */
+    Route::name('app.')->group(function () {
+        Route::resource('categories', CategoryController::class);
+        Route::put('categories/reorder', [CategoryController::class, 'reorder'])->name('categories.reorder');
+        Route::put('categories/{category}/move', [CategoryController::class, 'move'])->name('categories.move');
+        Route::put('categories/{category}/status', [CategoryController::class, 'updateStatus'])->name('categories.status');
     });
 });
 

@@ -20,7 +20,7 @@ import {
   AlertDialogTitle,
 } from "@/Components/ui/alert-dialog";
 import { router } from "@inertiajs/react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/Components/ui/use-toast";
 
 export const RowActions = ({
   row,

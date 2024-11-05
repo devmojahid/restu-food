@@ -39,6 +39,9 @@ export const DataTable = ({
   pagination,
   onPageChange,
   isLoading,
+  sorting,
+  onSort,
+  rowSelection,
 }) => {
   const [visibleData, setVisibleData] = useState([]);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -121,6 +124,8 @@ export const DataTable = ({
                   selectedItems={selectedItems}
                   onSelectAll={onSelectionChange}
                   data={visibleData}
+                  sorting={sorting}
+                  onSort={onSort}
                 />
                 <MemoizedTableContent
                   data={visibleData}

@@ -9,16 +9,21 @@ use Illuminate\Validation\Rule;
 
 final class CategoryRequest extends FormRequest
 {
+    public function authorize(): bool
+    {
+        return true;
+    }
+
     public function rules(): array
     {
-        return [
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
             'slug' => [
-                'required',
+                'nullable',
                 'string',
-                Rule::unique('categories')->ignore($this->category)
+                'max:255',
             ],
-            'type' => ['required', 'string', 'in:blog,food'],
+            'description' => ['nullable', 'string'],
             'parent_id' => [
                 'nullable',
                 'exists:categories,id',
@@ -26,13 +31,28 @@ final class CategoryRequest extends FormRequest
                     if ($this->category && $value == $this->category->id) {
                         $fail('A category cannot be its own parent.');
                     }
-                }
+                },
             ],
-            'description' => ['nullable', 'string'],
-            'image' => ['nullable', 'image', 'max:2048'],
+            'type' => ['required', 'string', 'max:50'],
+            'sort_order' => ['nullable', 'integer'],
             'is_active' => ['boolean'],
-            'sort_order' => ['integer'],
-            'meta_data' => ['nullable', 'array'],
+            'settings' => ['nullable', 'array'],
+            'files' => ['nullable', 'array'],
+            'files.icon' => ['nullable', 'array'],
+            'files.thumbnail' => ['nullable', 'array'],
+        ];
+
+        return $rules;
+    }
+
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'The category name is required.',
+            'name.max' => 'The category name cannot exceed 255 characters.',
+            'slug.unique' => 'This slug is already in use.',
+            'parent_id.exists' => 'The selected parent category does not exist.',
+            'type.required' => 'The category type is required.',
         ];
     }
 }

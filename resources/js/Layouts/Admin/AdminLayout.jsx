@@ -2,13 +2,13 @@ import React, { useState, useEffect } from "react";
 import Sidebar from "./Partials/Sidebar/Sidebar";
 import Header from "./Partials/Header/Header";
 import { Head, usePage } from "@inertiajs/react";
-import toast, { Toaster } from "react-hot-toast";
+import { Toaster, toast } from "react-hot-toast";
 import {
-  CheckCircle2,
-  XCircle,
   AlertCircle,
-  Info,
   AlertTriangle,
+  CheckCircle2,
+  Info,
+  XCircle,
 } from "lucide-react";
 
 export default function AdminLayout({ children }) {
@@ -60,6 +60,11 @@ export default function AdminLayout({ children }) {
     const toastConfig = {
       duration: 5000,
       position: "top-right",
+      style: {
+        borderRadius: "10px",
+        padding: "16px",
+        color: "#fff",
+      },
     };
 
     const getIcon = (type) => {
@@ -80,42 +85,22 @@ export default function AdminLayout({ children }) {
     const getStyle = (type) => {
       switch (type) {
         case "success":
-          return {
-            background: "#f0fdf4",
-            border: "1px solid #86efac",
-            color: "#166534",
-          };
+          return { background: "#4caf50" };
         case "error":
-          return {
-            background: "#fef2f2",
-            border: "1px solid #fca5a5",
-            color: "#991b1b",
-          };
+          return { background: "#f44336" };
         case "warning":
-          return {
-            background: "#fffbeb",
-            border: "1px solid #fcd34d",
-            color: "#92400e",
-          };
+          return { background: "#ff9800" };
         case "info":
-          return {
-            background: "#eff6ff",
-            border: "1px solid #93c5fd",
-            color: "#1e40af",
-          };
+          return { background: "#2196f3" };
         default:
-          return {
-            background: "#f9fafb",
-            border: "1px solid #d1d5db",
-            color: "#374151",
-          };
+          return { background: "#9e9e9e" };
       }
     };
 
     toast(message, {
       ...toastConfig,
       icon: getIcon(type),
-      style: getStyle(type),
+      style: { ...toastConfig.style, ...getStyle(type) },
     });
   };
 
@@ -135,15 +120,11 @@ export default function AdminLayout({ children }) {
     <>
       <Toaster
         position="top-right"
-        reverseOrder={false}
-        gutter={8}
         toastOptions={{
           duration: 5000,
-          className: "dark:bg-gray-800 dark:text-white",
           style: {
-            padding: "16px",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+            background: "#fff",
+            color: "#363636",
           },
         }}
       />

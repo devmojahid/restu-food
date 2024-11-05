@@ -1,8 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { router } from '@inertiajs/react';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/Components/ui/use-toast';
 import debounce from 'lodash/debounce';
-import DOMPurify from 'dompurify';
 
 /**
  * Custom hook for handling data table operations
@@ -21,44 +20,96 @@ export const useDataTable = ({
     const { toast } = useToast();
     const [selectedItems, setSelectedItems] = useState([]);
     const [filters, setFilters] = useState(initialFilters);
+    const [isLoading, setIsLoading] = useState(false);
+    const [searchValue, setSearchValue] = useState(initialFilters.search || '');
+    const [sorting, setSorting] = useState({
+        column: initialFilters.sort || '',
+        direction: initialFilters.direction || 'desc'
+    });
 
-    // Debounced search handler
-    const debouncedSearch = useCallback(
-        debounce((newFilters) => {
-            router.get(
-                route(routeName),
-                newFilters,
-                { preserveState: true, preserveScroll: true }
-            );
-        }, 300),
-        [routeName]
-    );
+    // Create a debounced search with longer delay
+    const debouncedSearch = useRef(
+        debounce((value, currentFilters) => {
+            performSearch(value, currentFilters);
+        }, 800)
+    ).current;
 
-    const handleFilterChange = (key, value) => {
-        // Sanitize input
-        const sanitizedValue = DOMPurify.sanitize(value);
-        const newFilters = { ...filters, [key]: sanitizedValue };
+    // Separate function to perform the search with current filters
+    const performSearch = (value, currentFilters = filters) => {
+        const newFilters = {
+            ...currentFilters,
+            search: value,
+            page: 1
+        };
+        setIsLoading(true);
+
+        router.get(
+            route(routeName),
+            newFilters,
+            {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    setIsLoading(false);
+                    onSuccess?.();
+                },
+                onError: () => {
+                    setIsLoading(false);
+                    onError?.();
+                }
+            }
+        );
+    };
+
+    const handleFilterChange = useCallback((key, value, immediate = false) => {
+        const newFilters = { ...filters, [key]: value, page: 1 };
         setFilters(newFilters);
 
-        // Use existing debounced search
         if (key === 'search') {
-            debouncedSearch(newFilters);
-        } else {
-            router.get(
-                route(routeName),
-                newFilters,
-                { preserveState: true, preserveScroll: true }
-            );
+            setSearchValue(value);
+            if (immediate) {
+                performSearch(value, newFilters);
+            } else {
+                debouncedSearch(value, newFilters);
+            }
+            return;
         }
+
+        // For non-search filters, include current search value
+        setIsLoading(true);
+        router.get(
+            route(routeName),
+            { ...newFilters, search: searchValue },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    setIsLoading(false);
+                    onSuccess?.();
+                },
+                onError: () => {
+                    setIsLoading(false);
+                    onError?.();
+                }
+            }
+        );
+    }, [filters, searchValue, routeName, debouncedSearch]);
+
+    // Function to handle immediate search
+    const handleImmediateSearch = () => {
+        performSearch(searchValue, filters);
     };
 
     const handleBulkAction = async (action, ids) => {
         try {
+            setIsLoading(true);
             await router.post(route(`${routeName}.${action}`), { ids });
             setSelectedItems([]);
             onSuccess?.();
         } catch (error) {
             onError?.(error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -67,19 +118,61 @@ export const useDataTable = ({
     };
 
     const handlePageChange = (page) => {
+        setIsLoading(true);
         router.get(
             route(routeName),
-            { ...filters, page },
-            { preserveState: true, preserveScroll: true }
+            { ...filters, search: searchValue, page },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => setIsLoading(false),
+                onError: () => setIsLoading(false)
+            }
         );
     };
 
+    const handleSort = useCallback((column) => {
+        const direction = column === sorting.column && sorting.direction === 'asc' ? 'desc' : 'asc';
+
+        setSorting({ column, direction });
+        setIsLoading(true);
+
+        const newFilters = {
+            ...filters,
+            search: searchValue,
+            sort: column,
+            direction,
+            page: 1
+        };
+
+        router.get(
+            route(routeName),
+            newFilters,
+            {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    setIsLoading(false);
+                    onSuccess?.();
+                },
+                onError: () => {
+                    setIsLoading(false);
+                    onError?.();
+                }
+            }
+        );
+    }, [filters, searchValue, sorting, routeName]);
+
     return {
         selectedItems,
-        filters,
+        filters: { ...filters, search: searchValue },
+        sorting,
+        isLoading,
         handleFilterChange,
+        handleImmediateSearch,
         handleBulkAction,
         handleSelectionChange,
         handlePageChange,
+        handleSort,
     };
 }; 

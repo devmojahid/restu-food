@@ -4,6 +4,55 @@ import { CheckCircle2, XCircle, AlertTriangle, Info } from "lucide-react";
 import React from "react";
 
 export const useToast = () => {
+  // Move getStyle out of showToast so it can be used by other methods
+  const getStyle = (type = "default") => {
+    const baseStyle = {
+      padding: "16px",
+      borderRadius: "8px",
+      display: "flex",
+      alignItems: "flex-start",
+      gap: "12px",
+      maxWidth: "400px",
+      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+      background: "white",
+      border: "1px solid",
+      cursor: "pointer",
+    };
+
+    switch (type) {
+      case "success":
+        return {
+          ...baseStyle,
+          background: "#f0fdf4",
+          borderColor: "#86efac",
+        };
+      case "error":
+        return {
+          ...baseStyle,
+          background: "#fef2f2",
+          borderColor: "#fca5a5",
+        };
+      case "warning":
+        return {
+          ...baseStyle,
+          background: "#fffbeb",
+          borderColor: "#fcd34d",
+        };
+      case "info":
+        return {
+          ...baseStyle,
+          background: "#eff6ff",
+          borderColor: "#93c5fd",
+        };
+      default:
+        return {
+          ...baseStyle,
+          background: "#f9fafb",
+          borderColor: "#d1d5db",
+        };
+    }
+  };
+
   const showToast = ({
     title,
     description,
@@ -25,60 +74,13 @@ export const useToast = () => {
       }
     };
 
-    const getStyle = () => {
-      const baseStyle = {
-        padding: "16px",
-        borderRadius: "8px",
-        display: "flex",
-        alignItems: "flex-start",
-        gap: "12px",
-        maxWidth: "400px",
-        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-        background: "white",
-        border: "1px solid",
-        cursor: "pointer",
-      };
-
-      switch (type) {
-        case "success":
-          return {
-            ...baseStyle,
-            background: "#f0fdf4",
-            borderColor: "#86efac",
-          };
-        case "error":
-          return {
-            ...baseStyle,
-            background: "#fef2f2",
-            borderColor: "#fca5a5",
-          };
-        case "warning":
-          return {
-            ...baseStyle,
-            background: "#fffbeb",
-            borderColor: "#fcd34d",
-          };
-        case "info":
-          return {
-            ...baseStyle,
-            background: "#eff6ff",
-            borderColor: "#93c5fd",
-          };
-        default:
-          return {
-            ...baseStyle,
-            background: "#f9fafb",
-            borderColor: "#d1d5db",
-          };
-      }
-    };
-
     return toast.custom(
       (t) => (
         <div
-          className={`${t.visible ? "animate-enter" : "animate-leave"
-            } relative`}
-          style={getStyle()}
+          className={`${
+            t.visible ? "animate-enter" : "animate-leave"
+          } relative`}
+          style={getStyle(type)}
           onClick={() => toast.dismiss(t.id)}
         >
           <div className="flex items-start space-x-3">
@@ -102,7 +104,6 @@ export const useToast = () => {
               )}
             </div>
           </div>
-          {/* Close button */}
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -134,7 +135,7 @@ export const useToast = () => {
     );
   };
 
-  // Helper methods for common toast types
+  // Helper methods
   const success = (message, options = {}) =>
     showToast({
       title: "Success",
@@ -167,7 +168,6 @@ export const useToast = () => {
       ...options,
     });
 
-  // Promise toast helper
   const promise = (promise, messages = {}, options = {}) =>
     toast.promise(
       promise,
@@ -178,7 +178,7 @@ export const useToast = () => {
       },
       {
         ...options,
-        style: getStyle(),
+        style: getStyle("default"), // Now getStyle is accessible here
       }
     );
 
@@ -190,24 +190,7 @@ export const useToast = () => {
     info,
     promise,
     dismiss: toast.dismiss,
-    // Additional utility methods
     loading: (message) => toast.loading(message),
     custom: toast.custom,
   };
 };
-
-// Add these animations to your tailwind.config.js
-// animation: {
-//   enter: "slideIn 0.2s ease-out",
-//   leave: "slideOut 0.2s ease-in forwards",
-// },
-// keyframes: {
-//   slideIn: {
-//     "0%": { transform: "translateX(100%)", opacity: 0 },
-//     "100%": { transform: "translateX(0)", opacity: 1 },
-//   },
-//   slideOut: {
-//     "0%": { transform: "translateX(0)", opacity: 1 },
-//     "100%": { transform: "translateX(100%)", opacity: 0 },
-//   },
-// },
