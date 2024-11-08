@@ -23,40 +23,58 @@ final class CategoryService extends BaseService
     protected array $sortableFields = ['name', 'sort_order', 'created_at'];
 
     /**
-     * Store a new category
+     * Generate a unique slug
+     */
+    protected function generateUniqueSlug(string $title, ?int $ignoreId = null): string
+    {
+        $baseSlug = Str::slug($title);
+        $slug = $baseSlug;
+        $counter = 1;
+
+        while (true) {
+            // Build query to check for existing slug
+            $query = $this->model::where('slug', $slug);
+            
+            // Exclude current category if updating
+            if ($ignoreId) {
+                $query->where('id', '!=', $ignoreId);
+            }
+
+            // If no duplicate found, break the loop
+            if (!$query->exists()) {
+                break;
+            }
+
+            // Try next number
+            $slug = $baseSlug . '-' . $counter;
+            $counter++;
+        }
+
+        return $slug;
+    }
+
+    /**
+     * Store a new category with files
      */
     public function store(array $data): Model
     {
         try {
             DB::beginTransaction();
 
-            // Generate slug if not provided or empty
-            if (empty($data['slug'])) {
-                $data['slug'] = $this->generateUniqueSlug($data['name']);
-            } else {
-                // If slug is provided, ensure it's unique
-                $data['slug'] = $this->generateUniqueSlug($data['slug']);
-            }
+            // Extract files data
+            $files = $data['files'] ?? [];
+            unset($data['files']);
 
-            // Handle parent category validation
-            if (!empty($data['parent_id'])) {
-                $parent = $this->findOrFail($data['parent_id']);
-                if ($parent->type !== $data['type']) {
-                    throw new \Exception('Parent category must be of the same type.');
-                }
-            }
+            // Generate unique slug
+            $data['slug'] = $this->generateUniqueSlug($data['name']);
 
             // Create category
             $category = $this->model::create($data);
 
-            // Handle file uploads if present
-            if (!empty($data['files'])) {
-                $this->handleFileUploads($category, $data['files']);
-            }
+            // Handle file uploads
+            $this->handleFileUploads($category, $files);
 
             DB::commit();
-            $this->clearCache();
-
             return $category->fresh(['files']);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -69,7 +87,7 @@ final class CategoryService extends BaseService
     }
 
     /**
-     * Update an existing category
+     * Update category with files
      */
     public function update(int $id, array $data): Model
     {
@@ -78,46 +96,24 @@ final class CategoryService extends BaseService
 
             $category = $this->findOrFail($id);
 
-            // Generate or validate slug
+            // Extract files data
+            $files = $data['files'] ?? [];
+            unset($data['files']);
+
+            // Generate unique slug if needed
             if (empty($data['slug'])) {
-                if (!empty($data['name']) && $data['name'] !== $category->name) {
-                    $data['slug'] = $this->generateUniqueSlug($data['name'], $id);
-                }
-            } else {
-                // If slug is provided, ensure it's unique
+                $data['slug'] = $this->generateUniqueSlug($data['name'], $id);
+            } elseif ($data['slug'] !== $category->slug) {
                 $data['slug'] = $this->generateUniqueSlug($data['slug'], $id);
             }
 
-            // Validate parent change
-            if (!empty($data['parent_id']) && $data['parent_id'] !== $category->parent_id) {
-                // Prevent self-parenting
-                if ($data['parent_id'] === $id) {
-                    throw new \Exception('A category cannot be its own parent.');
-                }
-
-                // Prevent parenting to own child
-                $descendants = $category->descendants()->pluck('id')->toArray();
-                if (in_array($data['parent_id'], $descendants)) {
-                    throw new \Exception('Cannot set a descendant as parent.');
-                }
-
-                // Validate parent type
-                $parent = $this->findOrFail($data['parent_id']);
-                if ($parent->type !== $category->type) {
-                    throw new \Exception('Parent category must be of the same type.');
-                }
-            }
-
+            // Update category
             $category->update($data);
 
             // Handle file uploads
-            if (!empty($data['files'])) {
-                $this->handleFileUploads($category, $data['files']);
-            }
+            $this->handleFileUploads($category, $files);
 
             DB::commit();
-            $this->clearCache();
-
             return $category->fresh(['files']);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -135,12 +131,22 @@ final class CategoryService extends BaseService
      */
     protected function handleFileUploads(Category $category, array $files): void
     {
-        if (!empty($files['icon'])) {
-            $category->syncFiles([$files['icon']], Category::COLLECTION_ICON);
+        // Handle icon
+        if (isset($files['icon'])) {
+            if ($files['icon']) {
+                $category->syncFiles([$files['icon']], Category::COLLECTION_ICON);
+            } else {
+                $category->clearFiles(Category::COLLECTION_ICON);
+            }
         }
 
-        if (!empty($files['thumbnail'])) {
-            $category->syncFiles([$files['thumbnail']], Category::COLLECTION_THUMBNAIL);
+        // Handle thumbnail
+        if (isset($files['thumbnail'])) {
+            if ($files['thumbnail']) {
+                $category->syncFiles([$files['thumbnail']], Category::COLLECTION_THUMBNAIL);
+            } else {
+                $category->clearFiles(Category::COLLECTION_THUMBNAIL);
+            }
         }
     }
 
@@ -252,12 +258,15 @@ final class CategoryService extends BaseService
             DB::beginTransaction();
 
             $category = $this->findOrFail($id);
-            $category->is_active = $status;
-            $category->save();
+            
+            // Update the status
+            $category->update([
+                'is_active' => $status
+            ]);
 
-            // Optionally update child categories
+            // If deactivating, also deactivate all children
             if (!$status) {
-                $category->descendants()->update(['is_active' => false]);
+                $category->children()->update(['is_active' => false]);
             }
 
             DB::commit();
@@ -347,33 +356,6 @@ final class CategoryService extends BaseService
 
         // Or simply clear all cache if needed
         // Cache::flush();
-    }
-
-    // Add this method to handle slug generation
-    protected function generateUniqueSlug(string $title, ?int $ignoreId = null): string
-    {
-        $baseSlug = Str::slug($title);
-        $slug = $baseSlug;
-        $counter = 1;
-
-        while ($this->slugExists($slug, $ignoreId)) {
-            $slug = $baseSlug . '-' . $counter;
-            $counter++;
-        }
-
-        return $slug;
-    }
-
-    // Add this method to check if slug exists
-    protected function slugExists(string $slug, ?int $ignoreId = null): bool
-    {
-        $query = $this->model::where('slug', $slug);
-
-        if ($ignoreId) {
-            $query->where('id', '!=', $ignoreId);
-        }
-
-        return $query->exists();
     }
 
     public function getPaginated(array $filters = []): LengthAwarePaginator

@@ -35,9 +35,10 @@ final class CategoryController extends Controller
         // Get categories with relationships
         $categories = $this->categoryService->getPaginated($filters);
 
-        // Load counts
+        // Load counts and files
         $categories->each(function ($category) {
             $category->loadCount('blogs');
+            $category->load('files');
         });
 
         $categoriesData = [
@@ -159,11 +160,11 @@ final class CategoryController extends Controller
 
     public function updateStatus(Request $request, Category $category): RedirectResponse
     {
-        $validated = $request->validate([
-            'is_active' => 'required|boolean'
-        ]);
-
         try {
+            $validated = $request->validate([
+                'is_active' => 'required|boolean'
+            ]);
+
             $this->categoryService->updateStatus($category->id, $validated['is_active']);
 
             return redirect()

@@ -35,6 +35,8 @@ final class Category extends Model
 
     protected $appends = ['icon_url', 'thumbnail_url'];
 
+    protected $with = ['files'];
+
     protected static function booted(): void
     {
         static::creating(function ($category) {
@@ -50,14 +52,16 @@ final class Category extends Model
         });
     }
 
-    public function getIconUrlAttribute()
+    public function getIconUrlAttribute(): ?string
     {
-        return $this->getFile(self::COLLECTION_ICON)?->url;
+        $file = $this->files->where('collection', self::COLLECTION_ICON)->first();
+        return $file?->url;
     }
 
-    public function getThumbnailUrlAttribute()
+    public function getThumbnailUrlAttribute(): ?string
     {
-        return $this->getFile(self::COLLECTION_THUMBNAIL)?->url;
+        $file = $this->files->where('collection', self::COLLECTION_THUMBNAIL)->first();
+        return $file?->url;
     }
 
     public function parent()

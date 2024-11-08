@@ -16,13 +16,9 @@ final class CategoryRequest extends FormRequest
 
     public function rules(): array
     {
-        $rules = [
+        return [
             'name' => ['required', 'string', 'max:255'],
-            'slug' => [
-                'nullable',
-                'string',
-                'max:255',
-            ],
+            'slug' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'parent_id' => [
                 'nullable',
@@ -36,13 +32,12 @@ final class CategoryRequest extends FormRequest
             'type' => ['required', 'string', 'max:50'],
             'sort_order' => ['nullable', 'integer'],
             'is_active' => ['boolean'],
-            'settings' => ['nullable', 'array'],
             'files' => ['nullable', 'array'],
             'files.icon' => ['nullable', 'array'],
+            'files.icon.uuid' => ['nullable', 'string'],
             'files.thumbnail' => ['nullable', 'array'],
+            'files.thumbnail.uuid' => ['nullable', 'string'],
         ];
-
-        return $rules;
     }
 
     public function messages(): array

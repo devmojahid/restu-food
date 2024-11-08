@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 
 final class BlogController extends Controller
 {
@@ -22,21 +22,8 @@ final class BlogController extends Controller
 
     public function index(Request $request): Response
     {
-        $filters = [
-            'search' => $request->input('search'),
-            'status' => $request->input('status'),
-            'per_page' => $request->input('per_page', 10),
-            'date_from' => $request->input('date_from'),
-            'date_to' => $request->input('date_to'),
-        ];
-
+        $filters = $this->getFilters($request);
         $blogs = $this->blogService->getPaginated($filters);
-
-        // Transform the blogs data to include thumbnail URLs
-        $blogs->through(function ($blog) {
-            $blog->thumbnail = $blog->getFile(Blog::COLLECTION_THUMBNAIL);
-            return $blog;
-        });
 
         return Inertia::render('Admin/Blogs/Index', [
             'blogs' => $blogs,
@@ -44,40 +31,58 @@ final class BlogController extends Controller
         ]);
     }
 
-    public function create(): Response
+    private function getFilters(Request $request): array
     {
-        return Inertia::render('Admin/Blogs/Create');
+        return [
+            'search' => $request->input('search'),
+            'status' => $request->input('status'),
+            'date_range' => $request->input('date_range'),
+            'sort' => $request->input('sort', 'created_at'),
+            'direction' => $request->input('direction', 'desc'),
+            'per_page' => $request->input('per_page', 10),
+        ];
     }
 
     public function store(BlogRequest $request): RedirectResponse
     {
         try {
             $data = $request->validated();
-            $data['user_id'] = auth()->id();
-            $data['files'] = [
+            $data['user_id'] = auth()->user()->id;
+            
+            $data['files'] = array_filter([
                 'thumbnail' => $request->input('thumbnail'),
+                'featured_image' => $request->input('featured_image'),
                 'images' => $request->input('images', []),
                 'videos' => $request->input('videos', []),
                 'attachments' => $request->input('attachments', [])
-            ];
+            ]);
 
             $blog = $this->blogService->store($data);
 
             return redirect()
                 ->route('app.blogs.edit', $blog)
-                ->with('toast', [
-                    'type' => 'success',
-                    'message' => 'Blog created successfully. You can now continue editing.'
-                ]);
+                ->with('success', 'Blog created successfully');
         } catch (\Exception $e) {
-            return redirect()
-                ->back()
-                ->withInput()
-                ->with('toast', [
-                    'type' => 'error',
-                    'message' => 'Error creating blog: ' . $e->getMessage()
-                ]);
+            return $this->handleError($e, 'Error creating blog');
         }
+    }
+
+    private function handleError(\Exception $e, string $message): RedirectResponse
+    {
+        Log::error($message, [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+
+        return redirect()
+            ->back()
+            ->withInput()
+            ->with('error', "{$message}: " . $e->getMessage());
+    }
+
+    public function create(): Response
+    {
+        return Inertia::render('Admin/Blogs/Create');
     }
 
     public function edit(int $id): Response
@@ -119,13 +124,15 @@ final class BlogController extends Controller
     {
         try {
             $data = $request->validated();
-            $data['files'] = [
+
+            // Properly structure files data
+            $data['files'] = array_filter([
                 'thumbnail' => $request->input('thumbnail'),
                 'featured_image' => $request->input('featured_image'),
                 'images' => $request->input('images', []),
                 'videos' => $request->input('videos', []),
                 'attachments' => $request->input('attachments', [])
-            ];
+            ]);
 
             $this->blogService->update($id, $data);
 
@@ -136,6 +143,13 @@ final class BlogController extends Controller
                     'message' => 'Blog updated successfully.'
                 ]);
         } catch (\Exception $e) {
+            Log::error('Blog update failed', [
+                'id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'data' => $data ?? null
+            ]);
+
             return redirect()
                 ->back()
                 ->withInput()

@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect } from "react";
+import React, { useCallback, useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useDropzone } from "react-dropzone";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -277,7 +277,7 @@ const getUploadAreaStateClasses = ({
   );
 
 // Enhanced FileUploader component
-const FileUploader = ({
+const FileUploader = forwardRef(({
   onUpload,
   maxFiles = 1,
   fileType = "image",
@@ -287,12 +287,23 @@ const FileUploader = ({
   disabled = false,
   description,
   error,
-}) => {
+}, ref) => {
   const [files, setFiles] = useState([]);
   const [progress, setProgress] = useState({});
   const [previews, setPreviews] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Expose methods to parent through ref
+  useImperativeHandle(ref, () => ({
+    reset: () => {
+      setFiles([]);
+      setProgress({});
+      setPreviews([]);
+      setIsUploading(false);
+      setIsDeleting(false);
+    }
+  }));
 
   // Get file type config
   const fileConfig = FILE_TYPES[fileType] || FILE_TYPES.document;
@@ -517,7 +528,10 @@ const FileUploader = ({
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
-};
+});
+
+// Add displayName
+FileUploader.displayName = 'FileUploader';
 
 export default FileUploader;
 

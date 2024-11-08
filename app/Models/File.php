@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
@@ -12,9 +11,10 @@ use Illuminate\Support\Str;
 
 final class File extends Model
 {
-    use HasFactory, SoftDeletes;
+    use SoftDeletes;
 
     protected $fillable = [
+        'uuid',
         'original_name',
         'filename',
         'path',
@@ -24,16 +24,11 @@ final class File extends Model
         'fileable_type',
         'fileable_id',
         'collection',
-        'meta',
         'order',
         'user_id'
     ];
 
-    protected $casts = [
-        'meta' => 'array',
-        'size' => 'integer',
-        'order' => 'integer',
-    ];
+    protected $appends = ['url'];
 
     protected static function booted(): void
     {
@@ -42,7 +37,9 @@ final class File extends Model
         });
 
         static::deleting(function ($file) {
-            Storage::disk($file->disk)->delete($file->path);
+            if ($file->isForceDeleting()) {
+                Storage::disk($file->disk)->delete($file->path);
+            }
         });
     }
 
@@ -51,31 +48,22 @@ final class File extends Model
         return $this->morphTo();
     }
 
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    // Helper methods
-    public function getUrl(): string
+    public function getUrlAttribute(): string
     {
         return Storage::disk($this->disk)->url($this->path);
     }
 
-    public function getFullPath(): string
-    {
-        return Storage::disk($this->disk)->path($this->path);
-    }
-
     public function getSizeForHumans(): string
     {
-        $bytes = $this->size;
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $size = $this->size;
+        $i = 0;
 
-        for ($i = 0; $bytes > 1024; $i++) {
-            $bytes /= 1024;
+        while ($size >= 1024 && $i < 4) {
+            $size /= 1024;
+            $i++;
         }
 
-        return round($bytes, 2) . ' ' . $units[$i];
+        return round($size, 2) . ' ' . $units[$i];
     }
 }

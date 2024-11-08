@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import { useForm } from "@inertiajs/react";
 import {
   FormItem,
@@ -34,6 +34,23 @@ const CategoryForm = ({
   can,
 }) => {
   const { toast } = useToast();
+  const iconUploaderRef = useRef(null);
+  const thumbnailUploaderRef = useRef(null);
+
+  // Initial form state
+  const initialFormState = {
+    name: "",
+    slug: "",
+    description: "",
+    parent_id: null,
+    type: "blog",
+    sort_order: 0,
+    is_active: true,
+    files: {
+      icon: null,
+      thumbnail: null,
+    },
+  };
 
   const {
     data,
@@ -44,40 +61,29 @@ const CategoryForm = ({
     errors,
     reset,
     clearErrors,
-  } = useForm({
-    name: category?.name || "",
-    slug: category?.slug || "",
-    description: category?.description || "",
-    parent_id: category?.parent_id || null,
-    type: "blog",
-    sort_order: category?.sort_order || 0,
-    is_active: category?.is_active ?? true,
-    icon: category?.icon || null,
-    thumbnail: category?.thumbnail || null,
-  });
+  } = useForm(initialFormState);
 
-  // Reset form when category changes
-  useEffect(() => {
-    if (category) {
-      setData({
-        ...data,
-        ...category,
-      });
-    }
-  }, [category]);
+  // Complete reset function
+  const resetForm = useCallback(() => {
+    // Clear all form data
+    clearErrors();
+    reset();
+    setData(initialFormState);
+    
+    // Reset file uploaders
+    iconUploaderRef.current?.reset();
+    thumbnailUploaderRef.current?.reset();
+    
+    // Clear any other state if needed
+  }, [clearErrors, reset, setData]);
 
-  // Auto-generate slug from name
-  useEffect(() => {
-    if (!isEditing && data.name) {
-      const slug = data.name
-        .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9-]/g, "-")
-        .replace(/-+/g, "-")
-        .replace(/^-|-$/g, "");
-      setData("slug", slug);
+  // Handle successful form submission
+  const handleSuccess = useCallback(() => {
+    if (!isEditing) {
+      resetForm();
     }
-  }, [data.name, isEditing]);
+    onSuccess?.();
+  }, [isEditing, resetForm, onSuccess]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -86,8 +92,8 @@ const CategoryForm = ({
     const submitData = {
       ...data,
       files: {
-        icon: data.icon,
-        thumbnail: data.thumbnail,
+        icon: data.files.icon,
+        thumbnail: data.files.thumbnail,
       },
     };
 
@@ -99,7 +105,7 @@ const CategoryForm = ({
             title: "Success",
             description: "Category updated successfully",
           });
-          onSuccess?.();
+          handleSuccess();
         },
         onError: () => {
           toast({
@@ -117,24 +123,14 @@ const CategoryForm = ({
             title: "Success",
             description: "Category created successfully",
           });
-          reset();
-          setData({
-            name: "",
-            slug: "",
-            description: "",
-            parent_id: null,
-            type: "blog",
-            sort_order: 0,
-            is_active: true,
-            icon: null,
-            thumbnail: null,
-          });
-          if (fileUploaderRefs.current.icon) {
-            fileUploaderRefs.current.icon.reset();
-          }
-          if (fileUploaderRefs.current.thumbnail) {
-            fileUploaderRefs.current.thumbnail.reset();
-          }
+          // Reset form to initial state
+          setData(initialFormState);
+          // Reset file uploaders
+          iconUploaderRef.current?.reset();
+          thumbnailUploaderRef.current?.reset();
+          // Clear any errors
+          clearErrors();
+          // Call success callback
           onSuccess?.();
         },
         onError: () => {
@@ -148,13 +144,56 @@ const CategoryForm = ({
     }
   };
 
+  // Handle cancel
+  const handleCancel = useCallback(() => {
+    resetForm();
+    onCancel?.();
+  }, [resetForm, onCancel]);
+
+  // Reset form when category changes
+  useEffect(() => {
+    if (category && isEditing) {
+      const iconFile = category.files?.find(f => f.collection === 'icon');
+      const thumbnailFile = category.files?.find(f => f.collection === 'thumbnail');
+
+      setData({
+        ...category,
+        description: category.description || "",
+        files: {
+          icon: category.icon_url ? {
+            id: iconFile?.id,
+            url: category.icon_url,
+            collection: 'icon',
+            mime_type: 'image/jpeg',
+          } : null,
+          thumbnail: category.thumbnail_url ? {
+            id: thumbnailFile?.id,
+            url: category.thumbnail_url,
+            collection: 'thumbnail',
+            mime_type: 'image/jpeg',
+          } : null,
+        },
+      });
+    } else {
+      resetForm();
+    }
+  }, [category, isEditing]);
+
+  // Auto-generate slug from name
+  useEffect(() => {
+    if (!isEditing && data.name) {
+      const slug = data.name
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9-]/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "");
+      setData("slug", slug);
+    }
+  }, [data.name, isEditing]);
+
   // Show validation errors summary
   const hasErrors = Object.keys(errors).length > 0;
-
-  const fileUploaderRefs = useRef({
-    icon: null,
-    thumbnail: null,
-  });
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -168,7 +207,7 @@ const CategoryForm = ({
             <Button
               type="button"
               variant="outline"
-              onClick={onCancel}
+              onClick={handleCancel}
               disabled={processing}
             >
               <X className="w-4 h-4 mr-2" />
@@ -266,7 +305,7 @@ const CategoryForm = ({
             <FormLabel error={errors.description}>Description</FormLabel>
             <FormControl>
               <Textarea
-                value={data.description}
+                value={data.description || ""}
                 onChange={(e) => setData("description", e.target.value)}
                 placeholder="Category description"
                 className="h-32"
@@ -296,26 +335,32 @@ const CategoryForm = ({
           <div className="space-y-4">
             <h3 className="text-sm font-medium">Category Icon</h3>
             <FileUploader
-              ref={(el) => (fileUploaderRefs.current.icon = el)}
+              ref={iconUploaderRef}
               maxFiles={1}
               fileType="image"
-              value={data.icon}
-              onUpload={(file) => setData("icon", file)}
+              value={data.files.icon}
+              onUpload={(file) => setData('files', {
+                ...data.files,
+                icon: file
+              })}
               description="Upload a small icon (SVG or PNG recommended)"
-              error={errors.icon}
+              error={errors['files.icon']}
             />
           </div>
 
           <div className="space-y-4">
             <h3 className="text-sm font-medium">Category Thumbnail</h3>
             <FileUploader
-              ref={(el) => (fileUploaderRefs.current.thumbnail = el)}
+              ref={thumbnailUploaderRef}
               maxFiles={1}
               fileType="image"
-              value={data.thumbnail}
-              onUpload={(file) => setData("thumbnail", file)}
+              value={data.files.thumbnail}
+              onUpload={(file) => setData('files', {
+                ...data.files,
+                thumbnail: file
+              })}
               description="Upload a thumbnail image"
-              error={errors.thumbnail}
+              error={errors['files.thumbnail']}
             />
           </div>
         </div>

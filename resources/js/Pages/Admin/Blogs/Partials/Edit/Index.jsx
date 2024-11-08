@@ -14,22 +14,21 @@ import { Switch } from "@/Components/ui/switch";
 import { Label } from "@/Components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
 import { Badge } from "@/Components/ui/badge";
-import { X, Save, ArrowLeft, AlertCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  X,
+  Save,
+  ArrowLeft,
+  AlertCircle,
+  Calendar,
+  Loader2,
+} from "lucide-react";
 import FileUploader from "@/Components/Admin/Filesystem/FileUploader";
 import { Alert, AlertDescription, AlertTitle } from "@/Components/ui/alert";
+import { format } from "date-fns";
 import toast from "react-hot-toast";
-import { cn } from "@/lib/utils";
 
-// Reuse the blog collections from Create component
-const BLOG_COLLECTIONS = {
-  THUMBNAIL: "thumbnail",
-  IMAGES: "images",
-  VIDEOS: "videos",
-  ATTACHMENTS: "attachments",
-  FEATURED_IMAGES: "featured_images",
-};
-
-// Add these constants at the top of the file
+// Reuse the FILE_COLLECTIONS from Create component
 const FILE_COLLECTIONS = {
   THUMBNAIL: {
     name: "thumbnail",
@@ -37,38 +36,10 @@ const FILE_COLLECTIONS = {
     fileType: "image",
     title: "Thumbnail",
     description: "Upload a thumbnail image (recommended size: 1200x630px)",
-  },
-  FEATURED_IMAGE: {
-    name: "featured_image",
-    maxFiles: 1,
-    fileType: "image",
-    title: "Featured Image",
-    description: "Upload a featured image (recommended size: 1920x1080px)",
-  },
-  IMAGES: {
-    name: "images",
-    maxFiles: 10,
-    fileType: "image",
-    title: "Gallery Images",
-    description: "Upload up to 10 images for the blog gallery",
-  },
-  VIDEOS: {
-    name: "videos",
-    maxFiles: 5,
-    fileType: "video",
-    title: "Videos",
-    description: "Upload up to 5 videos",
-  },
-  ATTACHMENTS: {
-    name: "attachments",
-    maxFiles: 20,
-    fileType: "document",
-    title: "Attachments",
-    description: "Upload related documents and files",
-  },
+  }
 };
 
-// Reuse the ErrorAlert component
+// Reuse the ErrorAlert component from Create
 const ErrorAlert = ({ errors }) => {
   if (!Object.keys(errors).length) return null;
 
@@ -92,7 +63,7 @@ const ErrorAlert = ({ errors }) => {
   );
 };
 
-export default function EditBlog({ blog }) {
+export default function EditBlog({ blog, categories = [] }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data, setData, put, processing, errors } = useForm({
@@ -102,69 +73,66 @@ export default function EditBlog({ blog }) {
     excerpt: blog.excerpt || "",
     meta_title: blog.meta_title || "",
     meta_description: blog.meta_description || "",
-    tags: blog.tags || [],
-    categories: blog.categories || [],
     is_published: blog.is_published || false,
+    is_featured: blog.is_featured || false,
     published_at: blog.published_at || new Date().toISOString(),
+    category_id: blog.category_id || "",
+    tags: blog.tags || [],
     thumbnail: blog.thumbnail || null,
-    featured_image: blog.featured_image || null,
-    images: blog.images || [],
-    videos: blog.videos || [],
-    attachments: blog.attachments || [],
   });
 
+  // Auto-generate slug from title if slug is empty
   useEffect(() => {
-    if (data.title && !blog.slug) {
-      setData(
-        "slug",
-        data.title
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/(^-|-$)/g, "")
-      );
+    if (data.title) {
+      const slug = data.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
+      
+      setData("slug", slug);
     }
   }, [data.title]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    put(`/app/blogs/${blog.id}`, {
+
+    put(route("app.blogs.update", blog.id), {
       preserveState: true,
       preserveScroll: true,
       onSuccess: () => {
         setIsSubmitting(false);
-        toast.success("Blog post updated successfully!");
+        toast.success("Blog updated successfully!");
       },
       onError: () => {
         setIsSubmitting(false);
-        toast.error("An error occurred while updating the blog post.");
+        toast.error("Failed to update blog.");
       },
     });
   };
 
-  // Update the file upload section in your form
-  const FileUploaders = () => (
-    <div className="space-y-6">
-      {Object.values(FILE_COLLECTIONS).map((collection) => (
-        <Card key={collection.name}>
-          <CardHeader>
-            <CardTitle>{collection.title}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <FileUploader
-              maxFiles={collection.maxFiles}
-              fileType={collection.fileType}
-              collection={collection.name}
-              value={data[collection.name]}
-              onUpload={(files) => setData(collection.name, files)}
-              description={collection.description}
-              error={errors[collection.name]}
-            />
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
+  const handleTagInput = (e) => {
+    if (e.key === "Enter" && e.target.value) {
+      e.preventDefault();
+      const newTag = e.target.value.trim();
+      if (newTag && !data.tags.includes(newTag)) {
+        setData("tags", [...data.tags, newTag]);
+        e.target.value = "";
+      }
+    }
+  };
+
+  const removeTag = (tagToRemove) => {
+    setData("tags", data.tags.filter((tag) => tag !== tagToRemove));
+  };
+
+  // Preview URL generator
+  const getPreviewUrl = () => {
+    return route("app.blogs.preview", {
+      blog: blog.id,
+      timestamp: new Date().getTime(),
+    });
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
@@ -176,6 +144,9 @@ export default function EditBlog({ blog }) {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
             Edit Blog Post
           </h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            Last updated: {format(new Date(blog.updated_at), "PPP")}
+          </p>
         </div>
         <div className="flex space-x-3">
           <Button
@@ -188,76 +159,100 @@ export default function EditBlog({ blog }) {
             Back
           </Button>
           <Button
+            type="button"
+            variant="outline"
+            onClick={() => window.open(getPreviewUrl(), "_blank")}
+          >
+            Preview
+          </Button>
+          <Button
             type="submit"
             disabled={processing || isSubmitting}
             className="flex items-center"
           >
-            <Save className="w-4 h-4 mr-2" />
-            {processing || isSubmitting ? "Saving..." : "Save Changes"}
+            {processing || isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4 mr-2" />
+                Save Changes
+              </>
+            )}
           </Button>
         </div>
       </div>
 
+      {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column - Main Content */}
         <div className="lg:col-span-2 space-y-8">
           <Card>
             <CardContent className="p-6 space-y-6">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="title"
-                    className="flex items-center space-x-1"
-                  >
-                    <span>Title</span>
-                    <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="title"
-                    value={data.title}
-                    onChange={(e) => setData("title", e.target.value)}
-                    disabled={processing || isSubmitting}
-                    className={cn(
-                      "w-full",
-                      errors.title && "border-red-500 focus:ring-red-500"
-                    )}
-                    placeholder="Enter blog title"
-                  />
-                  {errors.title && (
-                    <p className="text-sm text-red-500 mt-1">{errors.title}</p>
-                  )}
-                </div>
+              {/* Title */}
+              <div className="space-y-2">
+                <Label htmlFor="title" className="flex items-center space-x-1">
+                  <span>Title</span>
+                  <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="title"
+                  value={data.title}
+                  onChange={(e) => setData("title", e.target.value)}
+                  className={cn(errors.title && "border-red-500")}
+                  placeholder="Enter blog title"
+                />
+                {errors.title && (
+                  <p className="text-sm text-red-500">{errors.title}</p>
+                )}
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="slug">Slug</Label>
-                  <Input
-                    id="slug"
-                    value={data.slug}
-                    onChange={(e) => setData("slug", e.target.value)}
-                    className="w-full"
-                    placeholder="url-friendly-slug"
-                  />
-                  {errors.slug && (
-                    <p className="text-red-500 text-sm">{errors.slug}</p>
-                  )}
-                </div>
+              {/* Slug */}
+              <div className="space-y-2">
+                <Label htmlFor="slug">Slug</Label>
+                <Input
+                  id="slug"
+                  value={data.slug}
+                  onChange={(e) => setData("slug", e.target.value)}
+                  placeholder="url-friendly-slug"
+                />
+                {errors.slug && (
+                  <p className="text-sm text-red-500">{errors.slug}</p>
+                )}
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="content">Content</Label>
-                  <Textarea
-                    id="content"
-                    value={data.content}
-                    onChange={(e) => setData("content", e.target.value)}
-                    className="min-h-[400px]"
-                    placeholder="Write your blog content here..."
-                  />
-                  {errors.content && (
-                    <p className="text-red-500 text-sm">{errors.content}</p>
-                  )}
-                </div>
+              {/* Content */}
+              <div className="space-y-2">
+                <Label htmlFor="content">Content</Label>
+                <Textarea
+                  id="content"
+                  value={data.content}
+                  onChange={(e) => setData("content", e.target.value)}
+                  className="min-h-[400px]"
+                  placeholder="Write your blog content here..."
+                />
+                {errors.content && (
+                  <p className="text-sm text-red-500">{errors.content}</p>
+                )}
+              </div>
+
+              {/* Excerpt */}
+              <div className="space-y-2">
+                <Label htmlFor="excerpt">Excerpt</Label>
+                <Textarea
+                  id="excerpt"
+                  value={data.excerpt}
+                  onChange={(e) => setData("excerpt", e.target.value)}
+                  className="h-24"
+                  placeholder="Brief summary of the blog post"
+                />
               </div>
             </CardContent>
           </Card>
 
+          {/* SEO Settings */}
           <Card>
             <CardHeader>
               <CardTitle>SEO Settings</CardTitle>
@@ -269,7 +264,6 @@ export default function EditBlog({ blog }) {
                   id="meta_title"
                   value={data.meta_title}
                   onChange={(e) => setData("meta_title", e.target.value)}
-                  className="w-full"
                   placeholder="SEO optimized title"
                 />
                 <p className="text-sm text-muted-foreground">
@@ -294,8 +288,120 @@ export default function EditBlog({ blog }) {
           </Card>
         </div>
 
+        {/* Right Column - Sidebar */}
         <div className="space-y-6">
-          <FileUploaders />
+          {/* Publishing Options */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Publishing</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="is_published">Publish</Label>
+                <Switch
+                  id="is_published"
+                  checked={data.is_published}
+                  onCheckedChange={(checked) => setData("is_published", checked)}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label htmlFor="is_featured">Featured</Label>
+                <Switch
+                  id="is_featured"
+                  checked={data.is_featured}
+                  onCheckedChange={(checked) => setData("is_featured", checked)}
+                />
+              </div>
+
+              {!data.is_published && (
+                <div className="space-y-2">
+                  <Label htmlFor="published_at">Schedule Publication</Label>
+                  <Input
+                    type="datetime-local"
+                    id="published_at"
+                    value={format(
+                      new Date(data.published_at),
+                      "yyyy-MM-dd'T'HH:mm"
+                    )}
+                    onChange={(e) => setData("published_at", e.target.value)}
+                  />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Category Selection */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Category</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Select
+                value={data.category_id}
+                onValueChange={(value) => setData("category_id", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </CardContent>
+          </Card>
+
+          {/* Tags */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Tags</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Input
+                placeholder="Add tags and press Enter"
+                onKeyDown={handleTagInput}
+              />
+              <div className="flex flex-wrap gap-2 mt-2">
+                {data.tags.map((tag, index) => (
+                  <Badge key={index} variant="secondary">
+                    {tag}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="ml-1 p-0 h-auto"
+                      onClick={() => removeTag(tag)}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </Badge>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* File Uploaders */}
+          {Object.values(FILE_COLLECTIONS).map((collection) => (
+            <Card key={collection.name}>
+              <CardHeader>
+                <CardTitle>{collection.title}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <FileUploader
+                  maxFiles={collection.maxFiles}
+                  fileType={collection.fileType}
+                  collection={collection.name}
+                  value={data[collection.name]}
+                  onUpload={(files) => setData(collection.name, files)}
+                  description={collection.description}
+                  error={errors[collection.name]}
+                />
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     </form>

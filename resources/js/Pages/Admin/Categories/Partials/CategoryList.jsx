@@ -166,7 +166,7 @@ const CategoryList = ({ categories, filters, onEdit, can }) => {
     },
     {
       id: "actions",
-      header: "",
+      header: "Actions",
       cell: (row) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -242,12 +242,11 @@ const CategoryList = ({ categories, filters, onEdit, can }) => {
       },
       {
         preserveScroll: true,
+        preserveState: true,
         onSuccess: () => {
           toast({
             title: "Success",
-            description: `Category ${
-              row.is_active ? "deactivated" : "activated"
-            } successfully`,
+            description: `Category ${row.is_active ? "deactivated" : "activated"} successfully`,
           });
         },
         onError: () => {

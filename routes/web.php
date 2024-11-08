@@ -69,8 +69,8 @@ Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
                     ->middleware('permission:edit categories')
                     ->name('move');
                 Route::put('/{category}/status', [CategoryController::class, 'updateStatus'])
-                    ->middleware('permission:edit categories')
-                    ->name('status');
+                    ->name('status')
+                    ->middleware('permission:edit categories');
                 Route::delete('/bulk-delete', [CategoryController::class, 'bulkDelete'])
                     ->middleware('permission:delete categories')
                     ->name('bulk-delete');
