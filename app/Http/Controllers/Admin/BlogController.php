@@ -30,8 +30,16 @@ final class BlogController extends Controller
             'date_to' => $request->input('date_to'),
         ];
 
+        $blogs = $this->blogService->getPaginated($filters);
+
+        // Transform the blogs data to include thumbnail URLs
+        $blogs->through(function ($blog) {
+            $blog->thumbnail = $blog->getFile(Blog::COLLECTION_THUMBNAIL);
+            return $blog;
+        });
+
         return Inertia::render('Admin/Blogs/Index', [
-            'blogs' => $this->blogService->getPaginated($filters),
+            'blogs' => $blogs,
             'filters' => $filters,
         ]);
     }

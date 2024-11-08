@@ -3,7 +3,6 @@ import { useDataTable } from "@/hooks/useDataTable";
 import { useToast } from "@/Components/ui/use-toast";
 import { Trash2, Eye, EyeOff, FileText, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { usePage } from "@inertiajs/react";
 import { LazyImage } from "@/Components/Table/LazyImage";
 import { format } from "date-fns";
 import { RowActions } from "@/Components/Table/RowActions";
@@ -77,21 +76,40 @@ export default function ListBlogs({ blogs }) {
   // Enhanced column definitions with better spacing and layout
   const columns = [
     {
-      id: "featured_image",
+      id: "thumbnail",
       header: "",
       cell: (row) => (
         <div className="flex justify-center sm:justify-start">
-          <LazyImage
-            src={row.featured_image?.url || "/images/default-blog.png"}
-            alt={row.title}
-            className={cn(
-              "w-12 h-12 sm:w-14 sm:h-14",
-              "rounded-lg object-cover",
-              "border border-gray-200 dark:border-gray-700",
-              "transition-all duration-200",
-              "hover:scale-105"
-            )}
-          />
+          {row.thumbnail ? (
+            <img
+              src={row.thumbnail?.url}
+              alt={row.title}
+              className={cn(
+                "w-12 h-12 sm:w-14 sm:h-14",
+                "rounded-lg object-cover",
+                "border border-gray-200 dark:border-gray-700",
+                "transition-all duration-200",
+                "hover:scale-105 hover:shadow-lg",
+                "bg-gray-50 dark:bg-gray-800"
+              )}
+              onError={(e) => {
+                e.target.src = "/images/placeholder-image.jpg"; // Add a placeholder image
+                e.target.onerror = null; // Prevent infinite loop
+              }}
+            />
+          ) : (
+            <div
+              className={cn(
+                "w-12 h-12 sm:w-14 sm:h-14",
+                "rounded-lg",
+                "border border-gray-200 dark:border-gray-700",
+                "bg-gray-50 dark:bg-gray-800",
+                "flex items-center justify-center"
+              )}
+            >
+              <FileText className="w-6 h-6 text-gray-400" />
+            </div>
+          )}
         </div>
       ),
       className: "w-[60px] sm:w-[70px] pl-4",

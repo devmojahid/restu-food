@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Log;
 use App\Models\File;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 
 final class BlogService extends BaseService
 {
@@ -290,11 +292,158 @@ final class BlogService extends BaseService
     }
 
     // Add this method to handle file URLs
-    protected function addUrlToFile(File $file): File
+    protected function addUrlToFile(?File $file): ?File
     {
-        if ($file->disk && $file->path) {
+        if ($file && $file->disk && $file->path) {
             $file->url = Storage::disk($file->disk)->url($file->path);
         }
         return $file;
+    }
+
+    /**
+     * Apply filters to the query
+     */
+    protected function applyFilters(Builder $query, array $filters = []): void
+    {
+        // Status filter
+        if (isset($filters['status'])) {
+            $query->where('is_published', $filters['status'] === 'published');
+        }
+
+        // Date range filter
+        if (!empty($filters['date_from'])) {
+            $query->whereDate('created_at', '>=', $filters['date_from']);
+        }
+        if (!empty($filters['date_to'])) {
+            $query->whereDate('created_at', '<=', $filters['date_to']);
+        }
+
+        // Category filter
+        if (!empty($filters['category_id'])) {
+            $query->where('category_id', $filters['category_id']);
+        }
+
+        // Author filter
+        if (!empty($filters['user_id'])) {
+            $query->where('user_id', $filters['user_id']);
+        }
+
+        // Featured filter
+        if (isset($filters['is_featured'])) {
+            $query->where('is_featured', $filters['is_featured']);
+        }
+
+        // Tags filter (assuming tags are stored in a related table)
+        if (!empty($filters['tags'])) {
+            $tags = is_array($filters['tags']) ? $filters['tags'] : [$filters['tags']];
+            $query->whereHas('tags', function ($query) use ($tags) {
+                $query->whereIn('name', $tags);
+            });
+        }
+
+        // Custom filters from filterableFields
+        foreach ($this->filterableFields as $field) {
+            if (isset($filters[$field])) {
+                $query->where($field, $filters[$field]);
+            }
+        }
+    }
+
+    /**
+     * Apply search to the query
+     */
+    protected function applySearch(Builder $query, string $search): void
+    {
+        $query->where(function ($query) use ($search) {
+            // Search in primary fields
+            $query->where('title', 'like', "%{$search}%")
+                ->orWhere('content', 'like', "%{$search}%")
+                ->orWhere('excerpt', 'like', "%{$search}%");
+
+            // Search in related user's name
+            $query->orWhereHas('user', function ($query) use ($search) {
+                $query->where('name', 'like', "%{$search}%");
+            });
+
+            // Search in related category's name
+            $query->orWhereHas('category', function ($query) use ($search) {
+                $query->where('name', 'like', "%{$search}%");
+            });
+
+            // Search in tags
+            $query->orWhereHas('tags', function ($query) use ($search) {
+                $query->where('name', 'like', "%{$search}%");
+            });
+
+            // Custom search fields from searchableFields
+            foreach ($this->searchableFields as $field) {
+                $query->orWhere($field, 'like', "%{$search}%");
+            }
+        });
+    }
+
+    /**
+     * Apply sorting to the query
+     */
+    protected function applySorting(Builder $query, string $field = 'created_at', string $direction = 'desc'): void
+    {
+        // Validate sort direction
+        $direction = in_array(strtolower($direction), ['asc', 'desc']) ? $direction : 'desc';
+
+        // Check if the field is in sortableFields
+        if (in_array($field, $this->sortableFields)) {
+            $query->orderBy($field, $direction);
+        } else {
+            // Default sorting
+            $query->orderBy('created_at', 'desc');
+        }
+    }
+
+    /**
+     * Enhanced getPaginated method
+     */
+    public function getPaginated(array $filters = []): LengthAwarePaginator
+    {
+        try {
+            $query = $this->model::query()
+                ->with(['user', 'files' => function ($query) {
+                    $query->where('collection', Blog::COLLECTION_THUMBNAIL);
+                }]);
+
+            // Apply filters
+            $this->applyFilters($query, $filters);
+
+            // Apply search
+            if (!empty($filters['search'])) {
+                $this->applySearch($query, $filters['search']);
+            }
+
+            // Apply sorting
+            $sortField = $filters['sort'] ?? 'created_at';
+            $sortDirection = $filters['direction'] ?? 'desc';
+            $this->applySorting($query, $sortField, $sortDirection);
+
+            // Get paginated results
+            $perPage = $filters['per_page'] ?? 10;
+            $blogs = $query->paginate($perPage);
+
+            // Transform the blogs to include file URLs
+            $blogs->through(function ($blog) {
+                if ($blog->relationLoaded('files')) {
+                    $blog->files->each(function ($file) {
+                        $this->addUrlToFile($file);
+                    });
+                }
+                return $blog;
+            });
+
+            return $blogs;
+        } catch (\Exception $e) {
+            Log::error('Error in BlogService::getPaginated', [
+                'error' => $e->getMessage(),
+                'filters' => $filters
+            ]);
+            throw $e;
+        }
     }
 }

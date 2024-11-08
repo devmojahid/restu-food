@@ -122,30 +122,38 @@ const ErrorAlert = ({ errors }) => {
   );
 };
 
+const INITIAL_FORM_STATE = {
+  // Basic fields
+  title: '',
+  slug: '',
+  content: '',
+  excerpt: '',
+  
+  // Meta fields
+  meta_title: '',
+  meta_description: '',
+  
+  // Status fields
+  is_published: false,
+  is_featured: false,
+  published_at: new Date().toISOString(),
+  
+  // Taxonomy fields
+  tags: [],
+  categories: [],
+  
+  // File fields
+  thumbnail: null,
+  featured_image: null,
+  images: [],
+  videos: [],
+  attachments: [],
+};
+
 export default function CreateBlog() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data, setData, post, processing, errors } = useForm({
-    title: "",
-    slug: "",
-    content: "",
-    excerpt: "",
-    featured_image: null,
-    meta_title: "",
-    meta_description: "",
-    tags: [],
-    categories: [],
-    is_published: false,
-    // published_at: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
-    published_at: new Date().toISOString(),
-    blog_images: [],
-    // File fields
-    thumbnail: null,
-    featured_image: null,
-    images: [],
-    videos: [],
-    attachments: [],
-  });
+  const { data, setData, post, processing, errors } = useForm(INITIAL_FORM_STATE);
 
   useEffect(() => {
     if (data.title) {
@@ -163,7 +171,7 @@ export default function CreateBlog() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    post(route("blogs.store"), {
+    post(route("app.blogs.store"), {
       preserveState: true,
       preserveScroll: true,
       onSuccess: () => {
