@@ -3,48 +3,84 @@ import { Link, usePage } from "@inertiajs/react";
 import * as Icons from "lucide-react";
 import { routes } from "../Config/routes";
 
-const DynamicIcon = ({ name }) => {
+const DynamicIcon = ({ name, className = "mr-3 h-5 w-5" }) => {
   const Icon = Icons[name];
-  return Icon ? <Icon className="mr-3 h-5 w-5" /> : null;
+  return Icon ? <Icon className={className} /> : null;
 };
 
-export default function SidebarAllLinks({ closeSidebar }) {
-  const {
-    url,
-    props: { auth },
-  } = usePage();
-  const userRoles = auth.roles;
-  const [openSubmenu, setOpenSubmenu] = useState("");
-
-  // Check if current URL matches any submenu items and open parent menu
-  useEffect(() => {
-    for (const [key, item] of Object.entries(routes)) {
-      if (item.submenu) {
-        const hasActiveChild = Object.values(item.submenu).some((subItem) =>
-          url.startsWith(subItem.path)
-        );
-        if (hasActiveChild) {
-          setOpenSubmenu(key);
-          break;
-        }
+const MenuLink = ({ href, icon, children, isActive, onClick }) => (
+  <Link
+    href={href}
+    onClick={onClick}
+    className={`
+      flex items-center w-full px-4 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200
+      ${isActive 
+        ? "bg-blue-500 text-white" 
+        : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
       }
-    }
-  }, [url]);
+    `}
+  >
+    <DynamicIcon name={icon} />
+    <span>{children}</span>
+  </Link>
+);
 
-  const isActive = (path) => {
-    if (!path) return false;
-    return url.startsWith(path);
-  };
+const SubMenuButton = ({ icon, children, isOpen, onClick, isActive }) => (
+  <button
+    onClick={onClick}
+    className={`
+      flex items-center justify-between w-full px-4 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200
+      ${isActive
+        ? "bg-gray-100 dark:bg-gray-800 text-blue-600 dark:text-blue-400"
+        : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+      }
+    `}
+  >
+    <div className="flex items-center">
+      <DynamicIcon name={icon} />
+      <span>{children}</span>
+    </div>
+    <Icons.ChevronRight
+      className={`h-4 w-4 transition-transform duration-200 ${
+        isOpen ? "rotate-90" : ""
+      }`}
+    />
+  </button>
+);
+
+export default function SidebarAllLinks({ closeSidebar }) {
+  const { url } = usePage();
+  const userRoles = usePage().props.auth.roles;
+  const [openSubmenu, setOpenSubmenu] = useState("");
+  const [activeItems, setActiveItems] = useState(new Set());
+
+  // Check active routes on mount and URL changes
+  useEffect(() => {
+    const newActiveItems = new Set();
+    
+    Object.entries(routes).forEach(([key, item]) => {
+      if (item.submenu) {
+        Object.entries(item.submenu).forEach(([subKey, subItem]) => {
+          if (url.startsWith(subItem.path)) {
+            newActiveItems.add(key);
+            newActiveItems.add(`${key}-${subKey}`);
+            setOpenSubmenu(key);
+          }
+        });
+      } else if (url.startsWith(item.path)) {
+        newActiveItems.add(key);
+      }
+    });
+
+    setActiveItems(newActiveItems);
+  }, [url]);
 
   const toggleSubmenu = (key) => {
     setOpenSubmenu(openSubmenu === key ? "" : key);
   };
 
   const hasRequiredRole = (item) => {
-    // If no roles specified, show to everyone
     if (!item.role) return true;
-
-    // Check if user has any of the required roles
     return userRoles.some((userRole) =>
       Array.isArray(item.role)
         ? item.role.includes(userRole)
@@ -53,89 +89,64 @@ export default function SidebarAllLinks({ closeSidebar }) {
   };
 
   const renderMenuItem = (key, item) => {
-    // Skip rendering if user doesn't have required role
     if (!hasRequiredRole(item)) return null;
 
-    const active = isActive(item.path);
-
     if (item.submenu) {
-      // Check if any submenu items are accessible to the user
-      const hasAccessibleSubmenuItems = Object.values(
-        item.submenu
-      ).some((subItem) => hasRequiredRole(subItem));
+      const hasAccessibleSubmenuItems = Object.values(item.submenu).some(
+        (subItem) => hasRequiredRole(subItem)
+      );
 
-      // Don't render the submenu if user has no access to any of its items
       if (!hasAccessibleSubmenuItems) return null;
 
       return (
-        <div key={key}>
-          <button
+        <div key={key} className="space-y-1">
+          <SubMenuButton
+            icon={item.icon}
+            isOpen={openSubmenu === key}
             onClick={() => toggleSubmenu(key)}
-            className={`flex items-center justify-between w-full px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 
-              ${openSubmenu === key ? "bg-blue-50 dark:bg-gray-800" : ""}
-              text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700`}
+            isActive={activeItems.has(key)}
           >
-            <span className="flex items-center">
-              <DynamicIcon name={item.icon} />
-              {item.name}
-            </span>
-            <Icons.ChevronRight
-              className={`h-4 w-4 transition-transform duration-200 
-                ${openSubmenu === key ? "rotate-90" : ""}`}
-            />
-          </button>
+            {item.name}
+          </SubMenuButton>
+
           {openSubmenu === key && (
-            <ul className="mt-2 space-y-1 px-4">
+            <div className="ml-4 pl-2 space-y-1 border-l-2 border-gray-200 dark:border-gray-700">
               {Object.entries(item.submenu).map(
                 ([subKey, subItem]) =>
-                  // Only render submenu items user has access to
                   hasRequiredRole(subItem) && (
-                    <li key={subKey}>
-                      <Link
-                        href={subItem.path}
-                        className={`flex items-center w-full px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 
-                        ${
-                          isActive(subItem.path)
-                            ? "bg-blue-500 text-white"
-                            : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-                        }`}
-                        onClick={() => closeSidebar()}
-                      >
-                        <DynamicIcon name={subItem.icon} />
-                        {subItem.name}
-                      </Link>
-                    </li>
+                    <MenuLink
+                      key={subKey}
+                      href={subItem.path}
+                      icon={subItem.icon}
+                      isActive={activeItems.has(`${key}-${subKey}`)}
+                      onClick={closeSidebar}
+                    >
+                      {subItem.name}
+                    </MenuLink>
                   )
               )}
-            </ul>
+            </div>
           )}
         </div>
       );
     }
 
     return (
-      <Link
+      <MenuLink
         key={key}
         href={item.path}
-        className={`flex items-center w-full px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 
-          ${
-            active
-              ? "bg-blue-500 text-white"
-              : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-          }`}
-        onClick={() => closeSidebar()}
+        icon={item.icon}
+        isActive={activeItems.has(key)}
+        onClick={closeSidebar}
       >
-        <DynamicIcon name={item.icon} />
         {item.name}
-      </Link>
+      </MenuLink>
     );
   };
 
   return (
-    <ul className="space-y-2 px-3">
-      {Object.entries(routes).map(([key, item]) => (
-        <li key={key}>{renderMenuItem(key, item)}</li>
-      ))}
-    </ul>
+    <div className="space-y-2 px-2">
+      {Object.entries(routes).map(([key, item]) => renderMenuItem(key, item))}
+    </div>
   );
 }
