@@ -128,8 +128,7 @@ export default function EditBlog({ blog }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-
-    put(`blogs/${blog.id}`, {
+    put(`/app/blogs/${blog.id}`, {
       preserveState: true,
       preserveScroll: true,
       onSuccess: () => {
@@ -168,7 +167,7 @@ export default function EditBlog({ blog }) {
   );
 
   return (
-    <form id="blog-form" onSubmit={handleSubmit} className="space-y-8">
+    <form onSubmit={handleSubmit} className="space-y-8">
       <ErrorAlert errors={errors} />
 
       {/* Form Header */}
@@ -253,20 +252,6 @@ export default function EditBlog({ blog }) {
                   />
                   {errors.content && (
                     <p className="text-red-500 text-sm">{errors.content}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="excerpt">Excerpt</Label>
-                  <Textarea
-                    id="excerpt"
-                    value={data.excerpt}
-                    onChange={(e) => setData("excerpt", e.target.value)}
-                    className="h-24"
-                    placeholder="Brief summary of the blog post"
-                  />
-                  {errors.excerpt && (
-                    <p className="text-red-500 text-sm">{errors.excerpt}</p>
                   )}
                 </div>
               </div>
