@@ -6,8 +6,7 @@ import { Input } from "@/Components/ui/input";
 import { Label } from "@/Components/ui/label";
 import { Button } from "@/Components/ui/button";
 import { Textarea } from "@/Components/ui/textarea";
-import { MediaUploader } from "@/Components/MediaUploader";
-import { Toast } from "@/Components/ui/toast";
+import FileUploader from "@/Components/Admin/Filesystem/FileUploader";
 
 export default function StoreSettings() {
   const { data, setData, post, processing, errors } = useForm({
@@ -90,20 +89,28 @@ export default function StoreSettings() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label>Store Logo</Label>
-                  <MediaUploader
-                    onUpload={(file) => setData("store_logo", file)}
-                    currentImage={data.store_logo}
-                    maxFiles={1}
-                  />
+                  <FileUploader
+                  maxFiles={1}
+                  fileType="image"
+                  collection="store_logo"
+                  value={data.store_logo}
+                  onUpload={(files) => setData("store_logo", files)}
+                  description="Upload a logo image (recommended size: 1200x630px)"
+                  error={errors.store_logo}
+                />
                 </div>
 
                 <div className="space-y-2">
                   <Label>Store Favicon</Label>
-                  <MediaUploader
-                    onUpload={(file) => setData("store_favicon", file)}
-                    currentImage={data.store_favicon}
-                    maxFiles={1}
-                  />
+                  <FileUploader
+                  maxFiles={1}
+                  fileType="image"
+                  collection="store_favicon"
+                  value={data.store_favicon}
+                  onUpload={(files) => setData("store_favicon", files)}
+                  description="Upload a favicon image (recommended size: 180x180px)"
+                  error={errors.store_favicon}
+                />
                 </div>
               </div>
 

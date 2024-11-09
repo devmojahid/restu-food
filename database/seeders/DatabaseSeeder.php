@@ -23,9 +23,9 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             // ... other seeders
-            BlogSeeder::class,
+            // BlogSeeder::class,
             RolePermissionSeeder::class,
-            CategoryPermissionSeeder::class
+            // CategoryPermissionSeeder::class
         ]);
     }
 }

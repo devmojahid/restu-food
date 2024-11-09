@@ -187,7 +187,7 @@ const CategoryForm = ({
         .trim()
         .replace(/[^a-z0-9-]/g, "-")
         .replace(/-+/g, "-")
-        .replace(/^-|-$/g, "");
+        .repl{!!  !!}(/^-|-$/g, "");
       setData("slug", slug);
     }
   }, [data.name, isEditing]);

@@ -15,6 +15,7 @@ import {
 } from "@/Components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/Components/ui/alert";
 import { Shield, AlertTriangle, Key } from "lucide-react";
+import { Textarea } from "@/Components/ui/textarea";
 
 export default function SecuritySettings() {
   const { data, setData, post, processing, errors } = useForm({
