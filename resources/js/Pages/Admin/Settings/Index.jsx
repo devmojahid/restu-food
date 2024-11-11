@@ -45,7 +45,7 @@ import { cn } from "@/lib/utils";
 import { Input } from "@/Components/ui/input";
 import { usePage } from "@inertiajs/react";
 
-const Index = ({ children }) => {
+const Index = ({ children , actions, className, contentClassName}) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [recentSettings, setRecentSettings] = useState([]);
@@ -91,46 +91,26 @@ const Index = ({ children }) => {
     <AdminLayout>
       <Head title="Settings" />
 
-      <div className="container mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <Card className="mb-4 border-none shadow-sm bg-gradient-to-r from-primary/10 via-primary/5 to-background">
-          <CardHeader className="pb-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="space-y-1">
-                <div className="flex items-center space-x-2">
-                  <CardTitle className="text-2xl font-bold tracking-tight">
-                    Settings
-                  </CardTitle>
-                  {/* Show current section */}
-                  {getCurrentSection(url) && (
-                    <>
-                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                      <span className="text-lg font-medium text-muted-foreground">
-                        {getCurrentSection(url)}
-                      </span>
-                    </>
-                  )}
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Manage your application settings and preferences
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-9 text-destructive hover:bg-destructive/10 border-destructive/20"
-                >
-                  <RefreshCw className="h-4 w-4 mr-1.5" />
-                  Reset All
-                </Button>
-                <Button size="sm" className="h-9 shadow-sm">
-                  <Save className="h-4 w-4 mr-1.5" />
-                  Save Changes
-                </Button>
-              </div>
+      <div className="container mx-auto py-2 sm:py-3 px-1 sm:px-2 lg:px-1">
+        {/* Simplified header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div className="space-y-1.5">
+            <div className="flex items-center space-x-2">
+              <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
+              {getCurrentSection(url) && (
+                <>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-lg font-medium text-muted-foreground">
+                    {getCurrentSection(url)}
+                  </span>
+                </>
+              )}
             </div>
-          </CardHeader>
-        </Card>
+            <p className="text-sm text-muted-foreground">
+              Manage your application settings and preferences
+            </p>
+          </div>
+        </div>
 
         {/* Search and Mobile Toggle */}
         <div className="mb-4 space-y-2">
@@ -197,6 +177,18 @@ const Index = ({ children }) => {
             <div className="space-y-4">{children}</div>
           </main>
         </div>
+        {/* Fixed Bottom Action Bar with Mobile Support */}
+      {actions && (
+        <div className="mt-8 max-xs:mt-28">
+        <div className="fixed bottom-0 right-0 left-0 lg:left-[256px] bg-background/80 backdrop-blur-sm border-t z-50">
+          <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-4">
+            <div className="flex flex-col-reverse sm:flex-row justify-end items-center gap-3">
+              {actions}
+            </div>
+          </div>
+        </div>
+        </div>
+      )}
       </div>
     </AdminLayout>
   );

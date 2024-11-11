@@ -14,10 +14,10 @@ const AdminLayout = ({ children, title = "Dashboard" }) => {
   // Handle window resize and mobile detection
   useEffect(() => {
     const checkMobile = () => window.innerWidth < 1024;
-    
+
     const handleResize = () => {
       const mobile = checkMobile();
-      
+
       if (mobile !== isMobile) {
         setIsMobile(mobile);
         if (mobile) {
@@ -41,7 +41,7 @@ const AdminLayout = ({ children, title = "Dashboard" }) => {
     };
 
     window.addEventListener('resize', debouncedResize);
-    
+
     return () => {
       window.removeEventListener('resize', debouncedResize);
       clearTimeout(timeoutId);
@@ -53,7 +53,7 @@ const AdminLayout = ({ children, title = "Dashboard" }) => {
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
+
     const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
     setTheme(initialTheme);
     document.documentElement.classList.toggle('dark', initialTheme === 'dark');
@@ -100,7 +100,7 @@ const AdminLayout = ({ children, title = "Dashboard" }) => {
         <title>{`${title} - NextGen Admin`}</title>
       </Head>
 
-      <Toaster 
+      <Toaster
         position="top-right"
         toastOptions={{
           duration: 3000,
@@ -110,13 +110,13 @@ const AdminLayout = ({ children, title = "Dashboard" }) => {
 
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="flex h-screen overflow-hidden">
-          <Sidebar 
-            sidebarOpen={sidebarOpen} 
+          <Sidebar
+            sidebarOpen={sidebarOpen}
             closeSidebar={closeSidebar}
             isMobile={isMobile}
           />
 
-          <div 
+          <div
             className={`
               flex-1 flex flex-col min-w-0
               transition-all duration-300 ease-in-out
@@ -130,10 +130,10 @@ const AdminLayout = ({ children, title = "Dashboard" }) => {
               theme={theme}
               toggleTheme={toggleTheme}
             />
-            
+
             <main className="flex-1 relative overflow-y-auto focus:outline-none">
-              <div className="py-4 sm:py-6">
-                <div className="px-4 sm:px-6 lg:px-8 mx-auto w-full">
+              <div className="py-2 sm:py-4">
+                <div className="px-3 sm:px-2 lg:px-3 mx-auto w-full">
                   <div className="relative">
                     <div className="overflow-hidden">
                       {children}

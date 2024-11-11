@@ -6,9 +6,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\Admin\OptionsService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+use Inertia\Response;
+use Inertia\Inertia;
+use Illuminate\Support\Facades\Log;
 
 final class OptionsController extends Controller
 {
@@ -16,43 +17,74 @@ final class OptionsController extends Controller
         private readonly OptionsService $optionsService
     ) {}
 
-    public function index(Request $request): JsonResponse
+    public function email(): Response
     {
-        $group = $request->get('group', 'general');
-        $options = $this->optionsService->getGroup($group);
-        
-        return response()->json($options);
+        try {
+            // Clear cache to ensure fresh data
+            $this->optionsService->flushCache();
+            
+            // Get email-specific options
+            $emailOptions = $this->optionsService->getGroupKeyValues('email');
+            // Default settings
+            $defaults = [
+                'mail_driver' => config('mail.default', 'smtp'),
+                'mail_host' => config('mail.mailers.smtp.host', ''),
+                'mail_port' => config('mail.mailers.smtp.port', '587'),
+                'mail_username' => config('mail.mailers.smtp.username', ''),
+                'mail_password' => config('mail.mailers.smtp.password', ''),
+                'mail_encryption' => config('mail.mailers.smtp.encryption', 'tls'),
+                'mail_from_address' => config('mail.from.address', ''),
+                'mail_from_name' => config('mail.from.name', config('app.name')),
+            ];
+
+            // Merge defaults with saved options, preferring saved values when they exist and are not empty
+            $mergedOptions = array_merge(
+                $defaults,
+                array_filter($emailOptions, fn($value) => !empty($value))
+            );
+
+            return Inertia::render('Admin/Settings/Email/Index', [
+                'emailOptions' => $mergedOptions,
+                'defaults' => $defaults
+            ]);
+        } catch (\Exception $e) {            
+            return Inertia::render('Admin/Settings/Email/Index', [
+                'emailOptions' => $defaults,
+                'defaults' => $defaults,
+                'error' => 'Failed to load email settings'
+            ]);
+        }
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $validated = $request->validate([
             'options' => ['required', 'array'],
             'options.*.key' => ['required', 'string'],
-            'options.*.value' => ['required'],
-            'group' => ['sometimes', 'string'],
+            'options.*.value' => ['nullable'],
+            'group' => ['required', 'string'],
         ]);
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+        try {
+            // Transform options array to key-value pairs
+            $options = collect($validated['options'])->mapWithKeys(function ($item) {
+                return [$item['key'] => $item['value'] ?? null];
+            })->toArray();
+
+            // Save options
+            $this->optionsService->setMany($options, $validated['group']);
+
+            // Clear cache after saving
+            $this->optionsService->flushCache();
+
+            return back()->with('success', 'Settings saved successfully');
+        } catch (\Exception $e) {
+            Log::error('Failed to save settings', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return back()->with('error', 'Failed to save settings');
         }
-
-        $group = $request->get('group', 'general');
-        $options = collect($request->input('options'))
-            ->mapWithKeys(fn ($item) => [$item['key'] => $item['value']])
-            ->toArray();
-
-        $this->optionsService->setMany($options, $group);
-
-        return response()->json(['message' => 'Options saved successfully']);
-    }
-
-    public function destroy(string $key): JsonResponse
-    {
-        $deleted = $this->optionsService->delete($key);
-        
-        return response()->json([
-            'message' => $deleted ? 'Option deleted successfully' : 'Option not found'
-        ]);
     }
 } 

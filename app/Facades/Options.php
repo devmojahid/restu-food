@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static void setMany(array $options, string $group = 'general')
  * @method static \Illuminate\Support\Collection getAutoloadOptions()
  * @method static void flushCache()
+ * @method static \Illuminate\Support\Collection getGroups(array $groups)
  */
 final class Options extends Facade
 {

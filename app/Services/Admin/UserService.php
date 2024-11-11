@@ -21,17 +21,12 @@ final class UserService extends BaseService
     protected array $sortableFields = ['name', 'email', 'created_at'];
     protected array $relationships = ['roles', 'files'];
 
-    public function getAllRoles(): array
-    {
-        return Role::all(['id', 'name'])->toArray();
-    }
-
     public function store(array $data): User
     {
         try {
             DB::beginTransaction();
 
-            // Hash password
+            // Hash password if provided
             if (isset($data['password'])) {
                 $data['password'] = Hash::make($data['password']);
             }
@@ -47,6 +42,13 @@ final class UserService extends BaseService
             // Handle avatar upload
             if (!empty($data['files']['avatar'])) {
                 $this->handleFileUploads($user, $data['files']);
+            }
+
+            // Handle meta data
+            if (!empty($data['meta'])) {
+                foreach ($data['meta'] as $key => $value) {
+                    $user->setMeta($key, $value);
+                }
             }
 
             DB::commit();
@@ -89,8 +91,14 @@ final class UserService extends BaseService
                 $this->syncFileCollections($user, $data['files']);
             }
 
+            // Handle meta data
+            if (!empty($data['meta'])) {
+                foreach ($data['meta'] as $key => $value) {
+                    $user->setMeta($key, $value);
+                }
+            }
+
             DB::commit();
-            // $this->clearCache();
 
             return $user->fresh(['roles', 'files']);
         } catch (\Exception $e) {
@@ -104,85 +112,115 @@ final class UserService extends BaseService
         }
     }
 
-    protected function handleFileUploads(User $user, array $files): void
+    public function updateProfile(int $id, array $data): User
     {
-        if (!empty($files['avatar'])) {
-            // Delete existing avatar
-            $user->files()->where('collection', 'avatar')->delete();
+        try {
+            DB::beginTransaction();
 
-            // Attach new avatar
-            if (!empty($files['avatar']['uuid'])) {
-                $fileModel = File::where('uuid', $files['avatar']['uuid'])->first();
-                if ($fileModel) {
-                    $fileModel->update([
-                        'fileable_type' => get_class($user),
-                        'fileable_id' => $user->id,
-                        'collection' => 'avatar'
-                    ]);
+            $user = $this->findOrFail($id);
+
+            // Update basic info
+            $user->update([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'phone' => $data['phone'] ?? null,
+            ]);
+
+            // Handle avatar
+            if (isset($data['avatar'])) {
+                $this->syncFileCollections($user, ['avatar' => $data['avatar']]);
+            }
+
+            // Update meta data
+            $metaFields = [
+                'display_name',
+                'bio',
+                'location',
+                'company',
+                'position',
+                'website',
+                'social_links',
+                'notification_preferences',
+            ];
+
+            foreach ($metaFields as $field) {
+                if (isset($data[$field])) {
+                    $user->setMeta($field, $data[$field]);
                 }
             }
-        }
-    }
-
-    protected function syncFileCollections(User $user, array $files): void
-    {
-        if (isset($files['avatar'])) {
-            if (empty($files['avatar'])) {
-                $user->removeFiles('avatar');
-            } else {
-                $user->syncFiles([$files['avatar']], 'avatar');
-            }
-        }
-    }
-
-    public function bulkDelete(array $ids): bool
-    {
-        try {
-            DB::beginTransaction();
-
-            $users = $this->model::whereIn('id', $ids)->get();
-            foreach ($users as $user) {
-                // Delete avatar if exists
-                $user->files()->where('collection', 'avatar')->delete();
-                // Remove roles
-                $user->roles()->detach();
-                $user->delete();
-            }
 
             DB::commit();
-            $this->clearCache();
 
-            return true;
+            return $user->fresh(['files']);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Bulk delete failed', [
-                'ids' => $ids,
-                'error' => $e->getMessage()
+            Log::error('Profile update failed', [
+                'id' => $id,
+                'error' => $e->getMessage(),
+                'data' => $data
             ]);
             throw $e;
         }
     }
 
-    public function bulkUpdateStatus(array $ids, bool $status, string $field = 'status'): bool
+    public function updateStatus(int $id, string $status): bool
+    {
+        try {
+            $user = $this->findOrFail($id);
+            return $user->update(['status' => $status]);
+        } catch (\Exception $e) {
+            Log::error('User status update failed', [
+                'id' => $id,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
+    }
+
+    public function updateSecuritySettings(int $id, array $data): bool
     {
         try {
             DB::beginTransaction();
 
-            $this->model::whereIn('id', $ids)->update([
-                $field => $status
-            ]);
+            $user = $this->findOrFail($id);
+
+            if (!empty($data['password'])) {
+                $user->update(['password' => Hash::make($data['password'])]);
+                $user->setMeta('password_updated_at', now());
+            }
+
+            if (isset($data['two_factor_enabled'])) {
+                $user->setMeta('two_factor_enabled', $data['two_factor_enabled']);
+            }
+
+            if (isset($data['security_notifications'])) {
+                $user->setMeta('security_notifications', $data['security_notifications']);
+            }
 
             DB::commit();
-            $this->clearCache();
-
             return true;
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Bulk status update failed', [
-                'ids' => $ids,
+            Log::error('Security settings update failed', [
+                'id' => $id,
                 'error' => $e->getMessage()
             ]);
-            throw $e;
+            return false;
+        }
+    }
+
+    public function updateNotificationPreferences(int $id, array $preferences): bool
+    {
+        try {
+            $user = $this->findOrFail($id);
+            $user->setMeta('notification_preferences', $preferences);
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Notification preferences update failed', [
+                'id' => $id,
+                'error' => $e->getMessage()
+            ]);
+            return false;
         }
     }
 }

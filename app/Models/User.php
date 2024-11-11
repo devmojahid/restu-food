@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Traits\HasFiles;
+use App\Traits\HasMeta;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -13,7 +14,7 @@ use Spatie\Permission\Traits\HasRoles;
 
 final class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, HasRoles, HasFiles;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles, HasFiles, HasMeta;
 
     protected $fillable = [
         'name',
@@ -51,5 +52,15 @@ final class User extends Authenticatable
     public function restaurants()
     {
         return $this->hasMany(Restaurant::class);
+    }
+
+    public function getMetaAttribute(string $key, mixed $default = null): mixed
+    {
+        return $this->getMeta($key, $default);
+    }
+
+    public function setMetaAttribute(string $key, mixed $value): void
+    {
+        $this->setMeta($key, $value);
     }
 }

@@ -7,6 +7,7 @@ import { Label } from "@/Components/ui/label";
 import { Button } from "@/Components/ui/button";
 import { Textarea } from "@/Components/ui/textarea";
 import FileUploader from "@/Components/Admin/Filesystem/FileUploader";
+import { Save } from "lucide-react";
 
 export default function StoreSettings() {
   const { data, setData, post, processing, errors } = useForm({
@@ -29,8 +30,30 @@ export default function StoreSettings() {
     });
   };
 
+  const actionButtons = (
+    <>
+      <Button 
+        type="submit" 
+        disabled={processing}
+        className="w-full sm:w-auto"
+      >
+        {processing ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            <span>Saving Changes...</span>
+          </>
+        ) : (
+          <>
+            <Save className="w-4 h-4 mr-2" />
+            <span>Save Changes</span>
+          </>
+        )}
+      </Button>
+    </>
+  );
+
   return (
-    <SettingsLayout>
+    <SettingsLayout actions={actionButtons}>
       <Head title="Store Settings" />
 
       <div className="space-y-6">
@@ -164,12 +187,6 @@ export default function StoreSettings() {
                     placeholder="Paste your Google Analytics code here"
                   />
                 </div>
-              </div>
-
-              <div className="flex justify-end">
-                <Button type="submit" disabled={processing}>
-                  {processing ? "Saving..." : "Save Changes"}
-                </Button>
               </div>
             </form>
           </CardContent>

@@ -123,9 +123,7 @@ Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
         })->name('profile');
         // Route::post('/profile/update', [SettingsController::class, 'profileUpdate'])->name('profile.update');
         // Route::get('/email', [SettingsController::class, 'email'])->name('email');
-        Route::get('/email', function () {
-            return Inertia::render('Admin/Settings/Email/Index');
-        })->name('email');
+        Route::get('/email', [OptionsController::class, 'email'])->name('email');
         // Route::post('/email/update', [SettingsController::class, 'emailUpdate'])->name('email.update');
         // Route::get('/security', [SettingsController::class, 'security'])->name('security');
         Route::get('/security', function () {

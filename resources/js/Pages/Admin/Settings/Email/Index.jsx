@@ -1,11 +1,11 @@
-import React from "react";
+import React, { useState, useCallback } from "react";
 import { Head, useForm } from "@inertiajs/react";
+import AdminLayout from "@/Layouts/Admin/AdminLayout";
 import SettingsLayout from "../Index";
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
 import { Input } from "@/Components/ui/input";
 import { Label } from "@/Components/ui/label";
 import { Button } from "@/Components/ui/button";
-import { Textarea } from "@/Components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -13,143 +13,238 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/Components/ui/select";
-import { Switch } from "@/Components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/Components/ui/tabs";
-import { Settings, FileText, Bell } from "lucide-react";
+import {
+  Mail,
+  Loader2,
+  Save,
+  Eye,
+  EyeOff,
+  AlertCircle,
+  Settings,
+  Server,
+  AtSign,
+  ShieldCheck
+} from "lucide-react";
+import { useToast } from "@/Components/ui/use-toast";
+import { Alert, AlertDescription } from "@/Components/ui/alert";
 import { cn } from "@/lib/utils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/Components/ui/tabs";
 
-export default function EmailSettings() {
+const EmailSettings = ({ emailOptions = {}, defaults = {} }) => {
+  const { toast } = useToast();
+  const [isTesting, setIsTesting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [testEmailAddress, setTestEmailAddress] = useState("");
+  const [isTestEmailValid, setIsTestEmailValid] = useState(true);
+
+  // Initialize form with saved values from database
   const { data, setData, post, processing, errors } = useForm({
-    mail_driver: "smtp",
-    mail_host: "",
-    mail_port: "",
-    mail_username: "",
-    mail_password: "",
-    mail_encryption: "tls",
-    mail_from_address: "",
-    mail_from_name: "",
-    notification_templates: {
-      order_confirmation: {
-        subject: "",
-        content: "",
-        enabled: true,
+    options: [
+      {
+        key: 'mail_driver',
+        value: emailOptions?.mail_driver ?? defaults?.mail_driver ?? 'smtp'
       },
-      shipping_update: {
-        subject: "",
-        content: "",
-        enabled: true,
+      {
+        key: 'mail_host',
+        value: emailOptions?.mail_host ?? defaults?.mail_host ?? ''
       },
-      password_reset: {
-        subject: "",
-        content: "",
-        enabled: true,
+      {
+        key: 'mail_port',
+        value: emailOptions?.mail_port ?? defaults?.mail_port ?? '587'
       },
-    },
+      {
+        key: 'mail_username',
+        value: emailOptions?.mail_username ?? defaults?.mail_username ?? ''
+      },
+      {
+        key: 'mail_password',
+        value: emailOptions?.mail_password ?? defaults?.mail_password ?? ''
+      },
+      {
+        key: 'mail_encryption',
+        value: emailOptions?.mail_encryption ?? defaults?.mail_encryption ?? 'tls'
+      },
+      {
+        key: 'mail_from_address',
+        value: emailOptions?.mail_from_address ?? defaults?.mail_from_address ?? ''
+      },
+      {
+        key: 'mail_from_name',
+        value: emailOptions?.mail_from_name ?? defaults?.mail_from_name ?? ''
+      }
+    ],
+    group: 'email'
   });
+
+  const updateOption = useCallback((key, value) => {
+    setData('options', data.options.map(option =>
+      option.key === key ? { ...option, value } : option
+    ));
+  }, [data.options, setData]);
+
+  const getOptionValue = useCallback((key) => {
+    const option = data.options.find(opt => opt.key === key);
+    return option?.value ?? '';
+  }, [data.options]);
+
+  const validateTestEmail = useCallback((email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }, []);
+
+  const handleTestEmailChange = useCallback((e) => {
+    const email = e.target.value;
+    setTestEmailAddress(email);
+    setIsTestEmailValid(validateTestEmail(email));
+  }, [validateTestEmail]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    post(route("settings.email.update"));
+
+    // Validate required fields
+    const requiredFields = ['mail_driver', 'mail_host', 'mail_port', 'mail_from_address'];
+    const missingFields = requiredFields.filter(field => !getOptionValue(field));
+
+    if (missingFields.length > 0) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    post(route('options.store'), {
+      preserveScroll: true,
+      onSuccess: () => {
+        toast({
+          title: "Success",
+          description: "Email settings saved successfully",
+        });
+      },
+      onError: (errors) => {
+        toast({
+          title: "Error",
+          description: "Failed to save settings. Please check the form for errors.",
+          variant: "destructive",
+        });
+      }
+    });
   };
 
+  const handleTestEmail = () => {
+    if (!testEmailAddress || !isTestEmailValid) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsTesting(true);
+    post(route('options.test-email'), {
+      data: { test_email: testEmailAddress },
+      preserveScroll: true,
+      onSuccess: () => {
+        toast({
+          title: "Success",
+          description: "Test email sent successfully",
+        });
+        setTestEmailAddress("");
+      },
+      onError: () => {
+        toast({
+          title: "Error",
+          description: "Failed to send test email. Please check your settings.",
+          variant: "destructive",
+        });
+      },
+      onFinish: () => setIsTesting(false)
+    });
+  };
+
+  const actionButtons = (
+    <>
+      <Button
+        type="button"
+        variant="outline"
+        onClick={handleTestEmail}
+        disabled={isTesting || processing}
+        className="w-full sm:w-auto"
+      >
+        {isTesting ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            <span>Testing Email...</span>
+          </>
+        ) : (
+          <>
+            <Mail className="w-4 h-4 mr-2" />
+            <span>Send Test Email</span>
+          </>
+        )}
+      </Button>
+      <Button
+        type="submit"
+        disabled={processing}
+        onClick={handleSubmit}
+        className="w-full sm:w-auto"
+      >
+        {processing ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            <span>Saving Changes...</span>
+          </>
+        ) : (
+          <>
+            <Save className="w-4 h-4 mr-2" />
+            <span>Save Changes</span>
+          </>
+        )}
+      </Button>
+    </>
+  );
+
   return (
-    <SettingsLayout>
+    <SettingsLayout actions={actionButtons}>
       <Head title="Email Settings" />
-
       <div className="space-y-6">
-        <Tabs defaultValue="configuration" className="space-y-6">
-          <div className="bg-muted/50 p-1 rounded-lg">
-            <TabsList className="w-full flex justify-start gap-1 bg-transparent">
-              {[
-                {
-                  value: "configuration",
-                  label: "Configuration",
-                  icon: Settings,
-                  description: "Server settings and credentials",
-                },
-                {
-                  value: "templates",
-                  label: "Email Templates",
-                  icon: FileText,
-                  description: "Customize email templates",
-                },
-                {
-                  value: "notifications",
-                  label: "Notifications",
-                  icon: Bell,
-                  description: "Email notification settings",
-                },
-              ].map((tab) => (
-                <TabsTrigger
-                  key={tab.value}
-                  value={tab.value}
-                  className={cn(
-                    "flex-1 relative px-4 py-3",
-                    "data-[state=active]:bg-background",
-                    "data-[state=active]:text-foreground",
-                    "data-[state=active]:shadow-sm",
-                    "rounded-md transition-all duration-200",
-                    "hover:bg-background/60",
-                    "border border-transparent",
-                    "data-[state=active]:border-border/50"
-                  )}
-                >
-                  <div className="flex flex-col items-center gap-1">
-                    <div className="flex items-center gap-2">
-                      <tab.icon className="h-4 w-4" />
-                      <span className="font-medium">{tab.label}</span>
-                    </div>
-                    <span className="text-[10px] text-muted-foreground hidden sm:block">
-                      {tab.description}
-                    </span>
-                  </div>
-                  <div
-                    className={cn(
-                      "absolute bottom-0 left-0 right-0 h-0.5 rounded-full",
-                      "transition-all duration-200",
-                      "data-[state=active]:bg-primary",
-                      "data-[state=active]:opacity-100",
-                      "opacity-0"
-                    )}
-                  />
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </div>
-
-          <TabsContent
-            value="configuration"
-            className={cn(
-              "mt-6 rounded-lg border shadow-sm",
-              "transition-all duration-300",
-              "data-[state=active]:animate-in",
-              "data-[state=inactive]:animate-out",
-              "data-[state=inactive]:fade-out-0",
-              "data-[state=active]:fade-in-0",
-              "data-[state=inactive]:zoom-out-95",
-              "data-[state=active]:zoom-in-95"
-            )}
-          >
-            <Card className="border-0 shadow-none">
-              <CardHeader className="px-6 py-4 border-b">
+        <Card>
+          <CardHeader className="border-b p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row justify-between gap-4">
+              <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <Settings className="h-5 w-5 text-primary" />
-                  <div>
-                    <CardTitle>Email Configuration</CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Configure your email server settings and credentials
-                    </p>
-                  </div>
+                  <Settings className="h-5 w-5 text-muted-foreground" />
+                  <CardTitle>Email Settings</CardTitle>
                 </div>
-              </CardHeader>
-              <CardContent className="p-6">
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <p className="text-sm text-muted-foreground">
+                  Configure your email server settings and preferences
+                </p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="mt-3">
+              {/* Show error alert if there are any form errors */}
+              {Object.keys(errors).length > 0 && (
+                <Alert variant="destructive" className="mb-6">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    Please correct the errors below.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              <div className="space-y-6">
+                <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label>Mail Driver</Label>
+                    {/* Mail Driver - Full Width */}
+                    <div className="md:col-span-2 space-y-2">
+                      <Label required>Mail Driver</Label>
                       <Select
-                        value={data.mail_driver}
-                        onValueChange={(value) => setData("mail_driver", value)}
+                        value={getOptionValue('mail_driver')}
+                        onValueChange={(value) => updateOption('mail_driver', value)}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select mail driver" />
@@ -161,54 +256,76 @@ export default function EmailSettings() {
                           <SelectItem value="postmark">Postmark</SelectItem>
                         </SelectContent>
                       </Select>
+                      {errors?.mail_driver && (
+                        <p className="text-sm text-destructive mt-1">{errors.mail_driver}</p>
+                      )}
                     </div>
 
+                    {/* Server Settings */}
                     <div className="space-y-2">
-                      <Label>Mail Host</Label>
+                      <Label required>SMTP Host</Label>
                       <Input
-                        value={data.mail_host}
-                        onChange={(e) => setData("mail_host", e.target.value)}
                         placeholder="smtp.example.com"
+                        value={getOptionValue('mail_host')}
+                        onChange={(e) => updateOption('mail_host', e.target.value)}
                       />
+                      <p className="text-xs text-muted-foreground">
+                        Your mail server hostname
+                      </p>
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Mail Port</Label>
+                      <Label required>SMTP Port</Label>
                       <Input
-                        value={data.mail_port}
-                        onChange={(e) => setData("mail_port", e.target.value)}
+                        type="number"
                         placeholder="587"
+                        value={getOptionValue('mail_port')}
+                        onChange={(e) => updateOption('mail_port', e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Common ports: 25, 465, 587, 2525
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>SMTP Username</Label>
+                      <Input
+                        placeholder="username@example.com"
+                        value={getOptionValue('mail_username')}
+                        onChange={(e) => updateOption('mail_username', e.target.value)}
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Mail Username</Label>
-                      <Input
-                        value={data.mail_username}
-                        onChange={(e) =>
-                          setData("mail_username", e.target.value)
-                        }
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Mail Password</Label>
-                      <Input
-                        type="password"
-                        value={data.mail_password}
-                        onChange={(e) =>
-                          setData("mail_password", e.target.value)
-                        }
-                      />
+                      <Label>SMTP Password</Label>
+                      <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          value={getOptionValue('mail_password')}
+                          onChange={(e) => updateOption('mail_password', e.target.value)}
+                          className="pr-10"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
                     </div>
 
                     <div className="space-y-2">
                       <Label>Encryption</Label>
                       <Select
-                        value={data.mail_encryption}
-                        onValueChange={(value) =>
-                          setData("mail_encryption", value)
-                        }
+                        value={getOptionValue('mail_encryption')}
+                        onValueChange={(value) => updateOption('mail_encryption', value)}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select encryption" />
@@ -222,235 +339,83 @@ export default function EmailSettings() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>From Address</Label>
+                      <Label required>From Address</Label>
                       <Input
-                        value={data.mail_from_address}
-                        onChange={(e) =>
-                          setData("mail_from_address", e.target.value)
-                        }
+                        type="email"
                         placeholder="noreply@example.com"
+                        value={getOptionValue('mail_from_address')}
+                        onChange={(e) => updateOption('mail_from_address', e.target.value)}
                       />
                     </div>
 
                     <div className="space-y-2">
                       <Label>From Name</Label>
                       <Input
-                        value={data.mail_from_name}
-                        onChange={(e) =>
-                          setData("mail_from_name", e.target.value)
-                        }
                         placeholder="Your Company Name"
+                        value={getOptionValue('mail_from_name')}
+                        onChange={(e) => updateOption('mail_from_name', e.target.value)}
                       />
                     </div>
                   </div>
+                  <div className="space-y-4">
+                    <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                      <h4 className="font-medium">Test Your Email Configuration</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Send a test email to verify your settings are working correctly.
+                        Make sure to save any changes before testing.
+                      </p>
+                    </div>
 
-                  <div className="flex justify-end">
-                    <Button type="submit" disabled={processing}>
-                      {processing ? "Saving..." : "Save Changes"}
-                    </Button>
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <div className="flex-1 sm:max-w-md space-y-2">
+                        <Label>Test Email Address</Label>
+                        <Input
+                          type="email"
+                          placeholder="Enter test email address"
+                          value={testEmailAddress}
+                          onChange={handleTestEmailChange}
+                          className={cn(
+                            "w-full",
+                            !isTestEmailValid && testEmailAddress && "border-destructive"
+                          )}
+                        />
+                        {!isTestEmailValid && testEmailAddress && (
+                          <p className="text-sm text-destructive">
+                            Please enter a valid email address
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-end">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleTestEmail}
+                          disabled={isTesting || !testEmailAddress || !isTestEmailValid}
+                          className="w-full sm:w-auto"
+                        >
+                          {isTesting ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Testing...
+                            </>
+                          ) : (
+                            <>
+                              <Mail className="w-4 h-4 mr-2" />
+                              Send Test
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
                   </div>
-                </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent
-            value="templates"
-            className={cn(
-              "mt-6 rounded-lg border shadow-sm",
-              "transition-all duration-300",
-              "data-[state=active]:animate-in",
-              "data-[state=inactive]:animate-out",
-              "data-[state=inactive]:fade-out-0",
-              "data-[state=active]:fade-in-0",
-              "data-[state=inactive]:zoom-out-95",
-              "data-[state=active]:zoom-in-95"
-            )}
-          >
-            <Card className="border-0 shadow-none">
-              <CardHeader className="px-6 py-4 border-b border-border/40">
-                <div className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-muted-foreground" />
-                  <CardTitle>Email Templates</CardTitle>
                 </div>
-                <p className="text-sm text-muted-foreground mt-1.5">
-                  Customize your email templates and notification messages
-                </p>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="space-y-8">
-                  {Object.entries(data.notification_templates).map(
-                    ([key, template]) => (
-                      <div
-                        key={key}
-                        className={cn(
-                          "space-y-4 pb-8",
-                          "border-b border-border/40 last:border-0 last:pb-0"
-                        )}
-                      >
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                          <div className="space-y-1">
-                            <h3 className="text-lg font-medium capitalize">
-                              {key.replace(/_/g, " ")}
-                            </h3>
-                            <p className="text-sm text-muted-foreground">
-                              Configure the{" "}
-                              {key.replace(/_/g, " ").toLowerCase()} email
-                              template
-                            </p>
-                          </div>
-                          <Switch
-                            checked={template.enabled}
-                            onCheckedChange={(checked) =>
-                              setData("notification_templates", {
-                                ...data.notification_templates,
-                                [key]: { ...template, enabled: checked },
-                              })
-                            }
-                          />
-                        </div>
-
-                        <div className="grid gap-6 sm:grid-cols-2">
-                          <div className="space-y-2">
-                            <Label>Subject</Label>
-                            <Input
-                              value={template.subject}
-                              onChange={(e) =>
-                                setData("notification_templates", {
-                                  ...data.notification_templates,
-                                  [key]: {
-                                    ...template,
-                                    subject: e.target.value,
-                                  },
-                                })
-                              }
-                            />
-                          </div>
-
-                          <div className="space-y-2 sm:col-span-2">
-                            <Label>Content</Label>
-                            <Textarea
-                              value={template.content}
-                              onChange={(e) =>
-                                setData("notification_templates", {
-                                  ...data.notification_templates,
-                                  [key]: {
-                                    ...template,
-                                    content: e.target.value,
-                                  },
-                                })
-                              }
-                              className="min-h-[200px]"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent
-            value="notifications"
-            className={cn(
-              "mt-6 rounded-lg border shadow-sm",
-              "transition-all duration-300",
-              "data-[state=active]:animate-in",
-              "data-[state=inactive]:animate-out",
-              "data-[state=inactive]:fade-out-0",
-              "data-[state=active]:fade-in-0",
-              "data-[state=inactive]:zoom-out-95",
-              "data-[state=active]:zoom-in-95"
-            )}
-          >
-            <Card className="border-0 shadow-none">
-              <CardHeader className="px-6 py-4 border-b border-border/40">
-                <div className="flex items-center gap-2">
-                  <Bell className="h-5 w-5 text-muted-foreground" />
-                  <CardTitle>Notifications</CardTitle>
-                </div>
-                <p className="text-sm text-muted-foreground mt-1.5">
-                  Configure email notification settings
-                </p>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="space-y-8">
-                  {Object.entries(data.notification_templates).map(
-                    ([key, template]) => (
-                      <div
-                        key={key}
-                        className={cn(
-                          "space-y-4 pb-8",
-                          "border-b border-border/40 last:border-0 last:pb-0"
-                        )}
-                      >
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                          <div className="space-y-1">
-                            <h3 className="text-lg font-medium capitalize">
-                              {key.replace(/_/g, " ")}
-                            </h3>
-                            <p className="text-sm text-muted-foreground">
-                              Configure the{" "}
-                              {key.replace(/_/g, " ").toLowerCase()} email
-                              template
-                            </p>
-                          </div>
-                          <Switch
-                            checked={template.enabled}
-                            onCheckedChange={(checked) =>
-                              setData("notification_templates", {
-                                ...data.notification_templates,
-                                [key]: { ...template, enabled: checked },
-                              })
-                            }
-                          />
-                        </div>
-
-                        <div className="grid gap-6 sm:grid-cols-2">
-                          <div className="space-y-2">
-                            <Label>Subject</Label>
-                            <Input
-                              value={template.subject}
-                              onChange={(e) =>
-                                setData("notification_templates", {
-                                  ...data.notification_templates,
-                                  [key]: {
-                                    ...template,
-                                    subject: e.target.value,
-                                  },
-                                })
-                              }
-                            />
-                          </div>
-
-                          <div className="space-y-2 sm:col-span-2">
-                            <Label>Content</Label>
-                            <Textarea
-                              value={template.content}
-                              onChange={(e) =>
-                                setData("notification_templates", {
-                                  ...data.notification_templates,
-                                  [key]: {
-                                    ...template,
-                                    content: e.target.value,
-                                  },
-                                })
-                              }
-                              className="min-h-[200px]"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     </SettingsLayout>
   );
-}
+};
+
+export default EmailSettings;
