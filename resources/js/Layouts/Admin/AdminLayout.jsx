@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Sidebar from "./Partials/Sidebar/Sidebar";
 import Header from "./Partials/Header/Header";
 import { Head, usePage } from "@inertiajs/react";
-import { Toaster } from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 
 const AdminLayout = ({ children, title = "Dashboard" }) => {
   const { flash } = usePage().props;
@@ -10,6 +10,22 @@ const AdminLayout = ({ children, title = "Dashboard" }) => {
   const [isMobile, setIsMobile] = useState(false);
   const [theme, setTheme] = useState("light");
   const [pageReady, setPageReady] = useState(false);
+
+    useEffect(() => {
+        if (flash.success) {
+            toast.success(flash.success, {
+                position: 'top-right',
+                autoClose: 1500,
+            })
+        }
+
+        if (flash.error) {
+            toast.error(flash.error, {
+                position: 'top-right',
+                autoClose: 1500,
+            })
+        }
+    }, [flash]);
 
   // Handle window resize and mobile detection
   useEffect(() => {
@@ -106,6 +122,7 @@ const AdminLayout = ({ children, title = "Dashboard" }) => {
           duration: 3000,
           className: 'dark:bg-gray-800 dark:text-white'
         }}
+        
       />
 
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">

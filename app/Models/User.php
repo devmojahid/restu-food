@@ -16,11 +16,12 @@ final class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, HasRoles, HasFiles, HasMeta;
 
+    public const COLLECTION_AVATAR = 'avatar';
+
     protected $fillable = [
         'name',
         'email',
         'password',
-        'phone',
         'status',
     ];
 
@@ -54,13 +55,44 @@ final class User extends Authenticatable
         return $this->hasMany(Restaurant::class);
     }
 
-    public function getMetaAttribute(string $key, mixed $default = null): mixed
+    protected $appends = ['avatar'];
+
+    public function getAvatarAttribute(): ?File
     {
-        return $this->getMeta($key, $default);
+        return $this->getFile(self::COLLECTION_AVATAR);
     }
 
-    public function setMetaAttribute(string $key, mixed $value): void
+    // Helper methods for common operations
+    public function recordLoginAttempt(bool $success, ?string $ip = null): void
     {
-        $this->setMeta($key, $value);
+        $loginHistory = $this->getMeta('login_history', []);
+        array_unshift($loginHistory, [
+            'timestamp' => now()->toDateTimeString(),
+            'ip' => $ip ?? request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'success' => $success
+        ]);
+
+        // Keep only last 50 attempts
+        $loginHistory = array_slice($loginHistory, 0, 50);
+        
+        $this->setMeta('login_history', $loginHistory);
+        $this->incrementMeta('login_count');
+        
+        if ($success) {
+            $this->setMeta('last_login_at', now());
+            $this->setMeta('last_login_ip', $ip ?? request()->ip());
+        }
+    }
+
+    public function updateLastActivity(): void
+    {
+        $this->setMeta('last_activity', now());
+    }
+
+    public function isOnline(): bool
+    {
+        $lastActivity = $this->getMeta('last_activity');
+        return $lastActivity && now()->diffInMinutes($lastActivity) < 5;
     }
 }

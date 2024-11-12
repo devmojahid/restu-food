@@ -48,6 +48,7 @@ final class UserController extends Controller
     {
         try {
             $data = $request->validated();
+            
             $data['files'] = [
                 'avatar' => $request->input('avatar'),
             ];

@@ -138,10 +138,7 @@ final class BlogController extends Controller
 
             return redirect()
                 ->back()
-                ->with('toast', [
-                    'type' => 'success',
-                    'message' => 'Blog updated successfully.'
-                ]);
+                ->with('success', 'Blog updated successfully.');
         } catch (\Exception $e) {
             Log::error('Blog update failed', [
                 'id' => $id,
@@ -153,10 +150,7 @@ final class BlogController extends Controller
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('toast', [
-                    'type' => 'error',
-                    'message' => 'Error updating blog: ' . $e->getMessage()
-                ]);
+                ->with('error', 'Error updating blog: ' . $e->getMessage());
         }
     }
 

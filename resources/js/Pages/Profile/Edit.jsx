@@ -1,9 +1,6 @@
 import { Head } from "@inertiajs/react";
-import DeleteUserForm from "./Partials/DeleteUserForm";
-import UpdatePasswordForm from "./Partials/UpdatePasswordForm";
-import UpdateProfileInformationForm from "./Partials/UpdateProfileInformationForm";
 import AdminLayout from "@/Layouts/Admin/AdminLayout";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/Components/ui/tabs";
+import { Tabs, TabsContent } from "@/Components/ui/tabs";
 import { Card, CardHeader, CardTitle } from "@/Components/ui/card";
 import { cn } from "@/lib/utils";
 import {
@@ -15,36 +12,55 @@ import {
   History,
   Smartphone,
   Key,
-  Settings,
-  Download,
   Menu,
+  ChevronUp,
 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Button } from "@/Components/ui/button";
+
+// Import all form components
+import DeleteUserForm from "./Partials/DeleteUserForm";
+import UpdatePasswordForm from "./Partials/UpdatePasswordForm";
+import UpdateProfileInformationForm from "./Partials/UpdateProfileInformationForm";
 import NotificationPreferences from "./Partials/NotificationPreferences";
 import SecuritySettings from "./Partials/SecuritySettings";
 import ActivityLog from "./Partials/ActivityLog";
 import ConnectedDevices from "./Partials/ConnectedDevices";
 import ApiTokens from "./Partials/ApiTokens";
-import { useState, useEffect } from "react";
-import { ScrollArea } from "@/Components/ui/scroll-area";
-import { Button } from "@/Components/ui/button";
-import { ChevronUp } from "lucide-react";
 
-export default function Edit({ mustVerifyEmail, status }) {
+export default function Edit({ mustVerifyEmail, status, user_meta }) {
   const [activeTab, setActiveTab] = useState("profile");
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
-  // Check screen size on mount and resize
   useEffect(() => {
     const checkScreenSize = () => {
       setIsMobile(window.innerWidth < 1024);
     };
 
+    const handleScroll = () => {
+      setShowScrollTop(window.pageYOffset > 300);
+    };
+
     checkScreenSize();
     window.addEventListener("resize", checkScreenSize);
+    window.addEventListener("scroll", handleScroll);
 
-    return () => window.removeEventListener("resize", checkScreenSize);
+    return () => {
+      window.removeEventListener("resize", checkScreenSize);
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
+
+  const handleTabChange = (value) => {
+    setActiveTab(value);
+    setShowMobileMenu(false);
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const tabs = [
     {
@@ -53,7 +69,7 @@ export default function Edit({ mustVerifyEmail, status }) {
       icon: User,
       description: "Update your account details",
       component: UpdateProfileInformationForm,
-      props: { mustVerifyEmail, status },
+      props: { mustVerifyEmail, status, user_meta },
     },
     {
       value: "security",
@@ -100,16 +116,11 @@ export default function Edit({ mustVerifyEmail, status }) {
     },
   ];
 
-  const handleTabChange = (value) => {
-    setActiveTab(value);
-    setShowMobileMenu(false);
-  };
-
   return (
     <AdminLayout>
       <Head title="Profile Settings" />
 
-      <div className="container mx-auto py-4 px-4 sm:px-6 lg:px-8 min-h-screen">
+      <div className="container mx-auto py-4 px-4 sm:px-6 lg:px-8">
         {/* Header Card */}
         <Card className="mb-6 border-none shadow-sm bg-gradient-to-r from-primary/10 via-primary/5 to-background">
           <CardHeader className="pb-4">
@@ -138,16 +149,14 @@ export default function Edit({ mustVerifyEmail, status }) {
 
         <div className="grid grid-cols-12 gap-6">
           {/* Sidebar Navigation */}
-          <div
-            className={cn(
-              "lg:col-span-3 col-span-12",
-              "lg:block",
-              !showMobileMenu && !isMobile ? "block" : "hidden",
-              showMobileMenu && isMobile ? "block" : "hidden"
-            )}
-          >
-            <div className="sticky top-6 space-y-2 bg-background p-4 rounded-lg border">
-              <ScrollArea className="h-[calc(100vh-16rem)]">
+          <div className={cn(
+            "lg:col-span-3 col-span-12",
+            "lg:block",
+            !showMobileMenu && !isMobile ? "block" : "hidden",
+            showMobileMenu && isMobile ? "block" : "hidden"
+          )}>
+            <Card className="border shadow-sm">
+              <div className="p-2">
                 {tabs.map((tab) => (
                   <button
                     key={tab.value}
@@ -157,98 +166,52 @@ export default function Edit({ mustVerifyEmail, status }) {
                       "hover:bg-muted transition-colors",
                       "focus:outline-none focus:ring-2 focus:ring-primary/20",
                       activeTab === tab.value && "bg-muted",
-                      tab.destructive &&
-                        "text-destructive hover:bg-destructive/10"
+                      tab.destructive && "text-destructive hover:bg-destructive/10"
                     )}
                   >
                     <tab.icon className="h-4 w-4 shrink-0" />
                     <span className="truncate">{tab.label}</span>
                   </button>
                 ))}
-              </ScrollArea>
-            </div>
+              </div>
+            </Card>
           </div>
 
-          {/* Main Content - Added min-height and overflow handling */}
+          {/* Main Content */}
           <div className="lg:col-span-9 col-span-12">
-            <div className="relative min-h-[600px]">
-              {" "}
-              {/* Added wrapper with min-height */}
-              <Tabs
-                value={activeTab}
-                onValueChange={handleTabChange}
-                className="space-y-6"
-              >
-                {/* Tab Contents - Modified animations */}
-                {tabs.map((tab) => (
-                  <TabsContent
-                    key={tab.value}
-                    value={tab.value}
-                    className={cn(
-                      "mt-0 rounded-lg border shadow-sm",
-                      "absolute top-0 left-0 w-full",
-                      "transition-all duration-300 ease-in-out",
-                      "data-[state=inactive]:opacity-0 data-[state=active]:opacity-100",
-                      "data-[state=inactive]:translate-x-2 data-[state=active]:translate-x-0",
-                      "data-[state=inactive]:pointer-events-none data-[state=active]:pointer-events-auto",
-                      tab.destructive && "border-destructive/50"
-                    )}
-                    style={{
-                      transform: "translate3d(0, 0, 0)", // Force GPU acceleration
-                    }}
-                  >
-                    <tab.component {...tab.props} />
-                  </TabsContent>
-                ))}
-              </Tabs>
-            </div>
+            <Tabs value={activeTab} className="space-y-6">
+              {tabs.map((tab) => (
+                <TabsContent
+                  key={tab.value}
+                  value={tab.value}
+                  className={cn(
+                    "mt-0 focus-visible:outline-none focus-visible:ring-0",
+                    "data-[state=active]:animate-in data-[state=inactive]:animate-out",
+                    "data-[state=inactive]:slide-out-to-left data-[state=active]:slide-in-from-right",
+                    "duration-200 ease-in-out"
+                  )}
+                >
+                  <tab.component {...tab.props} />
+                </TabsContent>
+              ))}
+            </Tabs>
           </div>
         </div>
       </div>
 
-      {/* Optional: Add a scroll to top button for better UX */}
-      <ScrollToTop />
+      {/* Scroll to Top Button */}
+      <Button
+        variant="outline"
+        size="icon"
+        className={cn(
+          "fixed bottom-8 right-8 z-50 rounded-full transition-all duration-300",
+          "bg-background/80 backdrop-blur-sm hover:bg-background",
+          showScrollTop ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
+        )}
+        onClick={scrollToTop}
+      >
+        <ChevronUp className="h-4 w-4" />
+      </Button>
     </AdminLayout>
-  );
-}
-
-// Add a scroll to top button component
-function ScrollToTop() {
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    const toggleVisibility = () => {
-      if (window.pageYOffset > 300) {
-        setIsVisible(true);
-      } else {
-        setIsVisible(false);
-      }
-    };
-
-    window.addEventListener("scroll", toggleVisibility);
-    return () => window.removeEventListener("scroll", toggleVisibility);
-  }, []);
-
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  };
-
-  return (
-    <Button
-      variant="outline"
-      size="icon"
-      className={cn(
-        "fixed bottom-8 right-8 z-50 rounded-full transition-all duration-300",
-        isVisible
-          ? "opacity-100 translate-y-0"
-          : "opacity-0 translate-y-4 pointer-events-none"
-      )}
-      onClick={scrollToTop}
-    >
-      <ChevronUp className="h-4 w-4" />
-    </Button>
   );
 }

@@ -64,6 +64,7 @@ const ErrorAlert = ({ errors }) => {
 };
 
 export default function EditBlog({ blog, categories = [] }) {
+  console.log(blog);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data, setData, put, processing, errors } = useForm({

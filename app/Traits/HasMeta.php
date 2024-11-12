@@ -6,6 +6,7 @@ namespace App\Traits;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 trait HasMeta
 {
@@ -22,8 +23,9 @@ trait HasMeta
             return $this->metaCache[$key];
         }
 
-        $value = Cache::tags(['user_meta', "user_{$this->id}"])->remember(
-            "user_{$this->id}_meta_{$key}",
+        $cacheKey = "user_meta_{$this->id}_{$key}";
+        $value = Cache::remember(
+            $cacheKey,
             now()->addHours(24),
             fn () => $this->meta()->where('meta_key', $key)->value('meta_value')
         );
@@ -44,6 +46,52 @@ trait HasMeta
         $this->metaCache[$key] = $value;
     }
 
+    public function setMultipleMeta(array $data): void
+    {
+        DB::transaction(function () use ($data) {
+            foreach ($data as $key => $value) {
+                $this->setMeta($key, $value);
+            }
+        });
+    }
+
+    public function getMetaByPrefix(string $prefix): array
+    {
+        $cacheKey = "user_meta_{$this->id}_prefix_{$prefix}";
+        return Cache::remember(
+            $cacheKey,
+            now()->addHours(24),
+            fn () => $this->meta()
+                ->where('meta_key', 'LIKE', "{$prefix}%")
+                ->pluck('meta_value', 'meta_key')
+                ->toArray()
+        );
+    }
+
+    public function incrementMeta(string $key, int $amount = 1): int
+    {
+        $value = (int) $this->getMeta($key, 0) + $amount;
+        $this->setMeta($key, $value);
+        return $value;
+    }
+
+    public function decrementMeta(string $key, int $amount = 1): int
+    {
+        return $this->incrementMeta($key, -$amount);
+    }
+
+    public function toggleMeta(string $key): bool
+    {
+        $value = !$this->getMeta($key, false);
+        $this->setMeta($key, $value);
+        return $value;
+    }
+
+    public function hasMeta(string $key): bool
+    {
+        return $this->getMeta($key) !== null;
+    }
+
     public function deleteMeta(string $key): bool
     {
         $deleted = $this->meta()->where('meta_key', $key)->delete();
@@ -55,8 +103,9 @@ trait HasMeta
 
     public function getAllMeta(): array
     {
-        return Cache::tags(['user_meta', "user_{$this->id}"])->remember(
-            "user_{$this->id}_all_meta",
+        $cacheKey = "user_meta_{$this->id}_all";
+        return Cache::remember(
+            $cacheKey,
             now()->addHours(24),
             fn () => $this->meta()->pluck('meta_value', 'meta_key')->toArray()
         );
@@ -64,32 +113,46 @@ trait HasMeta
 
     public function syncMeta(array $meta): void
     {
-        $existingKeys = $this->meta()->pluck('meta_key')->toArray();
-        $newKeys = array_keys($meta);
+        DB::transaction(function () use ($meta) {
+            $existingKeys = $this->meta()->pluck('meta_key')->toArray();
+            $newKeys = array_keys($meta);
 
-        // Delete removed keys
-        $keysToDelete = array_diff($existingKeys, $newKeys);
-        if (!empty($keysToDelete)) {
-            $this->meta()->whereIn('meta_key', $keysToDelete)->delete();
-        }
+            // Delete removed keys
+            $keysToDelete = array_diff($existingKeys, $newKeys);
+            if (!empty($keysToDelete)) {
+                $this->meta()->whereIn('meta_key', $keysToDelete)->delete();
+            }
 
-        // Update or create new meta
-        foreach ($meta as $key => $value) {
-            $this->setMeta($key, $value);
-        }
+            // Update or create new meta
+            foreach ($meta as $key => $value) {
+                $this->setMeta($key, $value);
+            }
 
-        $this->clearAllMetaCache();
+            $this->clearAllMetaCache();
+        });
     }
 
     protected function clearMetaCache(string $key): void
     {
-        Cache::tags(['user_meta', "user_{$this->id}"])->forget("user_{$this->id}_meta_{$key}");
-        Cache::tags(['user_meta', "user_{$this->id}"])->forget("user_{$this->id}_all_meta");
+        Cache::forget("user_meta_{$this->id}_{$key}");
+        Cache::forget("user_meta_{$this->id}_all");
     }
 
     protected function clearAllMetaCache(): void
     {
-        Cache::tags(['user_meta', "user_{$this->id}"])->flush();
+        // Clear all related cache keys
+        $keys = [
+            "user_meta_{$this->id}_all",
+            ...array_map(
+                fn($key) => "user_meta_{$this->id}_{$key}",
+                array_keys($this->getAllMeta())
+            )
+        ];
+
+        foreach ($keys as $key) {
+            Cache::forget($key);
+        }
+
         $this->metaCache = [];
     }
 } 

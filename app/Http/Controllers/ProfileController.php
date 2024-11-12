@@ -1,8 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\User;
+use App\Services\Admin\UserService;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,12 +17,17 @@ use Inertia\Response;
 
 class ProfileController extends Controller
 {
+    public function __construct(
+        private readonly UserService $userService
+    ) {}
+
     /**
      * Display the user's profile form.
      */
     public function edit(Request $request): Response
     {
         return Inertia::render('Profile/Edit', [
+            'user_meta' => $request->user()->getAllMeta(),
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
         ]);
@@ -36,8 +45,24 @@ class ProfileController extends Controller
         }
 
         $request->user()->save();
+        $data['files'] = [
+            'avatar' => $request->input('avatar'),
+        ];
+        if (!empty($data['files']['avatar'])) {
+            $this->userService->handleFileUploads($request->user(), $data['files']);
+        }
+
+        $this->updateMeta($request, $request->user());
 
         return Redirect::route('profile.edit');
+    }
+
+    public function updateMeta(ProfileUpdateRequest $request, User $user): bool
+    {
+       
+        $this->userService->updateUserMeta($user->id, $request->metaData);
+
+        return true;
     }
 
     /**

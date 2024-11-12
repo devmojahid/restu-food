@@ -247,7 +247,7 @@ const EmailSettings = ({ emailOptions = {}, defaults = {} }) => {
                         onValueChange={(value) => updateOption('mail_driver', value)}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select mail driver" />
+                          <SelectValue placeholder="Select mail driver" className="text-gray-400" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="smtp">SMTP</SelectItem>

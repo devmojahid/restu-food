@@ -26,6 +26,10 @@ Route::get('/', function () {
 Route::middleware(['auth'])->group(function () {
     Route::post('app/files/upload', [FileController::class, 'upload']);
     Route::delete('app/files/{file}', [FileController::class, 'destroy']);
+    // User profile routes
+    Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
+    Route::put('/users/{user}/meta', [UserController::class, 'updateMeta'])->name('users.meta.update');
+    Route::put('/users/{user}/avatar', [UserController::class, 'updateAvatar'])->name('users.avatar.update');
 });
 
 // Route::get('admin/dashboard', function () {

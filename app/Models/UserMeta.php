@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class UserMeta extends Model
 {
+    protected $table = 'user_meta';
     protected $fillable = [
         'user_id',
         'meta_key',
