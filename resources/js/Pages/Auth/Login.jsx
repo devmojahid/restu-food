@@ -2,18 +2,23 @@ import { useEffect, useState } from "react";
 import InputError from "@/Components/InputError";
 import InputLabel from "@/Components/InputLabel";
 import { Head, Link, useForm } from "@inertiajs/react";
+import BlankLayout from "@/Layouts/Blank/BlankLayout";
 import { Card } from "@/Components/ui/card";
 import { Input } from "@/Components/ui/input";
 import { Button } from "@/Components/ui/button";
-import { Facebook, Github } from "lucide-react";
-import BlankLayout from "@/Layouts/Blank/BlankLayout";
+import SocialLogin from "@/Components/Auth/SocialLogin";
+import { useToast } from "@/Components/ui/use-toast";
+import ReCaptcha from "@/Components/Auth/ReCaptcha";
 
-export default function Login({ status, canResetPassword }) {
+export default function Login({ status, canResetPassword, enabledProviders, captchaEnabled, captchaSiteKey, captchaType }) {
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+
   const { data, setData, post, processing, errors, reset } = useForm({
     email: "",
     password: "",
     remember: false,
+    captcha_token: "",
   });
 
   useEffect(() => {
@@ -22,14 +27,76 @@ export default function Login({ status, canResetPassword }) {
     };
   }, []);
 
-  const submit = (e) => {
+  const handleRecaptchaVerify = (token) => {
+    setData(prevData => ({
+      ...prevData,
+      captcha_token: token
+    }));
+  };
+
+  const submit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
-    post(route("login"), {
-      onSuccess: () => setIsLoading(false),
-      onError: () => setIsLoading(false),
-    });
+    try {
+      // Handle reCAPTCHA
+      if (captchaEnabled && !data.captcha_token) {
+        toast({
+          title: "Verification Required",
+          description: "Please complete the reCAPTCHA verification.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Submit form
+      post(route("login"), {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => {
+          setIsLoading(false);
+          toast({
+            title: "Success",
+            description: "Login successful!",
+          });
+        },
+        onError: (errors) => {
+          setIsLoading(false);
+          if (errors.captcha) {
+            // Reset reCAPTCHA on verification failure
+            if (window.grecaptcha) {
+              if (captchaType === 'v2_checkbox') {
+                window.grecaptcha.reset();
+              }
+              setData(prevData => ({
+                ...prevData,
+                captcha_token: ''
+              }));
+            }
+            toast({
+              title: "Verification Failed",
+              description: errors.captcha,
+              variant: "destructive",
+            });
+            return;
+          }
+          toast({
+            title: "Error",
+            description: "Login failed. Please check your credentials.",
+            variant: "destructive",
+          });
+        },
+      });
+    } catch (error) {
+      setIsLoading(false);
+      console.error('Login error:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -105,41 +172,24 @@ export default function Login({ status, canResetPassword }) {
                   <InputError message={errors.password} className="mt-2" />
                 </div>
 
-                <Button className="mt-2" loading={isLoading}>
-                  Login
+                <ReCaptcha
+                  enabled={captchaEnabled}
+                  siteKey={captchaSiteKey}
+                  type={captchaType}
+                  action="login"
+                  onVerify={handleRecaptchaVerify}
+                  error={errors.captcha}
+                />
+
+                <Button 
+                  className="mt-2" 
+                  loading={isLoading}
+                  disabled={captchaEnabled && !data.captcha_token}
+                >
+                  Log in
                 </Button>
 
-                <div className="relative my-2">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
-                      Or continue with
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    type="button"
-                    loading={isLoading}
-                    leftSection={<Github className="h-4 w-4" />}
-                  >
-                    GitHub
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    type="button"
-                    loading={isLoading}
-                    leftSection={<Facebook className="h-4 w-4" />}
-                  >
-                    Facebook
-                  </Button>
-                </div>
+                <SocialLogin enabledProviders={enabledProviders} />
               </div>
             </form>
             <p className="mt-4 px-8 text-center text-sm text-muted-foreground">

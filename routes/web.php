@@ -180,6 +180,7 @@ Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
         })->name('notifications');
         // Route::post('/localization/update', [SettingsController::class, 'localizationUpdate'])->name('localization.update');
         // Add more routes as needed
+        Route::get('/auth', [OptionsController::class, 'auth'])->name('auth');
     });
 
     /**

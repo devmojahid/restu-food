@@ -11,8 +11,9 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 
-final class User extends Authenticatable
+final class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable, HasRoles, HasFiles, HasMeta;
 
@@ -94,5 +95,10 @@ final class User extends Authenticatable
     {
         $lastActivity = $this->getMeta('last_activity');
         return $lastActivity && now()->diffInMinutes($lastActivity) < 5;
+    }
+
+    public function socialAccounts()
+    {
+        return $this->hasMany(SocialAccount::class);
     }
 }

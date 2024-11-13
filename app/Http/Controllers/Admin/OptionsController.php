@@ -87,4 +87,44 @@ final class OptionsController extends Controller
             return back()->with('error', 'Failed to save settings');
         }
     }
+
+    public function auth(): Response
+    {
+        try {
+            $this->optionsService->flushCache();
+            
+            $authOptions = $this->optionsService->getGroupKeyValues('auth');
+            
+            $defaults = [
+                'social_login_enabled' => false,
+                'google_login_enabled' => false,
+                'facebook_login_enabled' => false,
+                'github_login_enabled' => false,
+                'linkedin_login_enabled' => false,
+                'captcha_enabled' => false,
+                'captcha_type' => 'v2_invisible',
+            ];
+
+            $mergedOptions = array_merge(
+                $defaults,
+                array_filter($authOptions, fn($value) => !empty($value))
+            );
+
+            return Inertia::render('Admin/Settings/Auth/Index', [
+                'authOptions' => $mergedOptions,
+                'defaults' => $defaults
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to load auth settings', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return Inertia::render('Admin/Settings/Auth/Index', [
+                'authOptions' => $defaults,
+                'defaults' => $defaults,
+                'error' => 'Failed to load authentication settings'
+            ]);
+        }
+    }
 } 

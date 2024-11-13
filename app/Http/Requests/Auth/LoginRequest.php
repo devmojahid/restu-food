@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use App\Services\ReCaptchaService;
 
 class LoginRequest extends FormRequest
 {
@@ -41,7 +42,17 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        // Verify reCAPTCHA if enabled
+        $reCaptchaService = app(ReCaptchaService::class);
+        if ($reCaptchaService->isEnabled()) {
+            if (!$reCaptchaService->verify($this->input('captcha_token'))) {
+                throw ValidationException::withMessages([
+                    'captcha' => 'Invalid reCAPTCHA response. Please try again.'
+                ]);
+            }
+        }
+
+        if (!Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
