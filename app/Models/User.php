@@ -96,9 +96,4 @@ final class User extends Authenticatable implements MustVerifyEmail
         $lastActivity = $this->getMeta('last_activity');
         return $lastActivity && now()->diffInMinutes($lastActivity) < 5;
     }
-
-    public function socialAccounts()
-    {
-        return $this->hasMany(SocialAccount::class);
-    }
 }
