@@ -5,18 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class FoodItemVariant extends Model
+class ProductVariant extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'food_item_id',
+        'product_id',
         'name',
         'price',
     ];
 
-    public function foodItem()
+    public function Product()
     {
-        return $this->belongsTo(FoodItem::class);
+        return $this->belongsTo(Product::class);
     }
 }

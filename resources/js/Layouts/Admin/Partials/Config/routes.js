@@ -65,7 +65,7 @@ export const routes = {
             },
             categories: {
                 name: "Categories",
-                path: "/app/products/categories",
+                path: "/app/categories?type=product",
                 icon: "Folder"
             },
             productOptions: {
