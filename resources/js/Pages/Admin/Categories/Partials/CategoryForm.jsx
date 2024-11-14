@@ -36,6 +36,7 @@ const CategoryForm = ({
   const { toast } = useToast();
   const iconUploaderRef = useRef(null);
   const thumbnailUploaderRef = useRef(null);
+  const type = new URLSearchParams(window.location.search).get('type') || 'blog';
 
   // Initial form state
   const initialFormState = {
@@ -43,7 +44,7 @@ const CategoryForm = ({
     slug: "",
     description: "",
     parent_id: null,
-    type: "blog",
+    type: type,
     sort_order: 0,
     is_active: true,
     files: {
@@ -187,7 +188,7 @@ const CategoryForm = ({
         .trim()
         .replace(/[^a-z0-9-]/g, "-")
         .replace(/-+/g, "-")
-        .repl{!!  !!}(/^-|-$/g, "");
+        .replace(/^-|-$/g, "");
       setData("slug", slug);
     }
   }, [data.name, isEditing]);

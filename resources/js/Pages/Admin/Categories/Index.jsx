@@ -52,18 +52,18 @@ const Index = ({ categories, filters, parentCategories, can }) => {
         />
 
         <div className="space-y-6">
-          {(can.create || can.edit) && (
+          {/* {(can.create || can.edit) && ( */}
             <Card className="p-6">
               <CategoryForm
                 category={selectedCategory}
                 categories={parentCategories}
                 isEditing={isEditing}
                 onCancel={handleCancelEdit}
-                onSuccess={handleSuccess}
-                can={can}
-              />
-            </Card>
-          )}
+              onSuccess={handleSuccess}
+              can={can}
+            />
+          </Card>
+          {/* )} */}
 
           <Card className="p-6">
             <CategoryList
