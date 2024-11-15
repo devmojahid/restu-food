@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\{
     CategoryController,
     DashboardController,
     FileController,
+    ProductController,
     RoleController,
     UserController
 };
@@ -99,15 +100,35 @@ Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
         Route::delete('/bulk-delete', [UserController::class, 'bulkDelete'])->name('bulk-delete');
         Route::put('/bulk-status', [UserController::class, 'bulkUpdateStatus'])->name('bulk-status');
     });
-
-    /**
-     * Roles Management
-     */
     Route::name('app.')->group(function () {
+        /**
+         * Roles Management
+         */
         Route::resource('roles', RoleController::class);
         Route::put('roles/{role}/permissions', [RoleController::class, 'updatePermissions'])
             ->name('roles.permissions.update');
+        
+        /**
+         * Categories Management
+         */
+        Route::resource('categories', CategoryController::class);
+        Route::put('categories/reorder', [CategoryController::class, 'reorder'])->name('categories.reorder');
+        Route::put('categories/{category}/move', [CategoryController::class, 'move'])->name('categories.move');
+        Route::put('categories/{category}/status', [CategoryController::class, 'updateStatus'])->name('categories.status');
+
+        /**
+         * Products Management
+         */
+        Route::resource('products', ProductController::class);
     });
+
+    // Options Management Routes
+    Route::group(['prefix' => 'options', 'as' => 'options.'], function () {
+        Route::get('/', [OptionsController::class, 'index'])->name('index');
+        Route::post('/', [OptionsController::class, 'store'])->name('store');
+        Route::delete('{key}', [OptionsController::class, 'destroy'])->name('destroy');
+    });
+
     /*
     * Settings
     */
@@ -183,22 +204,6 @@ Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
         Route::get('/auth', [OptionsController::class, 'auth'])->name('auth');
     });
 
-    /**
-     * Categories Management
-     */
-    Route::name('app.')->group(function () {
-        Route::resource('categories', CategoryController::class);
-        Route::put('categories/reorder', [CategoryController::class, 'reorder'])->name('categories.reorder');
-        Route::put('categories/{category}/move', [CategoryController::class, 'move'])->name('categories.move');
-        Route::put('categories/{category}/status', [CategoryController::class, 'updateStatus'])->name('categories.status');
-    });
-
-    // Options Management Routes
-    Route::group(['prefix' => 'options', 'as' => 'options.'], function () {
-        Route::get('/', [OptionsController::class, 'index'])->name('index');
-        Route::post('/', [OptionsController::class, 'store'])->name('store');
-        Route::delete('{key}', [OptionsController::class, 'destroy'])->name('destroy');
-    });
 });
 
 

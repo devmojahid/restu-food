@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
-final class ProductsController extends Controller
+final class ProductController extends Controller
 {
     public function __construct(
         private readonly ProductService $productService

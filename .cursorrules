@@ -1,4 +1,12 @@
 
+Project context: This is a Laravel 11 project with Inertia Js and React Js realtime food ordering and delivery app. and also it has admin panel. and also it has a mobile app. and also it has a web app. and also it has a api. and there have single admin panel for deferant role users like admin, manager, delivery boy, customer. and also it has a payment gateway. and also it has a email and sms notification system. and also it has a report system. and also it has a chat system. and also it has a live location tracking system. and also it has a live chat system. and also it has a live support system. and also it has a live notification system. and also it has a live report system. and also it has a live chat system. and also it has a live support system. and also it has a live notification system. and also it has a live report system. all this features uses laravel breeze for authentication and authorization.and all the project is build for mobile first and also it has a desktop version. i need fully functional and fully 100% responsive system for all devices. and complete project should real time features ready using Laravel Reverb.
+
+Most important thing do not use type script in this project. not any tsx or ts file. only use javascript and jsx.
+and aslo you can use scss for styling with shadcn ui and tailwind css. for better design and responsive design. 
+my scss file location is resources/sass/app.scss
+and scss folder location is resources/sass/dashboard, resources/sass/dashboard/components, resources/sass/dashboard/theme, resources/sass/dashboard/utils,
+try to write bellow code in scss use tailwind css classess and shadcn ui classess everywhere if very necessary need scss file use it.
+
 # Laravel Development Standards and Best Practices
 
 You are an expert in Laravel, PHP, and related web development technologies.
@@ -112,6 +120,7 @@ You are an expert in Laravel, PHP, and related web development technologies.
 # React Development Standards and Best Practices
 You are a Senior Front-End Developer and an Expert in ReactJS, Inertia Js
 
+- Do not use type script in this project. not any tsx or ts file. only use javascript and jsx.
 - Follow the user’s requirements carefully & to the letter.
 - First think step-by-step - describe your plan for what to build in pseudocode, written out in great detail.
 - Confirm, then write code!
