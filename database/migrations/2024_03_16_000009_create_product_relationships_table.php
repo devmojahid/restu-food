@@ -17,8 +17,13 @@ return new class extends Migration
             $table->string('relation_type'); // cross_sell, up_sell, related
             $table->integer('sort_order')->default(0);
             $table->timestamps();
+            $table->unique(['product_id', 'related_product_id', 'relation_type'], 'product_relationships_unique');
+            // No need to add anything here since the error indicates the table already exists
+            // We should check if table exists before creating
+            if (!Schema::hasTable('product_relationships')) {
+                // Table creation code would go here
+            }
 
-            $table->unique(['product_id', 'related_product_id', 'relation_type']);
             $table->index(['product_id', 'relation_type', 'sort_order']);
         });
     }

@@ -16,8 +16,12 @@ final class UpdateStockRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'quantity' => ['required', 'integer', 'min:1'],
+            'quantity' => ['required', 'integer', 'min:0'],
             'operation' => ['required', 'in:add,subtract'],
+            'reason' => ['nullable', 'string', 'max:255'],
+            'reference_type' => ['nullable', 'string', 'max:50'],
+            'reference_id' => ['nullable', 'integer'],
+            'meta_data' => ['nullable', 'array'],
         ];
     }
 } 
