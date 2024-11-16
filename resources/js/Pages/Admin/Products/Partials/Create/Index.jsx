@@ -479,42 +479,42 @@ const DEMO_SPECIFICATION_GROUPS = [
   },
 ];
 
-// Update the SpecificationGroupCard component for smaller size
+// Update the SpecificationGroupCard component for better UI
 const SpecificationGroupCard = ({ group, isSelected, isCompleted, onClick }) => {
   return (
     <div
       onClick={onClick}
       className={cn(
-        "flex-shrink-0 w-[220px] sm:w-[250px] p-3 rounded-lg cursor-pointer transition-all duration-200",
-        "border-2 hover:shadow-md relative group",
+        "flex-shrink-0 w-[180px] sm:w-[200px] p-2.5 rounded-lg cursor-pointer transition-all duration-200",
+        "border hover:shadow-md relative group",
         "hover:scale-[1.02] active:scale-[0.98]",
         isSelected 
-          ? "border-primary bg-primary/5 shadow-md ring-2 ring-primary/20" 
+          ? "border-primary bg-primary/5 shadow-md" 
           : "border-border hover:border-primary/30",
         isCompleted && "border-green-500/50 bg-green-50/50 dark:bg-green-900/10"
       )}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-2.5">
         <div className={cn(
-          "p-2.5 rounded-lg",
+          "p-2 rounded-lg",
           isSelected ? "bg-primary/10" : "bg-muted",
           isCompleted && "bg-green-100 dark:bg-green-900/20"
         )}>
-          <span className="text-2xl">{group.icon}</span>
+          <span className="text-xl">{group.icon}</span>
         </div>
-        <div className="space-y-1.5 flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="font-medium text-sm sm:text-base truncate">
+        <div className="space-y-1 flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-1">
+            <h3 className="font-medium text-xs sm:text-sm truncate">
               {group.name}
             </h3>
             {isCompleted && (
-              <Badge variant="success" className="shrink-0 text-xs">
-                <CheckCircle className="w-3 h-3 mr-1" />
+              <Badge variant="success" className="shrink-0 text-[10px]">
+                <CheckCircle className="w-2.5 h-2.5 mr-0.5" />
                 Done
               </Badge>
             )}
           </div>
-          <p className="text-xs text-muted-foreground line-clamp-2">
+          <p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-2">
             {group.description}
           </p>
         </div>
@@ -540,12 +540,12 @@ const SpecificationField = ({ spec, value, onChange }) => {
   };
 
   return (
-    <div className="space-y-3">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+    <div className="space-y-2.5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
         <div className="space-y-1">
           <Label 
             htmlFor={`spec_${spec.id}`} 
-            className="flex items-center gap-2 text-sm font-medium"
+            className="flex items-center gap-1.5 text-xs sm:text-sm font-medium"
           >
             {spec.name}
             {spec.required && (
@@ -555,69 +555,17 @@ const SpecificationField = ({ spec, value, onChange }) => {
             )}
           </Label>
           {spec.help_text && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] sm:text-xs text-muted-foreground">
               {spec.help_text}
             </p>
           )}
         </div>
       </div>
       <div className="w-full">
-        {spec.input_type === 'text' && (
-          <Input
-            id={`spec_${spec.id}`}
-            type="text"
-            value={inputValue}
-            onChange={(e) => handleInputChange(e.target.value)}
-            className="w-full h-9"
-            placeholder={spec.placeholder || `Enter ${spec.name.toLowerCase()}`}
-          />
-        )}
-        {spec.input_type === 'number' && (
-          <div className="flex flex-col sm:flex-row gap-2">
-            <div className="relative flex-1">
-              <Input
-                type="number"
-                id={`spec_${spec.id}`}
-                value={inputValue}
-                onChange={(e) => handleInputChange(e.target.value)}
-                className="w-full h-9 pr-12"
-                step={spec.step || "1"}
-                min={spec.min}
-                max={spec.max}
-                placeholder="0"
-              />
-              {spec.unit && !spec.unit_group && (
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                  {spec.unit}
-                </span>
-              )}
-            </div>
-            {spec.unit && spec.unit_group && (
-              <Select
-                value={spec.default_unit}
-                onValueChange={(unitValue) => {
-                  // Handle unit change
-                }}
-                className="w-full sm:w-[120px]"
-              >
-                <SelectTrigger className="h-9">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {COMMON_UNITS[spec.unit_group]?.map((unit) => (
-                    <SelectItem key={unit.value} value={unit.value}>
-                      {unit.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          </div>
-        )}
-        {/* ... (keep other input types) ... */}
+        {renderSpecificationInput(spec, inputValue, handleInputChange)}
       </div>
       {spec.description && (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-[10px] sm:text-xs text-muted-foreground">
           {spec.description}
         </p>
       )}
@@ -634,7 +582,7 @@ const renderSpecificationInput = (spec, value, onChange) => {
           value={value || ''}
           onValueChange={onChange}
         >
-          <SelectTrigger className="w-full h-10">
+          <SelectTrigger className="w-full h-10 text-sm">
             <SelectValue placeholder={`Select ${spec.name.toLowerCase()}`} />
           </SelectTrigger>
           <SelectContent>
@@ -642,7 +590,7 @@ const renderSpecificationInput = (spec, value, onChange) => {
               <SelectItem 
                 key={option.value} 
                 value={option.value}
-                className="cursor-pointer"
+                className="text-sm cursor-pointer"
               >
                 {option.label}
               </SelectItem>
@@ -659,15 +607,20 @@ const renderSpecificationInput = (spec, value, onChange) => {
               type="number"
               id={`spec_${spec.id}`}
               value={value || ''}
-              onChange={(e) => onChange(e.target.value)}
-              className="w-full h-10 pr-12"
+              onChange={(e) => {
+                const newValue = e.target.value;
+                if (newValue === '' || !isNaN(newValue)) {
+                  onChange(newValue);
+                }
+              }}
+              className="w-full h-10 pr-12 text-sm"
               step={spec.step || "1"}
               min={spec.min}
               max={spec.max}
               placeholder="0"
             />
             {spec.unit && !spec.unit_group && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
                 {spec.unit}
               </span>
             )}
@@ -678,9 +631,9 @@ const renderSpecificationInput = (spec, value, onChange) => {
               onValueChange={(unitValue) => {
                 // Handle unit change
               }}
-              className="w-full sm:w-[140px]"
+              className="w-full sm:w-[120px]"
             >
-              <SelectTrigger className="h-10">
+              <SelectTrigger className="h-10 text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -703,7 +656,7 @@ const renderSpecificationInput = (spec, value, onChange) => {
               <Badge
                 key={option.value}
                 variant={value?.includes(option.value) ? "default" : "outline"}
-                className="cursor-pointer py-1.5 px-3 hover:shadow-sm transition-all"
+                className="cursor-pointer py-1.5 px-3 text-xs hover:shadow-sm transition-all"
                 onClick={() => {
                   const current = value || [];
                   const updated = current.includes(option.value)
@@ -731,7 +684,7 @@ const renderSpecificationInput = (spec, value, onChange) => {
           value={value || ''}
           onChange={(e) => onChange(e.target.value)}
           placeholder={spec.placeholder}
-          className="min-h-[100px] resize-y"
+          className="min-h-[100px] resize-y text-sm"
         />
       );
 
@@ -743,7 +696,7 @@ const renderSpecificationInput = (spec, value, onChange) => {
             checked={value || false}
             onCheckedChange={onChange}
           />
-          <Label htmlFor={`spec_${spec.id}`} className="text-sm text-muted-foreground">
+          <Label htmlFor={`spec_${spec.id}`} className="text-xs text-muted-foreground">
             {spec.help_text || `Enable ${spec.name.toLowerCase()}`}
           </Label>
         </div>
@@ -756,7 +709,7 @@ const renderSpecificationInput = (spec, value, onChange) => {
           id={`spec_${spec.id}`}
           value={value || ''}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full h-10"
+          className="w-full h-10 text-sm"
           placeholder={spec.placeholder || `Enter ${spec.name.toLowerCase()}`}
         />
       );
