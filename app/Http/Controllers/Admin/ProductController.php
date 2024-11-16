@@ -10,6 +10,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Restaurant;
 use App\Models\SpecificationGroup;
+use App\Models\ProductAttribute;
 use App\Services\Admin\ProductService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -39,6 +40,25 @@ final class ProductController extends Controller
             'restaurants' => Restaurant::select('id', 'name')->get(),
             'categories' => Category::select('id', 'name')->get(),
             'specificationGroups' => SpecificationGroup::with('specifications')->get(),
+            'globalAttributes' => ProductAttribute::with('values')
+                ->where('is_global', true)
+                ->orderBy('sort_order')
+                ->get()
+                ->map(function ($attribute) {
+                    return [
+                        'id' => $attribute->id,
+                        'name' => $attribute->name,
+                        'type' => $attribute->type,
+                        'values' => $attribute->values->map(function ($value) {
+                            return [
+                                'id' => $value->id,
+                                'value' => $value->value,
+                                'label' => $value->label,
+                                'color_code' => $value->color_code,
+                            ];
+                        }),
+                    ];
+                }),
         ]);
     }
 

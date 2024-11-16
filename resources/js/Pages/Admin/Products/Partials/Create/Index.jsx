@@ -33,6 +33,8 @@ import FileUploader from "@/Components/Admin/Filesystem/FileUploader";
 import { Alert, AlertDescription, AlertTitle } from "@/Components/ui/alert";
 import toast from "react-hot-toast";
 import { ScrollArea, ScrollBar } from "@/Components/ui/scroll-area";
+import { cartesianProduct } from '@/utils/productUtils';
+import VariableProductSection from "./VariableProductSection";
 
 const FILE_COLLECTIONS = {
   THUMBNAIL: {
@@ -108,6 +110,9 @@ const INITIAL_FORM_STATE = {
     stock_status: 'in_stock',
     backorders_allowed: false,
   },
+  is_variable: false,
+  attributes: [],
+  variations: [],
 };
 
 const ErrorAlert = ({ errors }) => {
@@ -716,11 +721,14 @@ const renderSpecificationInput = (spec, value, onChange) => {
   }
 };
 
-export default function CreateProductForm({ restaurants, categories, specificationGroups }) {
+export default function CreateProductForm({ restaurants, categories, specificationGroups, globalAttributes }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [autoUpdateSlug, setAutoUpdateSlug] = useState(true);
   const [selectedGroupId, setSelectedGroupId] = useState(null);
   const [selectedSpecifications, setSelectedSpecifications] = useState({});
+  const [isVariableProduct, setIsVariableProduct] = useState(false);
+  const [selectedAttributes, setSelectedAttributes] = useState([]);
+  const [generatedVariations, setGeneratedVariations] = useState([]);
 
   const { data, setData, post, processing, errors } = useForm(INITIAL_FORM_STATE);
 
@@ -949,6 +957,81 @@ export default function CreateProductForm({ restaurants, categories, specificati
     );
   };
 
+  const handleAttributeChange = (attributeId, values) => {
+    const updatedAttributes = data.attributes.map((attr) => {
+      if (attr.id === attributeId) {
+        return { ...attr, values };
+      }
+      return attr;
+    });
+    setData("attributes", updatedAttributes);
+  };
+
+  const handleRemoveAttribute = (attributeId) => {
+    const updatedAttributes = data.attributes.filter(
+      (attr) => attr.id !== attributeId
+    );
+    setData("attributes", updatedAttributes);
+  };
+
+  const handleAddAttribute = (attribute) => {
+    setData("attributes", [...data.attributes, attribute]);
+  };
+
+  const generateVariations = () => {
+    const variationAttributes = data.attributes.filter(attr => attr.variation);
+    const attributeValues = variationAttributes.map(attr => 
+      attr.isCustom ? attr.values : attr.selectedValues
+    );
+    
+    if (attributeValues.length === 0) {
+      toast.error("Please select at least one attribute for variations");
+      return;
+    }
+
+    const variations = cartesianProduct(...attributeValues).map((combination) => {
+      const attributes = combination.map((value, index) => ({
+        id: variationAttributes[index].id,
+        name: variationAttributes[index].name,
+        value,
+      }));
+      return {
+        attributes,
+        price: data.price,
+        stock_quantity: 0,
+        sku: "",
+        images: [],
+        is_active: true,
+      };
+    });
+    
+    setGeneratedVariations(variations);
+  };
+
+  const handleVariationChange = (index, field, value) => {
+    const updatedVariations = [...generatedVariations];
+    updatedVariations[index] = {
+      ...updatedVariations[index],
+      [field]: value,
+    };
+    setGeneratedVariations(updatedVariations);
+  };
+
+  const handleSaveVariations = () => {
+    setData("variations", generatedVariations);
+  };
+
+  // Update isVariableProduct state to use form data
+  const handleVariableProductChange = (checked) => {
+    setData('is_variable', checked);
+    if (!checked) {
+      // Reset attributes and variations when switching back to simple product
+      setData('attributes', []);
+      setData('variations', []);
+      setGeneratedVariations([]);
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       <ErrorAlert errors={errors} />
@@ -1119,6 +1202,20 @@ export default function CreateProductForm({ restaurants, categories, specificati
 
           {/* Move Specifications Section here - before Variants */}
           <SpecificationsSection />
+
+          <VariableProductSection 
+            isVariableProduct={data.is_variable}
+            setIsVariableProduct={handleVariableProductChange}
+            data={data}
+            globalAttributes={globalAttributes}
+            handleAddAttribute={handleAddAttribute}
+            handleRemoveAttribute={handleRemoveAttribute}
+            handleAttributeChange={handleAttributeChange}
+            generateVariations={generateVariations}
+            generatedVariations={generatedVariations}
+            handleVariationChange={handleVariationChange}
+            handleSaveVariations={handleSaveVariations}
+          />
 
           {/* Variants Section */}
           <VariantsSection />

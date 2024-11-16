@@ -25,7 +25,8 @@ class DatabaseSeeder extends Seeder
             // ... other seeders
             // BlogSeeder::class,
             RolePermissionSeeder::class,
-            // CategoryPermissionSeeder::class
+            // CategoryPermissionSeeder::class,
+            ProductAttributeSeeder::class,
         ]);
     }
 }
