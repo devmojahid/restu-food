@@ -746,20 +746,23 @@ export default function CreateProductForm({ restaurants, categories, specificati
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!data.is_variable && (data.attributes?.length > 0 || data.variations?.length > 0)) {
+      // Reset variable product data if not a variable product
+      setData({
+        ...data,
+        attributes: [],
+        variations: [],
+      });
+    }
+    
     setIsSubmitting(true);
+    post(route("app.products.store"));
+  };
 
-    post(route("app.products.store"), {
-      preserveState: true,
-      preserveScroll: true,
-      onSuccess: () => {
-        setIsSubmitting(false);
-        toast.success("Product created successfully!");
-      },
-      onError: () => {
-        setIsSubmitting(false);
-        toast.error("Failed to create product.");
-      },
-    });
+  // Prevent form submission on button clicks
+  const handleButtonClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
   };
 
   const addVariant = () => {
@@ -1033,7 +1036,15 @@ export default function CreateProductForm({ restaurants, categories, specificati
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
+    <form 
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (e.target === e.currentTarget) {
+          handleSubmit(e);
+        }
+      }} 
+      className="space-y-8"
+    >
       <ErrorAlert errors={errors} />
 
       {/* Form Header */}
@@ -1218,7 +1229,7 @@ export default function CreateProductForm({ restaurants, categories, specificati
           />
 
           {/* Variants Section */}
-          <VariantsSection />
+          {/* <VariantsSection /> */}
 
           {/* Stock Management Card */}
           <Card>

@@ -36,29 +36,36 @@ final class ProductController extends Controller
 
     public function create(): Response
     {
+        $globalAttributes = ProductAttribute::with(['values' => function($query) {
+            $query->orderBy('sort_order');
+        }])
+        ->where('is_global', true)
+        ->orderBy('sort_order')
+        ->get()
+        ->map(function ($attribute) {
+            return [
+                'id' => $attribute->id,
+                'name' => $attribute->name,
+                'type' => $attribute->type,
+                'values' => $attribute->values->map(function ($value) {
+                    return [
+                        'id' => $value->id,
+                        'value' => $value->value,
+                        'label' => $value->label,
+                        'color_code' => $value->color_code,
+                    ];
+                })->values()->all(),
+            ];
+        });
+
+        // Debug the attributes
+        \Log::info('Global Attributes:', ['attributes' => $globalAttributes]);
+
         return Inertia::render('Admin/Products/Create', [
             'restaurants' => Restaurant::select('id', 'name')->get(),
             'categories' => Category::select('id', 'name')->get(),
             'specificationGroups' => SpecificationGroup::with('specifications')->get(),
-            'globalAttributes' => ProductAttribute::with('values')
-                ->where('is_global', true)
-                ->orderBy('sort_order')
-                ->get()
-                ->map(function ($attribute) {
-                    return [
-                        'id' => $attribute->id,
-                        'name' => $attribute->name,
-                        'type' => $attribute->type,
-                        'values' => $attribute->values->map(function ($value) {
-                            return [
-                                'id' => $value->id,
-                                'value' => $value->value,
-                                'label' => $value->label,
-                                'color_code' => $value->color_code,
-                            ];
-                        }),
-                    ];
-                }),
+            'globalAttributes' => $globalAttributes,
         ]);
     }
 

@@ -5,7 +5,7 @@ import AdminLayout from "@/Layouts/Admin/AdminLayout";
 import { Plus, Home, Package, Save, ArrowLeft } from "lucide-react";
 import Breadcrumb from "@/Components/Admin/Breadcrumb";
 
-const CreateProduct = ({ restaurants, categories, specificationGroups }) => {
+const CreateProduct = ({ restaurants, categories, specificationGroups, globalAttributes }) => {
   return (
     <AdminLayout>
       <Head title="Create Product" />
@@ -22,6 +22,7 @@ const CreateProduct = ({ restaurants, categories, specificationGroups }) => {
           restaurants={restaurants} 
           categories={categories}
           specificationGroups={specificationGroups}
+          globalAttributes={globalAttributes}
         />
       </div>
     </AdminLayout>

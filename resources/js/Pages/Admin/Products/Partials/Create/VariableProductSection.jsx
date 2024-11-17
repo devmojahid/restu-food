@@ -9,7 +9,7 @@ import { Badge } from "@/Components/ui/badge";
 import { ScrollArea } from "@/Components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/Components/ui/tabs";
 import FileUploader from "@/Components/Admin/Filesystem/FileUploader";
-import { Plus, Trash2, Copy, AlertCircle } from "lucide-react";
+import { Plus, Trash2, Copy, AlertCircle, X } from "lucide-react";
 import { Alert, AlertDescription } from "@/Components/ui/alert";
 import { cartesianProduct, generateSKU } from '@/utils/productUtils';
 import { toast } from 'react-hot-toast';
@@ -91,11 +91,42 @@ const AttributeForm = ({
     isGlobal = false
 }) => {
     const [isEditing, setIsEditing] = useState(false);
-    const [editedValues, setEditedValues] = useState(attribute.values || []);
+    const [editedValues, setEditedValues] = useState(
+        Array.isArray(attribute.values) ? attribute.values : 
+        attribute.values?.split(',').map(v => v.trim()) || []
+    );
+
+    const validateValues = (values) => {
+        if (!values.length) {
+            toast.error("At least one value is required");
+            return false;
+        }
+        if (values.some(v => !v.trim())) {
+            toast.error("Empty values are not allowed");
+            return false;
+        }
+        return true;
+    };
 
     const handleSaveValues = () => {
-        onUpdate(attribute.id, 'values', editedValues);
-        setIsEditing(false);
+        if (validateValues(editedValues)) {
+            onUpdate(attribute.id, 'values', editedValues);
+            setIsEditing(false);
+        }
+    };
+
+    const handleBulkAdd = () => {
+        const input = prompt("Enter multiple values separated by commas");
+        if (input) {
+            const newValues = input.split(',').map(v => v.trim()).filter(Boolean);
+            if (validateValues(newValues)) {
+                setEditedValues([...new Set([...editedValues, ...newValues])]);
+            }
+        }
+    };
+
+    const handleRemoveValue = (valueToRemove) => {
+        setEditedValues(editedValues.filter(v => v !== valueToRemove));
     };
 
     return (
@@ -153,11 +184,25 @@ const AttributeForm = ({
                         <>
                             {isEditing ? (
                                 <div className="space-y-2">
-                                    <Input
-                                        value={editedValues.join(", ")}
-                                        onChange={(e) => setEditedValues(e.target.value.split(",").map(v => v.trim()))}
-                                        placeholder="Enter values separated by commas"
-                                    />
+                                    <div className="flex gap-2">
+                                        <Input
+                                            value={editedValues.join(", ")}
+                                            onChange={(e) => setEditedValues(
+                                                e.target.value.split(",")
+                                                    .map(v => v.trim())
+                                                    .filter(Boolean)
+                                            )}
+                                            placeholder="Enter values separated by commas"
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={handleBulkAdd}
+                                            title="Add multiple values at once"
+                                        >
+                                            Bulk Add
+                                        </Button>
+                                    </div>
                                     <div className="flex justify-end gap-2">
                                         <Button
                                             variant="outline"
@@ -175,24 +220,61 @@ const AttributeForm = ({
                                     </div>
                                 </div>
                             ) : (
-                                <div className="flex flex-wrap gap-2 mt-2">
-                                    {attribute.values.map((value, index) => (
-                                        <Badge key={index} variant="secondary">
-                                            {value}
-                                        </Badge>
-                                    ))}
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => setIsEditing(true)}
-                                    >
-                                        Edit Values
-                                    </Button>
+                                <div className="space-y-2">
+                                    <div className="flex flex-wrap gap-2 mt-2">
+                                        {editedValues.map((value, index) => (
+                                            <Badge 
+                                                key={index} 
+                                                variant="secondary"
+                                                className="group"
+                                            >
+                                                {value}
+                                                <X 
+                                                    className="w-3 h-3 ml-1 opacity-0 group-hover:opacity-100 cursor-pointer"
+                                                    onClick={() => handleRemoveValue(value)}
+                                                />
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setIsEditing(true)}
+                                        >
+                                            Edit Values
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={handleBulkAdd}
+                                        >
+                                            Add More Values
+                                        </Button>
+                                    </div>
                                 </div>
                             )}
                         </>
                     )}
                 </div>
+
+                {attribute.values?.length > 0 && (
+                    <div className="mt-4 p-3 bg-muted rounded-lg">
+                        <Label className="text-sm font-medium">Preview</Label>
+                        <div className="mt-2">
+                            <p className="text-sm text-muted-foreground">
+                                This attribute will create {attribute.values.length} variations when combined with other attributes.
+                            </p>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                                {attribute.values.map((value, index) => (
+                                    <Badge key={index}>
+                                        {value}
+                                    </Badge>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -292,6 +374,17 @@ const NewAttributeForm = ({ onSubmit, onCancel }) => {
     );
 };
 
+const generateVariationSKU = (baseSlug, attributes) => {
+    if (!attributes || !Array.isArray(attributes)) return '';
+    
+    const variantSlug = attributes
+        .map(attr => attr.value?.toLowerCase().replace(/\s+/g, '-'))
+        .filter(Boolean)
+        .join('-');
+    
+    return `${baseSlug}-${variantSlug}`;
+};
+
 const VariableProductSection = ({
     isVariableProduct,
     setIsVariableProduct,
@@ -341,6 +434,48 @@ const VariableProductSection = ({
     const handleAddCustomAttribute = (attribute) => {
         handleAddAttribute(attribute);
         setShowNewAttributeForm(false);
+    };
+
+    const handleGenerateVariations = () => {
+        const variationAttributes = data.attributes.filter(attr => attr.variation);
+        
+        if (variationAttributes.length === 0) {
+            toast.error("Please select at least one attribute for variations");
+            return;
+        }
+
+        const attributeValues = variationAttributes.map(attr => 
+            attr.isCustom ? attr.values : attr.selectedValues
+        );
+
+        if (attributeValues.some(values => !values?.length)) {
+            toast.error("Please select values for all variation attributes");
+            return;
+        }
+
+        const variations = cartesianProduct(...attributeValues).map((combination) => {
+            const attributes = combination.map((value, index) => ({
+                id: variationAttributes[index].id,
+                name: variationAttributes[index].name,
+                value,
+            }));
+
+            return {
+                attributes,
+                price: data.price || 0,
+                stock_quantity: 0,
+                sku: generateVariationSKU(data.slug || '', attributes),
+                images: [],
+                is_active: true,
+                weight: data.weight || '',
+                length: data.length || '',
+                width: data.width || '',
+                height: data.height || '',
+            };
+        });
+
+        setGeneratedVariations(variations);
+        toast.success(`Generated ${variations.length} variations`);
     };
 
     return (
@@ -409,72 +544,7 @@ const VariableProductSection = ({
                             )}
                         </TabsContent>
 
-                        <TabsContent value="attributes" className="space-y-4">
-                            <div className="flex justify-between items-center">
-                                <Label className="text-lg font-semibold">Product Attributes</Label>
-                                <div className="flex gap-2">
-                                    <Select
-                                        value=""
-                                        onValueChange={handleAddGlobalAttribute}
-                                    >
-                                        <SelectTrigger className="w-[200px]">
-                                            <SelectValue placeholder="Add global attribute" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {globalAttributes?.map((attribute) => (
-                                                <SelectItem
-                                                    key={attribute.id}
-                                                    value={attribute.id.toString()}
-                                                    disabled={data.attributes?.some(attr => attr.id === attribute.id)}
-                                                >
-                                                    {attribute.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => setShowNewAttributeForm(true)}
-                                    >
-                                        <Plus className="w-4 h-4 mr-2" />
-                                        Add Custom Attribute
-                                    </Button>
-                                </div>
-                            </div>
-
-                            <ScrollArea className="h-[400px] pr-4">
-                                {showNewAttributeForm && (
-                                    <NewAttributeForm
-                                        onSubmit={handleAddCustomAttribute}
-                                        onCancel={() => setShowNewAttributeForm(false)}
-                                    />
-                                )}
-
-                                {data.attributes?.map((attribute) => (
-                                    <AttributeForm
-                                        key={attribute.id}
-                                        attribute={attribute}
-                                        isGlobal={!attribute.isCustom}
-                                        onUpdate={handleAttributeChange}
-                                        onRemove={handleRemoveAttribute}
-                                    />
-                                ))}
-
-                                {!data.attributes?.length && !showNewAttributeForm && (
-                                    <div className="text-center py-8 text-muted-foreground">
-                                        No attributes added yet. Add some attributes to create variations.
-                                    </div>
-                                )}
-                            </ScrollArea>
-
-                            {data.attributes?.length > 0 && (
-                                <div className="flex justify-end">
-                                    <Button onClick={generateVariations}>
-                                        Generate Variations
-                                    </Button>
-                                </div>
-                            )}
-                        </TabsContent>
+                        
 
                         <TabsContent value="variations" className="space-y-4">
                             {generatedVariations.length > 0 ? (
@@ -487,21 +557,34 @@ const VariableProductSection = ({
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                onClick={() => bulkUpdateVariations('price', data.price)}
+                                                onClick={() => {
+                                                    const confirmed = window.confirm("This will reset all variations. Continue?");
+                                                    if (confirmed) {
+                                                        handleGenerateVariations();
+                                                    }
+                                                }}
                                             >
-                                                Set Default Prices
+                                                Regenerate Variations
                                             </Button>
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                onClick={() => bulkUpdateVariations('stock_quantity', 0)}
+                                                onClick={() => {
+                                                    const defaultPrice = data.price || 0;
+                                                    const updatedVariations = generatedVariations.map(v => ({
+                                                        ...v,
+                                                        price: defaultPrice,
+                                                    }));
+                                                    setGeneratedVariations(updatedVariations);
+                                                    toast.success("Updated all variation prices");
+                                                }}
                                             >
-                                                Reset Stock
+                                                Set Default Prices
                                             </Button>
                                         </div>
                                     </div>
 
-                                    <ScrollArea className="h-[400px]">
+                                    <ScrollArea className="h-[500px]">
                                         <div className="space-y-4">
                                             {generatedVariations.map((variation, index) => (
                                                 <Card key={index}>
@@ -553,7 +636,7 @@ const VariableProductSection = ({
                                                             <div>
                                                                 <Label>SKU</Label>
                                                                 <Input
-                                                                    value={variation.sku || generateSKU(variation)}
+                                                                    value={variation.sku}
                                                                     onChange={(e) =>
                                                                         handleVariationChange(
                                                                             index,
