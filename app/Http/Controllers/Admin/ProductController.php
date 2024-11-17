@@ -16,6 +16,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Support\Facades\Log;
+use App\Http\Requests\Admin\UpdateStockRequest;
+use App\Http\Requests\Admin\ApplySaleRequest;
 
 final class ProductController extends Controller
 {

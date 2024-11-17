@@ -10,4 +10,15 @@ export const generateSKU = (baseSlug, attributes) => {
     .map(attr => attr.value.toLowerCase().replace(/\s+/g, '-'))
     .join('-');
   return `${baseSlug}-${variantSlug}`;
+};
+
+export const generateVariationSKU = (baseSlug, attributes) => {
+    if (!attributes || !Array.isArray(attributes)) return '';
+    
+    const variantSlug = attributes
+        .map(attr => attr.value?.toLowerCase().replace(/\s+/g, '-'))
+        .filter(Boolean)
+        .join('-');
+    
+    return `${baseSlug}-${variantSlug}`;
 }; 

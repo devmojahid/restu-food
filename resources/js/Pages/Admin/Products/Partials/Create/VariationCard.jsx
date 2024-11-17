@@ -1,134 +1,118 @@
-const VariationCard = ({ variation, index, onUpdate, onRemove }) => {
-  const [expanded, setExpanded] = useState(false);
+import React from 'react';
+import { Card, CardContent } from "@/Components/ui/card";
+import { Input } from "@/Components/ui/input";
+import { Label } from "@/Components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/Components/ui/select";
+import { Badge } from "@/Components/ui/badge";
+import { Switch } from "@/Components/ui/switch";
+import FileUploader from "@/Components/Admin/Filesystem/FileUploader";
+import { cn } from "@/lib/utils";
 
-  return (
-    <Card className="group">
-      <CardHeader className="cursor-pointer" onClick={() => setExpanded(!expanded)}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <ChevronRight 
-              className={cn(
-                "w-4 h-4 transition-transform",
-                expanded && "rotate-90"
-              )} 
-            />
-            <h4 className="font-medium">Variation {index + 1}</h4>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge variant={variation.is_active ? "default" : "secondary"}>
-              {variation.is_active ? "Active" : "Inactive"}
-            </Badge>
-            <Switch
-              checked={variation.is_active}
-              onCheckedChange={(checked) => onUpdate(index, 'is_active', checked)}
-              onClick={(e) => e.stopPropagation()}
-            />
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-2 mt-2">
-          {variation.attributes.map((attr, idx) => (
-            <Badge key={idx} variant="outline">
-              {attr.name}: {attr.value}
-            </Badge>
-          ))}
-        </div>
-      </CardHeader>
+const VariationCard = ({ 
+    variation, 
+    index, 
+    onUpdate,
+    isSelected,
+    onSelect,
+    className 
+}) => {
+    return (
+        <Card 
+            className={cn(
+                "group transition-all duration-200 hover:shadow-md",
+                isSelected && "ring-2 ring-primary",
+                className
+            )}
+            onClick={() => onSelect?.()}
+        >
+            <CardContent className="p-4 space-y-4">
+                {/* Variation Attributes */}
+                <div>
+                    <Label className="text-sm font-medium mb-2">Variation</Label>
+                    <div className="flex flex-wrap gap-1.5">
+                        {variation.attributes.map((attr, idx) => (
+                            <Badge 
+                                key={idx} 
+                                variant={attr.type === 'color' ? 'outline' : 'secondary'}
+                                className="text-xs"
+                            >
+                                {attr.type === 'color' ? (
+                                    <div className="flex items-center gap-1.5">
+                                        <div 
+                                            className="w-3 h-3 rounded-full ring-1 ring-inset ring-black/10"
+                                            style={{ backgroundColor: attr.value }}
+                                        />
+                                        {attr.name}: {attr.label || attr.value}
+                                    </div>
+                                ) : (
+                                    `${attr.name}: ${attr.value}`
+                                )}
+                            </Badge>
+                        ))}
+                    </div>
+                </div>
 
-      <Collapsible open={expanded}>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Label>Price</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={variation.price}
-                onChange={(e) => onUpdate(index, 'price', e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Stock</Label>
-              <Input
-                type="number"
-                value={variation.stock_quantity}
-                onChange={(e) => onUpdate(index, 'stock_quantity', e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>SKU</Label>
-              <Input
-                value={variation.sku}
-                onChange={(e) => onUpdate(index, 'sku', e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <Select
-                value={variation.stock_status}
-                onValueChange={(value) => onUpdate(index, 'stock_status', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="in_stock">In Stock</SelectItem>
-                  <SelectItem value="out_of_stock">Out of Stock</SelectItem>
-                  <SelectItem value="on_backorder">On Backorder</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+                {/* Price and Stock */}
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor={`variation-${index}-price`}>Price</Label>
+                        <Input
+                            id={`variation-${index}-price`}
+                            type="number"
+                            step="0.01"
+                            value={variation.price}
+                            onChange={(e) => onUpdate(index, 'price', e.target.value)}
+                            className="text-sm"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor={`variation-${index}-stock`}>Stock</Label>
+                        <Input
+                            id={`variation-${index}-stock`}
+                            type="number"
+                            value={variation.stock_quantity}
+                            onChange={(e) => onUpdate(index, 'stock_quantity', e.target.value)}
+                            className="text-sm"
+                        />
+                    </div>
+                </div>
 
-          <div className="space-y-2">
-            <Label>Images</Label>
-            <FileUploader
-              maxFiles={5}
-              fileType="image"
-              collection={`variation_${index}_images`}
-              value={variation.images}
-              onUpload={(files) => onUpdate(index, 'images', files)}
-            />
-          </div>
+                {/* SKU */}
+                <div className="space-y-2">
+                    <Label htmlFor={`variation-${index}-sku`}>SKU</Label>
+                    <Input
+                        id={`variation-${index}-sku`}
+                        value={variation.sku}
+                        onChange={(e) => onUpdate(index, 'sku', e.target.value)}
+                        className="text-sm"
+                    />
+                </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label>Weight (kg)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={variation.weight}
-                onChange={(e) => onUpdate(index, 'weight', e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Dimensions (cm)</Label>
-              <div className="flex gap-2">
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={variation.length}
-                  onChange={(e) => onUpdate(index, 'length', e.target.value)}
-                  placeholder="Length"
-                />
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={variation.width}
-                  onChange={(e) => onUpdate(index, 'width', e.target.value)}
-                  placeholder="Width"
-                />
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={variation.height}
-                  onChange={(e) => onUpdate(index, 'height', e.target.value)}
-                  placeholder="Height"
-                />
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Collapsible>
-    </Card>
-  );
-}; 
+                {/* Status */}
+                <div className="flex items-center justify-between">
+                    <Label htmlFor={`variation-${index}-status`}>Status</Label>
+                    <Switch
+                        id={`variation-${index}-status`}
+                        checked={variation.is_active}
+                        onCheckedChange={(checked) => onUpdate(index, 'is_active', checked)}
+                    />
+                </div>
+
+                {/* Images */}
+                <div className="space-y-2">
+                    <Label>Images</Label>
+                    <FileUploader
+                        maxFiles={5}
+                        fileType="image"
+                        collection={`variation_${index}_images`}
+                        value={variation.images}
+                        onUpload={(files) => onUpdate(index, 'images', files)}
+                        compact
+                    />
+                </div>
+            </CardContent>
+        </Card>
+    );
+};
+
+export default VariationCard; 

@@ -49,15 +49,17 @@ export const AttributeActions = ({
   existingAttributeIds = [] 
 }) => {
   const [showNewDialog, setShowNewDialog] = useState(false);
-  const [activeTab, setActiveTab] = useState('custom'); // 'custom' or 'global'
+  const [activeTab, setActiveTab] = useState('custom');
   const [newAttribute, setNewAttribute] = useState({
     name: '',
-    values: [''], // Initialize with one empty value
+    values: [''],
     type: 'select',
     isCustom: true,
     visible: true,
     variation: true,
   });
+
+  const [selectedGlobalValues, setSelectedGlobalValues] = useState({});
 
   const handleAddValue = () => {
     setNewAttribute(prev => ({
@@ -74,7 +76,7 @@ export const AttributeActions = ({
   };
 
   const handleRemoveValue = (index) => {
-    if (newAttribute.values.length === 1) return; // Keep at least one value
+    if (newAttribute.values.length === 1) return;
     setNewAttribute(prev => ({
       ...prev,
       values: prev.values.filter((_, i) => i !== index)
@@ -106,6 +108,126 @@ export const AttributeActions = ({
     });
     setShowNewDialog(false);
   };
+
+  const handleGlobalAttributeSelect = (attributeId) => {
+    const attribute = globalAttributes.find(attr => attr.id === attributeId);
+    if (!attribute) return;
+
+    const selectedValues = selectedGlobalValues[attributeId] || [];
+    if (selectedValues.length === 0) {
+      toast.error("Please select at least one value");
+      return;
+    }
+
+    const mappedValues = selectedValues.map(valueId => {
+      const value = attribute.values.find(v => v.id === valueId);
+      return {
+        id: value.id,
+        value: value.value,
+        label: value.label,
+        color_code: value.color_code
+      };
+    });
+
+    onAddGlobal({
+      ...attribute,
+      selectedValues: mappedValues,
+      values: mappedValues
+    });
+    
+    setSelectedGlobalValues(prev => ({
+      ...prev,
+      [attributeId]: []
+    }));
+    
+    setShowNewDialog(false);
+    toast.success(`Added ${attribute.name} attribute with ${mappedValues.length} values`);
+  };
+
+  const GlobalAttributePreview = ({ attribute }) => {
+    const selected = selectedGlobalValues[attribute.id] || [];
+    
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h4 className="font-medium">{attribute.name}</h4>
+            <Badge variant="outline">{attribute.type}</Badge>
+          </div>
+          {selected.length > 0 && (
+            <Badge variant="secondary">
+              {selected.length} selected
+            </Badge>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {attribute.values?.map((value) => {
+            const isSelected = selected.includes(value.id);
+            return (
+              <Badge
+                key={value.id}
+                variant={isSelected ? "default" : "outline"}
+                className={cn(
+                  "cursor-pointer transition-all hover:scale-105",
+                  isSelected && "bg-primary"
+                )}
+                onClick={() => {
+                  const current = selected;
+                  const updated = current.includes(value.id)
+                    ? current.filter(v => v !== value.id)
+                    : [...current, value.id];
+                  setSelectedGlobalValues({
+                    ...selectedGlobalValues,
+                    [attribute.id]: updated
+                  });
+                }}
+              >
+                {attribute.type === 'color' ? (
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-3 h-3 rounded-full ring-1 ring-inset ring-black/10"
+                      style={{ backgroundColor: value.color_code }}
+                    />
+                    {value.label}
+                  </div>
+                ) : value.label || value.value}
+              </Badge>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const GlobalAttributesTab = () => (
+    <ScrollArea className="h-[400px]">
+      <div className="grid grid-cols-1 gap-4 pr-4">
+        {globalAttributes?.map((attribute) => (
+          <div
+            key={attribute.id}
+            className={cn(
+              "p-4 rounded-lg border hover:bg-accent/5 transition-all",
+              "group relative overflow-hidden",
+              existingAttributeIds.includes(attribute.id) && "opacity-50 cursor-not-allowed"
+            )}
+          >
+            <GlobalAttributePreview attribute={attribute} />
+            {!existingAttributeIds.includes(attribute.id) && (
+              <div className="mt-4 flex justify-end">
+                <Button
+                  size="sm"
+                  onClick={() => handleGlobalAttributeSelect(attribute.id)}
+                  disabled={!selectedGlobalValues[attribute.id]?.length}
+                >
+                  Add Selected Values
+                </Button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </ScrollArea>
+  );
 
   return (
     <div className="flex justify-between items-center">
@@ -230,43 +352,7 @@ export const AttributeActions = ({
             </TabsContent>
 
             <TabsContent value="global" className="mt-4">
-              <ScrollArea className="h-[400px]">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pr-4">
-                  {globalAttributes?.map((attribute) => (
-                    <div
-                      key={attribute.id}
-                      className={cn(
-                        "p-4 rounded-lg border hover:bg-accent cursor-pointer transition-all",
-                        "group relative overflow-hidden",
-                        existingAttributeIds.includes(attribute.id) && "opacity-50 cursor-not-allowed"
-                      )}
-                      onClick={() => {
-                        if (!existingAttributeIds.includes(attribute.id)) {
-                          onAddGlobal(attribute.id.toString());
-                          setShowNewDialog(false);
-                        }
-                      }}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-medium">{attribute.name}</h4>
-                        <Badge>{attribute.type}</Badge>
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {attribute.values.map((value, index) => (
-                          <Badge key={index} variant="secondary">
-                            {value.label || value.value}
-                          </Badge>
-                        ))}
-                      </div>
-                      {existingAttributeIds.includes(attribute.id) && (
-                        <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
-                          <Badge variant="secondary">Already Added</Badge>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
+              <GlobalAttributesTab />
             </TabsContent>
           </Tabs>
 

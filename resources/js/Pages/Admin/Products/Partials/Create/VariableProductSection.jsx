@@ -15,6 +15,9 @@ import { cartesianProduct, generateSKU } from '@/utils/productUtils';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 import { AttributeActions } from './AttributeActions';
+import VariationCard from './VariationCard';
+import VariationsTable from './VariationsTable';
+import BulkActions from './BulkActions';
 
 const SAMPLE_ATTRIBUTES = [
     {
@@ -129,6 +132,14 @@ const AttributeForm = ({
         setEditedValues(editedValues.filter(v => v !== valueToRemove));
     };
 
+    const handleUpdateValues = (values) => {
+        if (isGlobal) {
+            onUpdate(attribute.id, 'selectedValues', values);
+        } else {
+            onUpdate(attribute.id, 'values', values);
+        }
+    };
+
     return (
         <div className="mb-4 p-4 border rounded-lg bg-white dark:bg-gray-800">
             <div className="flex justify-between items-center mb-4">
@@ -178,7 +189,7 @@ const AttributeForm = ({
                         <AttributeValueSelector
                             attribute={attribute}
                             selectedValues={attribute.selectedValues || []}
-                            onChange={(values) => onUpdate(attribute.id, 'selectedValues', values)}
+                            onChange={handleUpdateValues}
                         />
                     ) : (
                         <>
@@ -399,6 +410,10 @@ const VariableProductSection = ({
     handleSaveVariations,
 }) => {
     const [showNewAttributeForm, setShowNewAttributeForm] = useState(false);
+    const [activeVariationTab, setActiveVariationTab] = useState('list');
+    const [bulkEditMode, setBulkEditMode] = useState(false);
+    const [selectedVariations, setSelectedVariations] = useState([]);
+    const [variationFilter, setVariationFilter] = useState('');
 
     const handleVariableToggle = (checked) => {
         if (!checked && data.attributes?.length > 0) {
@@ -478,6 +493,150 @@ const VariableProductSection = ({
         toast.success(`Generated ${variations.length} variations`);
     };
 
+    const handleBulkEdit = (field, value) => {
+        const updatedVariations = generatedVariations.map((variation, index) => {
+            if (selectedVariations.includes(index)) {
+                return {
+                    ...variation,
+                    [field]: value
+                };
+            }
+            return variation;
+        });
+        setGeneratedVariations(updatedVariations);
+    };
+
+    const filteredVariations = generatedVariations.filter(variation => 
+        variation.attributes.some(attr => 
+            attr.value.toLowerCase().includes(variationFilter.toLowerCase())
+        )
+    );
+
+    const VariationsTabContent = () => {
+        const hasVariations = filteredVariations.length > 0;
+        
+        if (!hasVariations) {
+            return (
+                <div className="text-center py-12">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted mb-4">
+                        <AlertCircle className="w-6 h-6 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-lg font-medium">No Variations Generated</h3>
+                    <p className="text-sm text-muted-foreground mt-2">
+                        Select attributes and generate variations to start managing product variants.
+                    </p>
+                    <Button
+                        variant="outline"
+                        className="mt-4"
+                        onClick={handleGenerateVariations}
+                    >
+                        Generate Variations
+                    </Button>
+                </div>
+            );
+        }
+
+        return (
+            <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row justify-between gap-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Input
+                            placeholder="Filter variations..."
+                            value={variationFilter}
+                            onChange={(e) => setVariationFilter(e.target.value)}
+                            className="w-full sm:w-64"
+                        />
+                        <Select
+                            value={activeVariationTab}
+                            onValueChange={setActiveVariationTab}
+                        >
+                            <SelectTrigger className="w-full sm:w-32">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="list">List View</SelectItem>
+                                <SelectItem value="grid">Grid View</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setBulkEditMode(!bulkEditMode)}
+                        >
+                            {bulkEditMode ? 'Exit Bulk Edit' : 'Bulk Edit'}
+                        </Button>
+                        
+                        {bulkEditMode && selectedVariations.length > 0 && (
+                            <BulkActions
+                                selectedCount={selectedVariations.length}
+                                onBulkUpdate={(updates) => {
+                                    selectedVariations.forEach(index => {
+                                        Object.entries(updates).forEach(([field, value]) => {
+                                            handleVariationChange(index, field, value);
+                                        });
+                                    });
+                                    setBulkEditMode(false);
+                                    setSelectedVariations([]);
+                                    toast.success(`Updated ${selectedVariations.length} variations`);
+                                }}
+                                basePrice={data.price}
+                                onClose={() => setBulkEditMode(false)}
+                            />
+                        )}
+                        
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleGenerateVariations}
+                        >
+                            Regenerate
+                        </Button>
+                    </div>
+                </div>
+
+                {activeVariationTab === 'grid' ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {filteredVariations.map((variation, index) => (
+                            <VariationCard
+                                key={index}
+                                variation={variation}
+                                index={index}
+                                onUpdate={handleVariationChange}
+                                isSelected={selectedVariations.includes(index)}
+                                onSelect={() => {
+                                    if (bulkEditMode) {
+                                        setSelectedVariations(prev => 
+                                            prev.includes(index)
+                                                ? prev.filter(i => i !== index)
+                                                : [...prev, index]
+                                        );
+                                    }
+                                }}
+                            />
+                        ))}
+                    </div>
+                ) : (
+                    <VariationsTable
+                        variations={filteredVariations}
+                        onUpdate={handleVariationChange}
+                        bulkEditMode={bulkEditMode}
+                        selectedVariations={selectedVariations}
+                        onSelectVariation={setSelectedVariations}
+                    />
+                )}
+
+                <div className="flex justify-end">
+                    <Button onClick={handleSaveVariations}>
+                        Save All Variations
+                    </Button>
+                </div>
+            </div>
+        );
+    };
+
     return (
         <Card>
             <CardHeader>
@@ -547,139 +706,7 @@ const VariableProductSection = ({
                         
 
                         <TabsContent value="variations" className="space-y-4">
-                            {generatedVariations.length > 0 ? (
-                                <>
-                                    <div className="flex justify-between items-center">
-                                        <Label className="text-lg font-semibold">
-                                            Product Variations ({generatedVariations.length})
-                                        </Label>
-                                        <div className="flex items-center space-x-2">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => {
-                                                    const confirmed = window.confirm("This will reset all variations. Continue?");
-                                                    if (confirmed) {
-                                                        handleGenerateVariations();
-                                                    }
-                                                }}
-                                            >
-                                                Regenerate Variations
-                                            </Button>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => {
-                                                    const defaultPrice = data.price || 0;
-                                                    const updatedVariations = generatedVariations.map(v => ({
-                                                        ...v,
-                                                        price: defaultPrice,
-                                                    }));
-                                                    setGeneratedVariations(updatedVariations);
-                                                    toast.success("Updated all variation prices");
-                                                }}
-                                            >
-                                                Set Default Prices
-                                            </Button>
-                                        </div>
-                                    </div>
-
-                                    <ScrollArea className="h-[500px]">
-                                        <div className="space-y-4">
-                                            {generatedVariations.map((variation, index) => (
-                                                <Card key={index}>
-                                                    <CardContent className="p-4">
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                            <div>
-                                                                <Label>Variation</Label>
-                                                                <div className="flex flex-wrap gap-2 mt-1">
-                                                                    {variation.attributes.map((attr, idx) => (
-                                                                        <Badge key={idx}>
-                                                                            {attr.name}: {attr.value}
-                                                                        </Badge>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-
-                                                            <div className="grid grid-cols-2 gap-4">
-                                                                <div>
-                                                                    <Label>Price</Label>
-                                                                    <Input
-                                                                        type="number"
-                                                                        step="0.01"
-                                                                        value={variation.price}
-                                                                        onChange={(e) =>
-                                                                            handleVariationChange(
-                                                                                index,
-                                                                                'price',
-                                                                                e.target.value
-                                                                            )
-                                                                        }
-                                                                    />
-                                                                </div>
-                                                                <div>
-                                                                    <Label>Stock</Label>
-                                                                    <Input
-                                                                        type="number"
-                                                                        value={variation.stock_quantity}
-                                                                        onChange={(e) =>
-                                                                            handleVariationChange(
-                                                                                index,
-                                                                                'stock_quantity',
-                                                                                e.target.value
-                                                                            )
-                                                                        }
-                                                                    />
-                                                                </div>
-                                                            </div>
-
-                                                            <div>
-                                                                <Label>SKU</Label>
-                                                                <Input
-                                                                    value={variation.sku}
-                                                                    onChange={(e) =>
-                                                                        handleVariationChange(
-                                                                            index,
-                                                                            'sku',
-                                                                            e.target.value
-                                                                        )
-                                                                    }
-                                                                />
-                                                            </div>
-
-                                                            <div>
-                                                                <Label>Images</Label>
-                                                                <FileUploader
-                                                                    maxFiles={5}
-                                                                    fileType="image"
-                                                                    collection={`variation_${index}_images`}
-                                                                    value={variation.images}
-                                                                    onUpload={(files) =>
-                                                                        handleVariationChange(index, 'images', files)
-                                                                    }
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                    </CardContent>
-                                                </Card>
-                                            ))}
-                                        </div>
-                                    </ScrollArea>
-
-                                    <div className="flex justify-end">
-                                        <Button onClick={handleSaveVariations}>
-                                            Save Variations
-                                        </Button>
-                                    </div>
-                                </>
-                            ) : (
-                                <Alert>
-                                    <AlertCircle className="h-4 w-4" />
-                                    <AlertDescription>
-                                        No variations generated yet. Please add attributes and generate variations first.
-                                    </AlertDescription>
-                                </Alert>
-                            )}
+                            <VariationsTabContent />
                         </TabsContent>
                     </Tabs>
                 </CardContent>
