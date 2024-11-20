@@ -3,7 +3,7 @@ import { Button } from "@/Components/ui/button";
 import { Input } from "@/Components/ui/input";
 import { Label } from "@/Components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/Components/ui/select";
-import { Plus, X, Move, Save, Search, Settings2, Palette, Box } from "lucide-react";
+import { Plus, X, Move, Save, Search, Settings2, Palette, Box, Circle, Globe, ChevronDown } from "lucide-react";
 import {
     Dialog,
     DialogContent,
@@ -82,327 +82,6 @@ const GlobalAttributeCard = ({
     onSelect,
     showValues = false 
 }) => {
-<<<<<<< HEAD
-  const [showNewDialog, setShowNewDialog] = useState(false);
-  const [activeTab, setActiveTab] = useState('custom');
-  const [newAttribute, setNewAttribute] = useState({
-    name: '',
-    values: [''],
-    type: 'select',
-    isCustom: true,
-    visible: true,
-    variation: true,
-  });
-
-  const [selectedGlobalValues, setSelectedGlobalValues] = useState({});
-
-  const handleAddValue = () => {
-    setNewAttribute(prev => ({
-      ...prev,
-      values: [...prev.values, '']
-    }));
-  };
-
-  const handleUpdateValue = (index, value) => {
-    setNewAttribute(prev => ({
-      ...prev,
-      values: prev.values.map((v, i) => i === index ? value : v)
-    }));
-  };
-
-  const handleRemoveValue = (index) => {
-    if (newAttribute.values.length === 1) return;
-    setNewAttribute(prev => ({
-      ...prev,
-      values: prev.values.filter((_, i) => i !== index)
-    }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const values = newAttribute.values.filter(Boolean);
-    
-    if (!newAttribute.name || values.length === 0) {
-      toast.error("Please add attribute name and at least one value");
-      return;
-    }
-
-    onAddLocal({
-      ...newAttribute,
-      id: `local-${Date.now()}`,
-      values: values,
-    });
-
-    setNewAttribute({
-      name: '',
-      values: [''],
-      type: 'select',
-      isCustom: true,
-      visible: true,
-      variation: true,
-    });
-    setShowNewDialog(false);
-  };
-
-  const handleGlobalAttributeSelect = (attributeId) => {
-    const attribute = globalAttributes.find(attr => attr.id === attributeId);
-    if (!attribute) return;
-
-    const selectedValues = selectedGlobalValues[attributeId] || [];
-    if (selectedValues.length === 0) {
-      toast.error("Please select at least one value");
-      return;
-    }
-
-    const mappedValues = selectedValues.map(valueId => {
-      const value = attribute.values.find(v => v.id === valueId);
-      return {
-        id: value.id,
-        value: value.value,
-        label: value.label,
-        color_code: value.color_code
-      };
-    });
-
-    onAddGlobal({
-      ...attribute,
-      selectedValues: mappedValues,
-      values: mappedValues
-    });
-    
-    setSelectedGlobalValues(prev => ({
-      ...prev,
-      [attributeId]: []
-    }));
-    
-    setShowNewDialog(false);
-    toast.success(`Added ${attribute.name} attribute with ${mappedValues.length} values`);
-  };
-
-  const GlobalAttributePreview = ({ attribute }) => {
-    const selected = selectedGlobalValues[attribute.id] || [];
-    
-    return (
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h4 className="font-medium">{attribute.name}</h4>
-            <Badge variant="outline">{attribute.type}</Badge>
-          </div>
-          {selected.length > 0 && (
-            <Badge variant="secondary">
-              {selected.length} selected
-            </Badge>
-          )}
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {attribute.values?.map((value) => {
-            const isSelected = selected.includes(value.id);
-            return (
-              <Badge
-                key={value.id}
-                variant={isSelected ? "default" : "outline"}
-                className={cn(
-                  "cursor-pointer transition-all hover:scale-105",
-                  isSelected && "bg-primary"
-                )}
-                onClick={() => {
-                  const current = selected;
-                  const updated = current.includes(value.id)
-                    ? current.filter(v => v !== value.id)
-                    : [...current, value.id];
-                  setSelectedGlobalValues({
-                    ...selectedGlobalValues,
-                    [attribute.id]: updated
-                  });
-                }}
-              >
-                {attribute.type === 'color' ? (
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="w-3 h-3 rounded-full ring-1 ring-inset ring-black/10"
-                      style={{ backgroundColor: value.color_code }}
-                    />
-                    {value.label}
-                  </div>
-                ) : value.label || value.value}
-              </Badge>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
-
-  const GlobalAttributesTab = () => (
-    <ScrollArea className="h-[400px]">
-      <div className="grid grid-cols-1 gap-4 pr-4">
-        {globalAttributes?.map((attribute) => (
-          <div
-            key={attribute.id}
-            className={cn(
-              "p-4 rounded-lg border hover:bg-accent/5 transition-all",
-              "group relative overflow-hidden",
-              existingAttributeIds.includes(attribute.id) && "opacity-50 cursor-not-allowed"
-            )}
-          >
-            <GlobalAttributePreview attribute={attribute} />
-            {!existingAttributeIds.includes(attribute.id) && (
-              <div className="mt-4 flex justify-end">
-                <Button
-                  size="sm"
-                  onClick={() => handleGlobalAttributeSelect(attribute.id)}
-                  disabled={!selectedGlobalValues[attribute.id]?.length}
-                >
-                  Add Selected Values
-                </Button>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    </ScrollArea>
-  );
-
-  return (
-    <div className="flex justify-between items-center">
-      <Label className="text-lg font-semibold">Product Attributes</Label>
-      <Dialog 
-        open={showNewDialog} 
-        onOpenChange={setShowNewDialog}
-        modal={true}
-      >
-        <DialogTrigger asChild>
-          <Button type="button" variant="outline">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Attribute
-          </Button>
-        </DialogTrigger>
-        <DialogContent 
-          className="max-w-2xl"
-          onPointerDownOutside={(e) => e.preventDefault()}
-        >
-          <DialogHeader>
-            <DialogTitle>Add Product Attribute</DialogTitle>
-            <DialogDescription>
-              Create a new attribute or select from existing global attributes
-            </DialogDescription>
-          </DialogHeader>
-
-          <Tabs defaultValue="custom" onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="custom">Custom Attribute</TabsTrigger>
-              <TabsTrigger value="global">Global Attributes</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="custom" className="space-y-4 mt-4">
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Attribute Name</Label>
-                    <Input
-                      value={newAttribute.name}
-                      onChange={(e) => setNewAttribute({
-                        ...newAttribute,
-                        name: e.target.value
-                      })}
-                      placeholder="e.g., Size, Color, Material"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Attribute Type</Label>
-                    <Select
-                      value={newAttribute.type}
-                      onValueChange={(value) => setNewAttribute({
-                        ...newAttribute,
-                        type: value
-                      })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="select">Dropdown Select</SelectItem>
-                        <SelectItem value="color">Color Swatch</SelectItem>
-                        <SelectItem value="button">Button</SelectItem>
-                        <SelectItem value="radio">Radio Button</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label>Attribute Values</Label>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleAddValue}
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Value
-                    </Button>
-                  </div>
-                  
-                  <ScrollArea className="h-[200px]">
-                    <div className="space-y-2 pr-4">
-                      {newAttribute.values.map((value, index) => (
-                        <AttributeValueInput
-                          key={index}
-                          value={value}
-                          onChange={(value) => handleUpdateValue(index, value)}
-                          onRemove={() => handleRemoveValue(index)}
-                        />
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      id="visible"
-                      checked={newAttribute.visible}
-                      onCheckedChange={(checked) =>
-                        setNewAttribute({ ...newAttribute, visible: checked })
-                      }
-                    />
-                    <Label htmlFor="visible">Visible on product page</Label>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      id="variation"
-                      checked={newAttribute.variation}
-                      onCheckedChange={(checked) =>
-                        setNewAttribute({ ...newAttribute, variation: checked })
-                      }
-                    />
-                    <Label htmlFor="variation">Used for variations</Label>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="global" className="mt-4">
-              <GlobalAttributesTab />
-            </TabsContent>
-          </Tabs>
-
-          <DialogFooter className="mt-6">
-            {activeTab === 'custom' && (
-              <>
-                <Button type="button" variant="outline" onClick={() => setShowNewDialog(false)}>
-                  Cancel
-                </Button>
-                <Button type="button" onClick={handleSubmit}>
-                  <Save className="w-4 h-4 mr-2" />
-                  Save Attribute
-                </Button>
-              </>
-=======
     const [expanded, setExpanded] = useState(false);
 
     return (
@@ -411,7 +90,6 @@ const GlobalAttributeCard = ({
                 "group transition-all duration-200",
                 "hover:shadow-md cursor-pointer",
                 isSelected && "opacity-50 cursor-not-allowed"
->>>>>>> 5367c133594306480f0231206e5447ffb6d65c7d
             )}
             onClick={() => !isSelected && onSelect(attribute)}
         >
@@ -462,6 +140,33 @@ const GlobalAttributeCard = ({
                 </Collapsible>
             </CardContent>
         </Card>
+    );
+};
+
+const AttributeValueInput = ({ value, type, onChange, onRemove }) => {
+    return (
+        <div className="flex items-center gap-2">
+            <div className="flex-1">
+                <Input
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    placeholder={
+                        type === 'color' ? 'Enter color name (e.g., Red)' :
+                        type === 'select' ? 'Enter option value' :
+                        'Enter value'
+                    }
+                />
+            </div>
+            <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={onRemove}
+                className="text-destructive hover:text-destructive"
+            >
+                <X className="h-4 w-4" />
+            </Button>
+        </div>
     );
 };
 

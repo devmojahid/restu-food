@@ -1,31 +1,14 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "./Partials/Sidebar/Sidebar";
 import Header from "./Partials/Header/Header";
-import { Head, usePage } from "@inertiajs/react";
-import toast, { Toaster } from "react-hot-toast";
+import { Head } from "@inertiajs/react";
+import FlashMessages from "@/Components/Admin/FlashMessages";
 
 const AdminLayout = ({ children, title = "Dashboard" }) => {
-  const { flash } = usePage().props;
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [theme, setTheme] = useState("light");
   const [pageReady, setPageReady] = useState(false);
-
-    useEffect(() => {
-        if (flash.success) {
-            toast.success(flash.success, {
-                position: 'top-right',
-                autoClose: 1500,
-            })
-        }
-
-        if (flash.error) {
-            toast.error(flash.error, {
-                position: 'top-right',
-                autoClose: 1500,
-            })
-        }
-    }, [flash]);
 
   // Handle window resize and mobile detection
   useEffect(() => {
@@ -116,15 +99,6 @@ const AdminLayout = ({ children, title = "Dashboard" }) => {
         <title>{`${title} - NextGen Admin`}</title>
       </Head>
 
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 3000,
-          className: 'dark:bg-gray-800 dark:text-white'
-        }}
-        
-      />
-
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div>
           <Sidebar
@@ -152,6 +126,7 @@ const AdminLayout = ({ children, title = "Dashboard" }) => {
               <div className="py-2 sm:py-4">
                 <div className="px-3 sm:px-2 lg:px-3 mx-auto w-full">
                   <div className="relative">
+                  <FlashMessages />
                     <div className="overflow-hidden">
                       {children}
                     </div>

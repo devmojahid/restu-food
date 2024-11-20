@@ -59,10 +59,8 @@ export default function UpdateProfileInformationForm({ className = "", user_meta
             },
             preserveScroll: true,
             onSuccess: () => {
-                toast.success("Profile updated successfully");
             },
             onError: (errors) => {
-                toast.error("Failed to update profile");
             }
         });
     }, [patch, data]);

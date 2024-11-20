@@ -103,11 +103,9 @@ export default function EditBlog({ blog, categories = [] }) {
       preserveScroll: true,
       onSuccess: () => {
         setIsSubmitting(false);
-        toast.success("Blog updated successfully!");
       },
       onError: () => {
         setIsSubmitting(false);
-        toast.error("Failed to update blog.");
       },
     });
   };

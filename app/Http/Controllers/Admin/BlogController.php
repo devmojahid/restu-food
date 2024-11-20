@@ -58,10 +58,10 @@ final class BlogController extends Controller
             ]);
 
             $blog = $this->blogService->store($data);
-
+            
             return redirect()
                 ->route('app.blogs.edit', $blog)
-                ->with('success', 'Blog created successfully');
+                ->with(['success' => 'Blog created successfully']);
         } catch (\Exception $e) {
             return $this->handleError($e, 'Error creating blog');
         }

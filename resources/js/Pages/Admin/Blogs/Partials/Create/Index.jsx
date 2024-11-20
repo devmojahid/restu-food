@@ -112,11 +112,9 @@ export default function CreateBlog({ categories = [] }) {
       preserveScroll: true,
       onSuccess: () => {
         setIsSubmitting(false);
-        toast.success("Blog created successfully!");
       },
       onError: () => {
         setIsSubmitting(false);
-        toast.error("Failed to create blog.");
       },
     });
   };

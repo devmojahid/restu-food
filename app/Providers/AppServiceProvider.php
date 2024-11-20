@@ -33,20 +33,17 @@ class AppServiceProvider extends ServiceProvider
             },
         ]);
 
-        // Share flash messages with all views
-        Inertia::share('flash', function () {
-            return [
-                'success' => Session::get('success'),
-                'error' => Session::get('error'),
-                'warning' => Session::get('warning'),
-                'info' => Session::get('info'),
-                'toast' => Session::get('toast'),
-                // System messages
-                'status' => Session::get('status'),
-                'message' => Session::get('message'),
-                // Custom data
-                'data' => Session::get('flash_data'),
-            ];
-        });
+        Inertia::share([
+            'flash' => function () {
+                return [
+                    'success' => fn () => Session::get('success'),
+                    'error' => fn () => Session::get('error'),
+                    'warning' => fn () => Session::get('warning'),
+                    'info' => fn () => Session::get('info'),
+                    'message' => fn () => Session::get('message'),
+                    'data' => fn () => Session::get('flash_data'),
+                ];
+            },
+        ]);
     }
 }

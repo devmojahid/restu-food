@@ -232,11 +232,9 @@ export default function EditRole({ role, permissions, stats }) {
       preserveScroll: true,
       onSuccess: () => {
         setIsSubmitting(false);
-        toast.success("Role updated successfully");
       },
       onError: (error) => {
         setIsSubmitting(false);
-        toast.error(error?.message || "Failed to update role");
       },
     });
   };

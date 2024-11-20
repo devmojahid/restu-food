@@ -15,11 +15,9 @@ import { cartesianProduct, generateSKU } from '@/utils/productUtils';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 import { AttributeActions } from './AttributeActions';
-<<<<<<< HEAD
 import VariationCard from './VariationCard';
 import VariationsTable from './VariationsTable';
 import BulkActions from './BulkActions';
-=======
 import { LayersIcon, BoxesIcon, WandIcon } from "lucide-react";
 import { EmptyState } from "@/Components/ui/empty-state";
 import { 
@@ -29,7 +27,6 @@ import {
     TooltipTrigger,
 } from "@/Components/ui/tooltip";
 import { Progress } from "@/Components/ui/progress";
->>>>>>> 5367c133594306480f0231206e5447ffb6d65c7d
 
 const SAMPLE_ATTRIBUTES = [
     {
@@ -468,18 +465,16 @@ const VariableProductSection = ({
     generatedVariations,
     handleVariationChange,
     handleSaveVariations,
+    isLoading = false,
+    isSubmitting = false,
 }) => {
     const [showNewAttributeForm, setShowNewAttributeForm] = useState(false);
-<<<<<<< HEAD
     const [activeVariationTab, setActiveVariationTab] = useState('list');
-    const [bulkEditMode, setBulkEditMode] = useState(false);
     const [selectedVariations, setSelectedVariations] = useState([]);
     const [variationFilter, setVariationFilter] = useState('');
-=======
     const [activeTab, setActiveTab] = useState('attributes');
     const [bulkEditMode, setBulkEditMode] = useState(false);
     const [generationProgress, setGenerationProgress] = useState(null);
->>>>>>> 5367c133594306480f0231206e5447ffb6d65c7d
 
     const handleVariableToggle = (checked) => {
         if (!checked && data.attributes?.length > 0) {
@@ -837,6 +832,10 @@ const VariableProductSection = ({
                                 onAddGlobal={handleAddGlobalAttribute}
                                 onAddLocal={handleAddCustomAttribute}
                                 existingAttributeIds={data.attributes?.map(attr => attr.id) || []}
+                                attributes={data.attributes}
+                                onAttributeChange={handleAttributeChange}
+                                isLoading={isLoading}
+                                isSubmitting={isSubmitting}
                             />
 
                             <ScrollArea className="h-[500px] pr-4">
@@ -897,13 +896,9 @@ const VariableProductSection = ({
                             )}
                         </TabsContent>
 
-<<<<<<< HEAD
                         
-
-                        <TabsContent value="variations" className="space-y-4">
-                            <VariationsTabContent />
-=======
                         <TabsContent value="variations" className="space-y-4 mt-4">
+                            <VariationsTabContent />
                             {generatedVariations.length > 0 ? (
                                 <VariationsGrid
                                     variations={generatedVariations}
@@ -928,7 +923,6 @@ const VariableProductSection = ({
                                     }
                                 />
                             )}
->>>>>>> 5367c133594306480f0231206e5447ffb6d65c7d
                         </TabsContent>
                     </Tabs>
                 </CardContent>

@@ -84,10 +84,8 @@ final class RoleController extends Controller
 
             return redirect()
                 ->back()
-                ->with('toast', [
-                    'type' => 'success',
-                    'message' => 'Role updated successfully.'
-                ]);
+                ->with(['success' => 'Role updated successfully']);
+
         } catch (\Exception $e) {
             return redirect()
                 ->back()
