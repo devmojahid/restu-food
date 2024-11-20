@@ -15,9 +15,21 @@ import { cartesianProduct, generateSKU } from '@/utils/productUtils';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 import { AttributeActions } from './AttributeActions';
+<<<<<<< HEAD
 import VariationCard from './VariationCard';
 import VariationsTable from './VariationsTable';
 import BulkActions from './BulkActions';
+=======
+import { LayersIcon, BoxesIcon, WandIcon } from "lucide-react";
+import { EmptyState } from "@/Components/ui/empty-state";
+import { 
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/Components/ui/tooltip";
+import { Progress } from "@/Components/ui/progress";
+>>>>>>> 5367c133594306480f0231206e5447ffb6d65c7d
 
 const SAMPLE_ATTRIBUTES = [
     {
@@ -396,6 +408,54 @@ const generateVariationSKU = (baseSlug, attributes) => {
     return `${baseSlug}-${variantSlug}`;
 };
 
+const VariationProgress = ({ current, total }) => {
+    const percentage = (current / total) * 100;
+    
+    return (
+        <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+                <span>Generating variations...</span>
+                <span>{current} of {total}</span>
+            </div>
+            <Progress value={percentage} className="h-2" />
+        </div>
+    );
+};
+
+const AttributeStats = ({ attributes }) => {
+    const totalCombinations = attributes
+        .filter(attr => attr.variation)
+        .reduce((acc, attr) => {
+            const valueCount = attr.isCustom 
+                ? attr.values.length 
+                : (attr.selectedValues?.length || 0);
+            return acc * (valueCount || 1);
+        }, 1);
+
+    return (
+        <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg">
+            <div>
+                <h4 className="text-sm font-medium">Total Attributes</h4>
+                <p className="text-2xl font-bold">{attributes.length}</p>
+            </div>
+            <div className="border-l pl-4">
+                <h4 className="text-sm font-medium">Possible Variations</h4>
+                <p className="text-2xl font-bold">{totalCombinations}</p>
+            </div>
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger>
+                        <AlertCircle className="w-4 h-4 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Based on selected attribute combinations</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+        </div>
+    );
+};
+
 const VariableProductSection = ({
     isVariableProduct,
     setIsVariableProduct,
@@ -410,16 +470,43 @@ const VariableProductSection = ({
     handleSaveVariations,
 }) => {
     const [showNewAttributeForm, setShowNewAttributeForm] = useState(false);
+<<<<<<< HEAD
     const [activeVariationTab, setActiveVariationTab] = useState('list');
     const [bulkEditMode, setBulkEditMode] = useState(false);
     const [selectedVariations, setSelectedVariations] = useState([]);
     const [variationFilter, setVariationFilter] = useState('');
+=======
+    const [activeTab, setActiveTab] = useState('attributes');
+    const [bulkEditMode, setBulkEditMode] = useState(false);
+    const [generationProgress, setGenerationProgress] = useState(null);
+>>>>>>> 5367c133594306480f0231206e5447ffb6d65c7d
 
     const handleVariableToggle = (checked) => {
         if (!checked && data.attributes?.length > 0) {
-            if (confirm('Disabling variable product will remove all attributes and variations. Are you sure?')) {
-                setIsVariableProduct(checked);
-            }
+            toast((t) => (
+                <div className="flex items-center gap-4">
+                    <p>This will remove all attributes and variations. Continue?</p>
+                    <div className="flex gap-2">
+                        <Button 
+                            size="sm" 
+                            variant="destructive"
+                            onClick={() => {
+                                setIsVariableProduct(checked);
+                                toast.dismiss(t.id);
+                            }}
+                        >
+                            Yes
+                        </Button>
+                        <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => toast.dismiss(t.id)}
+                        >
+                            No
+                        </Button>
+                    </div>
+                </div>
+            ), { duration: 6000 });
         } else {
             setIsVariableProduct(checked);
         }
@@ -431,9 +518,11 @@ const VariableProductSection = ({
         );
 
         if (attribute) {
-            // Check if attribute is already added
             if (data.attributes?.some(attr => attr.id === attribute.id)) {
-                toast.error("This attribute is already added");
+                toast.error("This attribute is already added", {
+                    icon: '⚠️',
+                    position: 'top-right'
+                });
                 return;
             }
 
@@ -443,6 +532,7 @@ const VariableProductSection = ({
                 visible: true,
                 variation: true,
             });
+            toast.success(`Added ${attribute.name} attribute`);
         }
     };
 
@@ -451,11 +541,13 @@ const VariableProductSection = ({
         setShowNewAttributeForm(false);
     };
 
-    const handleGenerateVariations = () => {
+    const handleGenerateVariations = async () => {
         const variationAttributes = data.attributes.filter(attr => attr.variation);
         
         if (variationAttributes.length === 0) {
-            toast.error("Please select at least one attribute for variations");
+            toast.error("Select at least one attribute for variations", {
+                icon: '⚠️'
+            });
             return;
         }
 
@@ -464,33 +556,84 @@ const VariableProductSection = ({
         );
 
         if (attributeValues.some(values => !values?.length)) {
-            toast.error("Please select values for all variation attributes");
+            toast.error("Select values for all variation attributes", {
+                icon: '⚠️'
+            });
             return;
         }
 
-        const variations = cartesianProduct(...attributeValues).map((combination) => {
-            const attributes = combination.map((value, index) => ({
-                id: variationAttributes[index].id,
-                name: variationAttributes[index].name,
-                value,
-            }));
+        const combinations = cartesianProduct(...attributeValues);
+        const totalVariations = combinations.length;
 
-            return {
-                attributes,
+        if (totalVariations > 1000) {
+            const confirmed = await new Promise(resolve => {
+                toast((t) => (
+                    <div className="space-y-2">
+                        <p>You are about to generate {totalVariations} variations. This might take a while.</p>
+                        <div className="flex gap-2">
+                            <Button 
+                                size="sm" 
+                                onClick={() => {
+                                    resolve(true);
+                                    toast.dismiss(t.id);
+                                }}
+                            >
+                                Continue
+                            </Button>
+                            <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => {
+                                    resolve(false);
+                                    toast.dismiss(t.id);
+                                }}
+                            >
+                                Cancel
+                            </Button>
+                        </div>
+                    </div>
+                ), { duration: 10000 });
+            });
+
+            if (!confirmed) return;
+        }
+
+        setGenerationProgress({ current: 0, total: totalVariations });
+        const variations = [];
+        const chunkSize = 100;
+
+        for (let i = 0; i < combinations.length; i += chunkSize) {
+            const chunk = combinations.slice(i, i + chunkSize);
+            await new Promise(resolve => setTimeout(resolve, 0));
+
+            const chunkVariations = chunk.map((combination) => ({
+                attributes: combination.map((value, index) => ({
+                    id: variationAttributes[index].id,
+                    name: variationAttributes[index].name,
+                    value,
+                })),
                 price: data.price || 0,
                 stock_quantity: 0,
-                sku: generateVariationSKU(data.slug || '', attributes),
+                sku: generateVariationSKU(data.slug || '', combination),
                 images: [],
                 is_active: true,
                 weight: data.weight || '',
                 length: data.length || '',
                 width: data.width || '',
                 height: data.height || '',
-            };
-        });
+            }));
+
+            variations.push(...chunkVariations);
+            setGenerationProgress({ 
+                current: Math.min(i + chunkSize, totalVariations), 
+                total: totalVariations 
+            });
+        }
 
         setGeneratedVariations(variations);
+        setGenerationProgress(null);
         toast.success(`Generated ${variations.length} variations`);
+        setActiveTab('variations');
     };
 
     const handleBulkEdit = (field, value) => {
@@ -638,10 +781,15 @@ const VariableProductSection = ({
     };
 
     return (
-        <Card>
-            <CardHeader>
+        <Card className="relative">
+            <CardHeader className="space-y-1">
                 <div className="flex items-center justify-between">
-                    <CardTitle>Variable Product</CardTitle>
+                    <div className="space-y-1">
+                        <CardTitle className="text-2xl">Variable Product</CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                            Create multiple variations of your product with different attributes
+                        </p>
+                    </div>
                     <div className="flex items-center space-x-2">
                         <Switch
                             checked={isVariableProduct}
@@ -653,22 +801,37 @@ const VariableProductSection = ({
                         </Label>
                     </div>
                 </div>
-                {isVariableProduct && (
-                    <p className="text-sm text-muted-foreground mt-2">
-                        Configure product attributes and generate variations
-                    </p>
-                )}
             </CardHeader>
 
             {isVariableProduct && (
                 <CardContent className="space-y-6">
-                    <Tabs defaultValue="attributes">
+                    {data.attributes?.length > 0 && (
+                        <AttributeStats attributes={data.attributes} />
+                    )}
+
+                    <Tabs 
+                        value={activeTab} 
+                        onValueChange={setActiveTab}
+                        className="w-full"
+                    >
                         <TabsList className="grid w-full grid-cols-2">
-                            <TabsTrigger value="attributes">Attributes</TabsTrigger>
-                            <TabsTrigger value="variations">Variations</TabsTrigger>
+                            <TabsTrigger 
+                                value="attributes"
+                                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                            >
+                                <LayersIcon className="w-4 h-4 mr-2" />
+                                Attributes
+                            </TabsTrigger>
+                            <TabsTrigger 
+                                value="variations"
+                                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                            >
+                                <BoxesIcon className="w-4 h-4 mr-2" />
+                                Variations
+                            </TabsTrigger>
                         </TabsList>
 
-                        <TabsContent value="attributes" className="space-y-4">
+                        <TabsContent value="attributes" className="space-y-4 mt-4">
                             <AttributeActions
                                 globalAttributes={globalAttributes}
                                 onAddGlobal={handleAddGlobalAttribute}
@@ -676,37 +839,96 @@ const VariableProductSection = ({
                                 existingAttributeIds={data.attributes?.map(attr => attr.id) || []}
                             />
 
-                            <ScrollArea className="h-[400px] pr-4">
-                                {data.attributes?.map((attribute) => (
-                                    <AttributeForm
-                                        key={attribute.id}
-                                        attribute={attribute}
-                                        isGlobal={!attribute.isCustom}
-                                        onUpdate={handleAttributeChange}
-                                        onRemove={handleRemoveAttribute}
-                                    />
-                                ))}
+                            <ScrollArea className="h-[500px] pr-4">
+                                <div className="space-y-4">
+                                    {data.attributes?.map((attribute) => (
+                                        <AttributeForm
+                                            key={attribute.id}
+                                            attribute={attribute}
+                                            isGlobal={!attribute.isCustom}
+                                            onUpdate={handleAttributeChange}
+                                            onRemove={handleRemoveAttribute}
+                                        />
+                                    ))}
 
-                                {!data.attributes?.length && (
-                                    <div className="text-center py-8 text-muted-foreground">
-                                        No attributes added yet. Add some attributes to create variations.
-                                    </div>
-                                )}
+                                    {!data.attributes?.length && (
+                                        <EmptyState
+                                            icon={<LayersIcon className="w-12 h-12" />}
+                                            title="No attributes added"
+                                            description="Add some attributes to create product variations"
+                                            action={
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={() => setShowNewAttributeForm(true)}
+                                                >
+                                                    <Plus className="w-4 h-4 mr-2" />
+                                                    Add Attribute
+                                                </Button>
+                                            }
+                                        />
+                                    )}
+                                </div>
                             </ScrollArea>
 
                             {data.attributes?.length > 0 && (
-                                <div className="flex justify-end">
-                                    <Button onClick={generateVariations}>
+                                <div className="flex justify-end gap-2">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setActiveTab('variations')}
+                                    >
+                                        View Variations
+                                    </Button>
+                                    <Button 
+                                        onClick={handleGenerateVariations}
+                                        className="gap-2"
+                                        disabled={generationProgress !== null}
+                                    >
+                                        <WandIcon className="w-4 h-4" />
                                         Generate Variations
                                     </Button>
                                 </div>
                             )}
+
+                            {generationProgress && (
+                                <VariationProgress 
+                                    current={generationProgress.current}
+                                    total={generationProgress.total}
+                                />
+                            )}
                         </TabsContent>
 
+<<<<<<< HEAD
                         
 
                         <TabsContent value="variations" className="space-y-4">
                             <VariationsTabContent />
+=======
+                        <TabsContent value="variations" className="space-y-4 mt-4">
+                            {generatedVariations.length > 0 ? (
+                                <VariationsGrid
+                                    variations={generatedVariations}
+                                    onVariationChange={handleVariationChange}
+                                    onSave={handleSaveVariations}
+                                    bulkEditMode={bulkEditMode}
+                                    setBulkEditMode={setBulkEditMode}
+                                    defaultPrice={data.price}
+                                />
+                            ) : (
+                                <EmptyState
+                                    icon={<BoxesIcon className="w-12 h-12" />}
+                                    title="No variations generated"
+                                    description="Generate variations from your attributes first"
+                                    action={
+                                        <Button
+                                            onClick={() => setActiveTab('attributes')}
+                                            variant="outline"
+                                        >
+                                            Go to Attributes
+                                        </Button>
+                                    }
+                                />
+                            )}
+>>>>>>> 5367c133594306480f0231206e5447ffb6d65c7d
                         </TabsContent>
                     </Tabs>
                 </CardContent>
