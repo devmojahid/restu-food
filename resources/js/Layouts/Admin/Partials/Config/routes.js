@@ -55,11 +55,11 @@ export const routes = {
         submenu: {
             products: {
                 name: "Products",
-                path: "/ai/writers",
+                path: "/app/products",
                 icon: "Package"
             },
             addNewProduct: {
-                name: "Add New Product",
+                name: "Add New",
                 path: "/app/products/create",
                 icon: "Plus"
             },

@@ -722,6 +722,12 @@ const renderSpecificationInput = (spec, value, onChange) => {
 };
 
 export default function CreateProductForm({ restaurants, categories, specificationGroups, globalAttributes }) {
+  restaurants = [
+    {
+      id: 1,
+      name: "Restaurant 1"
+    }
+  ];
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [autoUpdateSlug, setAutoUpdateSlug] = useState(true);
   const [selectedGroupId, setSelectedGroupId] = useState(null);
