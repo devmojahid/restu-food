@@ -2,10 +2,10 @@ import React from "react";
 import { Head } from "@inertiajs/react";
 import Form from "./Partials/Create/Index";
 import AdminLayout from "@/Layouts/Admin/AdminLayout";
-import { Plus, Home, Package, Save, ArrowLeft } from "lucide-react";
+import { Plus, Home, Package } from "lucide-react";
 import Breadcrumb from "@/Components/Admin/Breadcrumb";
 
-const CreateProduct = ({ restaurants, categories, specificationGroups, globalAttributes }) => {
+const CreateProduct = ({ restaurants, categories, globalAttributes }) => {
   return (
     <AdminLayout>
       <Head title="Create Product" />
@@ -21,7 +21,6 @@ const CreateProduct = ({ restaurants, categories, specificationGroups, globalAtt
         <Form 
           restaurants={restaurants} 
           categories={categories}
-          specificationGroups={specificationGroups}
           globalAttributes={globalAttributes}
         />
       </div>

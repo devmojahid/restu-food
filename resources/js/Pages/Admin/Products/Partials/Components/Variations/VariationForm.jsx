@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Calendar, Check, ImageIcon, Info, Upload } from 'lucide-react'
+import { Calendar, Check, ImageIcon, Info, Upload, X, DollarSign, Package, Box, Tag, Plus, Scale, FileText } from 'lucide-react'
 import { Button } from "@/Components/ui/button"
 import { Input } from "@/Components/ui/input"
 import { Label } from "@/Components/ui/label"
@@ -7,8 +7,22 @@ import { Checkbox } from "@/Components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/Components/ui/select"
 import { Textarea } from "@/Components/ui/textarea"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/Components/ui/dialog"
-import { Badge } from "@/Components/ui/badge"
+import { ScrollArea, ScrollBar } from "@/Components/ui/scroll-area"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/Components/ui/tooltip"
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/Components/ui/card"
+import { Separator } from "@/Components/ui/separator"
+import { cn } from "@/lib/utils"
+import FileUploader from "@/Components/Admin/Filesystem/FileUploader"
+
+const FILE_COLLECTIONS = {
+  THUMBNAIL: {
+    name: "thumbnail",
+    maxFiles: 1,
+    fileType: "image",
+    title: "Variation Image",
+    description: "Upload a variation image (recommended size: 800x800px)",
+  }
+};
 
 export default function VariationForm({
   variation = {},
@@ -17,331 +31,462 @@ export default function VariationForm({
   onCancel,
   readOnly = false
 }) {
-  const [formData, setFormData] = useState(variation)
+  const [formData, setFormData] = useState({
+    ...variation,
+    dimensions: variation.dimensions || { length: '', width: '', height: '' },
+    thumbnail: variation.thumbnail || null
+  })
   const [showSchedule, setShowSchedule] = useState(false)
+  const [activeTab, setActiveTab] = useState('basic')
+
+  const handleFileUpload = (files) => {
+    const thumbnail = Array.isArray(files) ? files[0] : files;
+    
+    setFormData(prevData => {
+      const newData = {
+        ...prevData,
+        thumbnail: thumbnail
+      };
+      console.log('Updated formData:', newData);
+      return newData;
+    });
+  };
+
+  const handleSave = () => {
+    const dataToSave = {
+      id: formData.id,
+      sku: formData.sku || '',
+      price: formData.price || '',
+      sale_price: formData.sale_price || '',
+      stock: formData.stock || 0,
+      enabled: formData.enabled ?? true,
+      virtual: formData.virtual ?? false,
+      downloadable: formData.downloadable ?? false,
+      manage_stock: formData.manage_stock ?? true,
+      weight: formData.weight || '',
+      dimensions: {
+        length: formData.dimensions?.length || '',
+        width: formData.dimensions?.width || '',
+        height: formData.dimensions?.height || ''
+      },
+      ...attributes.filter(a => a.variation).reduce((acc, attr) => ({
+        ...acc,
+        [attr.name]: formData[attr.name] || ''
+      }), {}),
+      thumbnail: formData.thumbnail || null
+    };
+
+    console.log('Saving variation with thumbnail:', formData.thumbnail);
+    onSave(dataToSave);
+  };
 
   return (
-    <Dialog open={true} onOpenChange={() => onCancel()}>
-      <DialogContent className="max-w-4xl">
-        <DialogHeader>
-          <DialogTitle>
-            {variation.id ? 'Edit Variation' : 'Add New Variation'}
-          </DialogTitle>
-          <DialogDescription>
-            {variation.id 
-              ? 'Modify the details for this product variation'
-              : 'Create a new product variation'
-            }
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-6">
-          <div className="flex items-start gap-6 flex-wrap md:flex-nowrap">
-            <div className="w-full md:w-[150px] h-[150px] bg-muted rounded-lg flex items-center justify-center relative group">
-              {formData.image ? (
-                <img 
-                  src={formData.image} 
-                  alt="Variation" 
-                  className="w-full h-full object-cover rounded-lg"
-                />
+    <Dialog 
+      open={true} 
+      onOpenChange={(open) => {
+        if (!open) onCancel()
+      }}
+    >
+      <DialogContent 
+        className={cn(
+          "p-0 gap-0",
+          "w-full h-full md:h-auto",
+          "max-w-[95vw] max-h-[100vh] md:max-h-[90vh] md:max-w-[85vw] lg:max-w-[75vw]",
+          "rounded-none md:rounded-lg",
+        )}
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+      >
+        <div className="flex flex-col h-[100vh] md:h-[calc(90vh-2rem)]">
+          {/* Enhanced Header for Mobile */}
+          <div className="px-4 sm:px-6 py-3 sm:py-4 border-b bg-background sticky top-0 z-20">
+            <DialogTitle className="text-lg sm:text-xl md:text-2xl font-semibold flex items-center gap-2 pr-8">
+              {variation.id ? (
+                <>
+                  <Tag className="h-5 w-5 md:h-6 md:w-6" />
+                  Edit Variation
+                </>
               ) : (
-                <ImageIcon className="h-12 w-12 text-muted-foreground" />
+                <>
+                  <Plus className="h-5 w-5 md:h-6 md:w-6" />
+                  Add New Variation
+                </>
               )}
-              {!readOnly && (
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                  <label htmlFor="variation-image" className="cursor-pointer">
-                    <Upload className="h-8 w-8 text-white" />
-                  </label>
-                  <input
-                    id="variation-image"
-                    type="file"
-                    className="hidden"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files[0]
-                      if (file) {
-                        const reader = new FileReader()
-                        reader.onloadend = () => {
-                          setFormData({ ...formData, image: reader.result })
-                        }
-                        reader.readAsDataURL(file)
-                      }
-                    }}
-                  />
+            </DialogTitle>
+            <DialogDescription className="mt-1 text-sm">
+              {variation.id 
+                ? 'Modify the details for this product variation'
+                : 'Create a new product variation with specific attributes and pricing'
+              }
+            </DialogDescription>
+          </div>
+
+          {/* Enhanced Tab Navigation for Mobile */}
+          <div className="px-4 sm:px-6 py-2 sm:py-3 border-b bg-background sticky top-[60px] sm:top-[73px] z-10">
+            <ScrollArea className="w-full" orientation="horizontal">
+              <nav className="flex justify-start sm:justify-center min-w-full">
+                <div className="inline-flex items-center justify-start sm:justify-center rounded-lg bg-muted p-1 text-muted-foreground">
+                  {[
+                    { id: 'basic', label: 'Basic Info', icon: Box },
+                    { id: 'pricing', label: 'Pricing', icon: DollarSign },
+                    { id: 'shipping', label: 'Shipping', icon: Package }
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={cn(
+                        "inline-flex items-center justify-center gap-1.5 rounded-md px-3 sm:px-4 py-2 text-sm font-medium transition-all whitespace-nowrap",
+                        "hover:bg-background/50",
+                        activeTab === tab.id ? "bg-background text-foreground shadow-sm" : "text-muted-foreground",
+                      )}
+                    >
+                      <tab.icon className="h-4 w-4" />
+                      <span className="hidden xs:inline">{tab.label}</span>
+                      <span className="xs:hidden">{tab.label.split(' ')[0]}</span>
+                    </button>
+                  ))}
                 </div>
-              )}
-            </div>
-            
-            <div className="flex-1 space-y-4 w-full">
-              {/* Attribute selections for manual add */}
-              {!variation.id && attributes.filter(a => a.variation).map((attr, index) => (
-                <div key={index} className="space-y-2">
-                  <Label>{attr.name}</Label>
-                  <Select
-                    value={formData[attr.name] || ''}
-                    onValueChange={(value) => 
-                      setFormData({ ...formData, [attr.name]: value })
-                    }
-                    disabled={readOnly}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={`Select ${attr.name}`} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {attr.values.map((value, vIndex) => (
-                        <SelectItem key={vIndex} value={value}>
-                          {value}
-                        </SelectItem>
+              </nav>
+              <ScrollBar orientation="horizontal" className="invisible" />
+            </ScrollArea>
+          </div>
+
+          {/* Enhanced Content Area for Mobile */}
+          <ScrollArea 
+            className="flex-1 overflow-y-auto"
+            type="always"
+          >
+            <div className="p-4 sm:p-6">
+              <div className="space-y-4 sm:space-y-6 max-w-5xl mx-auto">
+                {/* Basic Info Tab */}
+                <div className={cn("space-y-6", activeTab !== 'basic' && "hidden")}>
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    {/* Image Upload Section */}
+                    <Card className="lg:col-span-4 bg-muted/50">
+                      <CardHeader>
+                        <CardTitle className="text-sm font-medium flex items-center gap-2">
+                          <ImageIcon className="h-4 w-4" />
+                          Variation Image
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <FileUploader
+                          fileType="image"
+                          maxFiles={1}
+                          collection={FILE_COLLECTIONS.THUMBNAIL.name}
+                          value={formData.thumbnail}
+                          onUpload={handleFileUpload}
+                          description={FILE_COLLECTIONS.THUMBNAIL.description}
+                          disabled={readOnly}
+                        />
+                      </CardContent>
+                    </Card>
+
+                    {/* Main Form Fields */}
+                    <div className="lg:col-span-8 space-y-6">
+                      {/* Attribute selections */}
+                      {!variation.id && attributes.filter(a => a.variation).map((attr, index) => (
+                        <div key={index} className="space-y-2">
+                          <Label className="font-medium">{attr.name}</Label>
+                          <Select
+                            value={formData[attr.name] || ''}
+                            onValueChange={(value) => 
+                              setFormData({ ...formData, [attr.name]: value })
+                            }
+                            disabled={readOnly}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder={`Select ${attr.name}`} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {attr.values.map((value, vIndex) => (
+                                <SelectItem key={vIndex} value={value}>
+                                  {value}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ))}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>
-                    SKU
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <Info className="h-4 w-4 ml-1 inline-block text-muted-foreground" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Stock Keeping Unit - A unique identifier for this variation</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </Label>
-                  <Input
-                    value={formData.sku || ''}
-                    onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                    placeholder="Enter SKU"
-                    disabled={readOnly}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>
-                    GTIN/UPC/EAN/ISBN
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <Info className="h-4 w-4 ml-1 inline-block text-muted-foreground" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Global Trade Item Number or similar product identifier</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </Label>
-                  <Input
-                    value={formData.gtin || ''}
-                    onChange={(e) => setFormData({ ...formData, gtin: e.target.value })}
-                    placeholder="Enter identifier"
-                    disabled={readOnly}
-                  />
-                </div>
-              </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {/* SKU Field */}
+                        <div className="space-y-2">
+                          <Label className="font-medium flex items-center gap-1">
+                            SKU
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <Info className="h-4 w-4 text-muted-foreground" />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Stock Keeping Unit - A unique identifier</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </Label>
+                          <Input
+                            value={formData.sku || ''}
+                            onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                            placeholder="Enter SKU"
+                            disabled={readOnly}
+                            className="font-mono"
+                          />
+                        </div>
 
-              <div className="flex flex-wrap gap-6">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="enabled"
-                    checked={formData.enabled}
-                    onCheckedChange={(checked) => setFormData({ ...formData, enabled: checked })}
-                    disabled={readOnly}
-                  />
-                  <Label htmlFor="enabled">Enabled</Label>
+                        {/* Stock Field */}
+                        <div className="space-y-2">
+                          <Label className="font-medium">Stock</Label>
+                          <Input
+                            type="number"
+                            value={formData.stock || ''}
+                            onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                            placeholder="Enter stock quantity"
+                            disabled={readOnly}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Options Card */}
+                      <Card>
+                        <CardContent className="p-4">
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            {[
+                              { id: 'enabled', label: 'Enabled' },
+                              { id: 'downloadable', label: 'Downloadable' },
+                              { id: 'virtual', label: 'Virtual' },
+                              { id: 'manage_stock', label: 'Manage stock' }
+                            ].map((option) => (
+                              <div key={option.id} className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={option.id}
+                                  checked={formData[option.id]}
+                                  onCheckedChange={(checked) => 
+                                    setFormData({ ...formData, [option.id]: checked })
+                                  }
+                                  disabled={readOnly}
+                                />
+                                <Label 
+                                  htmlFor={option.id}
+                                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                >
+                                  {option.label}
+                                </Label>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+
+                  {/* Description moved to Basic Info tab only */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm font-medium flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        Description
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Textarea
+                        value={formData.description || ''}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        placeholder="Enter variation description"
+                        className="min-h-[100px]"
+                        disabled={readOnly}
+                      />
+                    </CardContent>
+                  </Card>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="downloadable"
-                    checked={formData.downloadable}
-                    onCheckedChange={(checked) => setFormData({ ...formData, downloadable: checked })}
-                    disabled={readOnly}
-                  />
-                  <Label htmlFor="downloadable">Downloadable</Label>
+
+                {/* Pricing Tab */}
+                <div className={cn("space-y-6", activeTab !== 'pricing' && "hidden")}>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <DollarSign className="h-5 w-5" />
+                        Pricing Details
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label className="font-medium">Regular Price</Label>
+                          <div className="relative">
+                            <DollarSign className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={formData.price || ''}
+                              onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                              className="pl-9"
+                              placeholder="0.00"
+                              disabled={readOnly}
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="font-medium">Sale Price</Label>
+                          <div className="relative">
+                            <DollarSign className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={formData.sale_price || ''}
+                              onChange={(e) => setFormData({ ...formData, sale_price: e.target.value })}
+                              className="pl-9"
+                              placeholder="0.00"
+                              disabled={readOnly}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="font-medium">Schedule Sale</Label>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowSchedule(!showSchedule)}
+                            type="button"
+                          >
+                            <Calendar className="h-4 w-4 mr-2" />
+                            {showSchedule ? 'Hide Schedule' : 'Set Schedule'}
+                          </Button>
+                        </div>
+                        
+                        {showSchedule && (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                            <div className="space-y-2">
+                              <Label>Sale Start Date</Label>
+                              <Input
+                                type="datetime-local"
+                                value={formData.sale_price_from || ''}
+                                onChange={(e) => setFormData({ ...formData, sale_price_from: e.target.value })}
+                                disabled={readOnly}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Sale End Date</Label>
+                              <Input
+                                type="datetime-local"
+                                value={formData.sale_price_to || ''}
+                                onChange={(e) => setFormData({ ...formData, sale_price_to: e.target.value })}
+                                disabled={readOnly}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="virtual"
-                    checked={formData.virtual}
-                    onCheckedChange={(checked) => setFormData({ ...formData, virtual: checked })}
-                    disabled={readOnly}
-                  />
-                  <Label htmlFor="virtual">Virtual</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="manage_stock"
-                    checked={formData.manage_stock}
-                    onCheckedChange={(checked) => setFormData({ ...formData, manage_stock: checked })}
-                    disabled={readOnly}
-                  />
-                  <Label htmlFor="manage_stock">Manage stock?</Label>
+
+                {/* Shipping Tab */}
+                <div className={cn("space-y-6", activeTab !== 'shipping' && "hidden")}>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Package className="h-5 w-5" />
+                        Shipping Details
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                          <Scale className="h-4 w-4 text-muted-foreground" />
+                          <Label className="font-medium">Weight & Dimensions</Label>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                          <div className="space-y-2">
+                            <Label>Weight (kg)</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={formData.weight || ''}
+                              onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
+                              placeholder="0.00"
+                              disabled={readOnly}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Length (cm)</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={formData.dimensions?.length || ''}
+                              onChange={(e) => setFormData({
+                                ...formData,
+                                dimensions: { ...formData.dimensions, length: e.target.value }
+                              })}
+                              placeholder="0.00"
+                              disabled={readOnly}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Width (cm)</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={formData.dimensions?.width || ''}
+                              onChange={(e) => setFormData({
+                                ...formData,
+                                dimensions: { ...formData.dimensions, width: e.target.value }
+                              })}
+                              placeholder="0.00"
+                              disabled={readOnly}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Height (cm)</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={formData.dimensions?.height || ''}
+                              onChange={(e) => setFormData({
+                                ...formData,
+                                dimensions: { ...formData.dimensions, height: e.target.value }
+                              })}
+                              placeholder="0.00"
+                              disabled={readOnly}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
             </div>
-          </div>
+            <ScrollBar />
+          </ScrollArea>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label>Regular price ($)</Label>
-              <Input
-                type="number"
-                value={formData.price || ''}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                placeholder="0.00"
-                disabled={readOnly}
-              />
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Sale price ($)</Label>
-                {!readOnly && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 text-xs"
-                    onClick={() => setShowSchedule(!showSchedule)}
-                  >
-                    <Calendar className="h-4 w-4 mr-1" />
-                    Schedule
-                  </Button>
-                )}
-              </div>
-              <Input
-                type="number"
-                value={formData.sale_price || ''}
-                onChange={(e) => setFormData({ ...formData, sale_price: e.target.value })}
-                placeholder="0.00"
-                disabled={readOnly}
-              />
-              {showSchedule && (
-                <div className="grid grid-cols-2 gap-4 mt-2">
-                  <div className="space-y-2">
-                    <Label className="text-sm">Sale start date</Label>
-                    <Input 
-                      type="datetime-local" 
-                      disabled={readOnly}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-sm">Sale end date</Label>
-                    <Input 
-                      type="datetime-local"
-                      disabled={readOnly}
-                    />
-                  </div>
-                </div>
+          {/* Enhanced Footer for Mobile */}
+          <div className="px-4 sm:px-6 py-3 sm:py-4 border-t bg-background mt-auto">
+            <div className="flex items-center justify-end gap-2 sm:gap-3 max-w-5xl mx-auto">
+              <Button 
+                variant="outline" 
+                onClick={onCancel}
+                className="min-w-[80px] sm:min-w-[100px] h-9 sm:h-10 text-sm"
+              >
+                <X className="h-4 w-4 mr-1.5 sm:mr-2" />
+                Cancel
+              </Button>
+              {!readOnly && (
+                <Button 
+                  onClick={handleSave}
+                  className="min-w-[100px] sm:min-w-[120px] h-9 sm:h-10 text-sm"
+                >
+                  <Check className="h-4 w-4 mr-1.5 sm:mr-2" />
+                  {variation.id ? 'Save Changes' : 'Add Variation'}
+                </Button>
               )}
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label>Stock status</Label>
-              <Select
-                value={formData.stock_status || 'instock'}
-                onValueChange={(value) => setFormData({ ...formData, stock_status: value })}
-                disabled={readOnly}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="instock">In stock</SelectItem>
-                  <SelectItem value="outofstock">Out of stock</SelectItem>
-                  <SelectItem value="onbackorder">On backorder</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Weight (kg)</Label>
-              <Input
-                type="number"
-                value={formData.weight || ''}
-                onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
-                placeholder="0.00"
-                disabled={readOnly}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Dimensions (cm)</Label>
-            <div className="grid grid-cols-3 gap-4">
-              <Input
-                placeholder="Length"
-                value={formData.dimensions?.length || ''}
-                onChange={(e) => setFormData({
-                  ...formData,
-                  dimensions: { ...formData.dimensions, length: e.target.value }
-                })}
-                disabled={readOnly}
-              />
-              <Input
-                placeholder="Width"
-                value={formData.dimensions?.width || ''}
-                onChange={(e) => setFormData({
-                  ...formData,
-                  dimensions: { ...formData.dimensions, width: e.target.value }
-                })}
-                disabled={readOnly}
-              />
-              <Input
-                placeholder="Height"
-                value={formData.dimensions?.height || ''}
-                onChange={(e) => setFormData({
-                  ...formData,
-                  dimensions: { ...formData.dimensions, height: e.target.value }
-                })}
-                disabled={readOnly}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Shipping class</Label>
-            <Select
-              value={formData.shipping_class || 'same_as_parent'}
-              onValueChange={(value) => setFormData({ ...formData, shipping_class: value })}
-              disabled={readOnly}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="same_as_parent">Same as parent</SelectItem>
-                <SelectItem value="standard">Standard</SelectItem>
-                <SelectItem value="express">Express</SelectItem>
-                <SelectItem value="free">Free shipping</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Description</Label>
-            <Textarea
-              value={formData.description || ''}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Enter variation description"
-              className="min-h-[100px]"
-              disabled={readOnly}
-            />
           </div>
         </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-          {!readOnly && (
-            <Button onClick={() => onSave(formData)}>
-              {variation.id ? 'Save Changes' : 'Add Variation'}
-            </Button>
-          )}
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

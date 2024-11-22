@@ -31,29 +31,22 @@ final class BlogService extends BaseService
     /**
      * Store a new blog with file handling
      */
-    public function store(array $data): Blog
+    public function store(array $data, array $files = []): Blog
     {
         try {
             DB::beginTransaction();
-
-            $filesData = $data['files'] ?? [];
-            unset($data['files']);
-
+            
             /** @var Blog $blog */
             $blog = $this->model::create($data);
-
-            $this->handleFiles($blog, $filesData);
+            
+            if (!empty($files)) {
+                $blog->handleFiles($files);
+            }
             
             DB::commit();
-
             return $blog->fresh($this->relationships);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Blog creation failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'data' => $data
-            ]);
             throw $e;
         }
     }
@@ -61,34 +54,23 @@ final class BlogService extends BaseService
     /**
      * Update a blog with file handling
      */
-    public function update(int $id, array $data): Model
+    public function update(int $id, array $data, array $files = []): Blog
     {
         try {
             DB::beginTransaction();
 
             /** @var Blog $blog */
             $blog = $this->findOrFail($id);
-
-            $filesData = $data['files'] ?? null;
-            unset($data['files']);
-
             $blog->update($data);
 
-            if ($filesData !== null) {
-                $this->handleFiles($blog, $filesData);
+            if (!empty($files)) {
+                $blog->handleFiles($files);
             }
 
             DB::commit();
-
             return $blog->fresh($this->relationships);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Blog update failed', [
-                'id' => $id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'data' => $data
-            ]);
             throw $e;
         }
     }
@@ -173,37 +155,6 @@ final class BlogService extends BaseService
 
         if (in_array($sortField, $this->sortableFields)) {
             $query->orderBy($sortField, $sortDirection);
-        }
-    }
-
-    /**
-     * Handle files with improved checks
-     */
-    private function handleFiles(Blog $blog, array $filesData): void
-    {
-        foreach ($filesData as $collection => $fileData) {
-            if ($fileData === null) {
-                continue;
-            }
-
-            if (empty($fileData)) {
-                $blog->clearFiles($collection);
-                continue;
-            }
-
-            if (!isset($fileData[0])) {
-                $currentFile = $blog->getFile($collection);
-                if (!$currentFile || $currentFile->id !== ($fileData['id'] ?? null)) {
-                    $blog->attachFile($fileData, $collection);
-                }
-            } else {
-                $currentFiles = $blog->getFiles($collection)->pluck('id')->toArray();
-                $newFileIds = collect($fileData)->pluck('id')->toArray();
-                
-                if ($currentFiles != $newFileIds) {
-                    $blog->syncFiles($fileData, $collection);
-                }
-            }
         }
     }
 }

@@ -42,7 +42,6 @@ final class ProductController extends Controller
         $globalAttributes = ProductAttribute::with(['values' => function($query) {
             $query->orderBy('sort_order');
         }])
-        ->where('is_global', true)
         ->orderBy('sort_order')
         ->get()
         ->map(function ($attribute) {
@@ -61,24 +60,62 @@ final class ProductController extends Controller
             ];
         });
 
-        // Debug the attributes
-        \Log::info('Global Attributes:', ['attributes' => $globalAttributes]);
+        $categories = Category::select(['id', 'name', 'slug', 'parent_id'])
+                ->where('type', 'product')
+                ->where('is_active', true)
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->with(['parent:id,name'])
+                ->get()
+                ->map(fn ($category) => [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                    'slug' => $category->slug,
+                    'parent' => $category->parent ? [
+                        'id' => $category->parent->id,
+                        'name' => $category->parent->name
+                        ] : null
+                ])
+            ->values()
+            ->all();
+
+        $restaurants = Restaurant::select(['id', 'name'])
+            ->orderBy('name')
+            ->get();
 
         return Inertia::render('Admin/Products/Create', [
-            'restaurants' => Restaurant::select('id', 'name')->get(),
-            'categories' => Category::select('id', 'name')->get(),
-            'specificationGroups' => SpecificationGroup::with('specifications')->get(),
+            'restaurants' => $restaurants,
+            'categories' => $categories,
             'globalAttributes' => $globalAttributes,
         ]);
     }
 
     public function store(ProductRequest $request): RedirectResponse
     {
-        $this->productService->create($request->validated());
+        try {
+            $data = $request->validated();
+            
+            // Handle file uploads
+            $data['thumbnail'] = $request->input('thumbnail');
+            $data['gallery'] = $request->input('gallery');
+            
+            // Handle variation files
+            if (!empty($data['variations'])) {
+                foreach ($data['variations'] as &$variation) {
+                    $variation['thumbnail'] = $variation['thumbnail'] ?? null;
+                }
+            }
 
-        return redirect()
-            ->route('admin.products.index')
-            ->with('success', 'Product created successfully.');
+            $product = $this->productService->store($data);
+
+            return redirect()
+                ->route('app.products.edit', $product)
+                ->with('success', 'Product created successfully.');
+        } catch (\Exception $e) {
+            return back()
+                ->withInput()
+                ->with('error', 'Error creating product: ' . $e->getMessage());
+        }
     }
 
     public function edit(Product $product): Response
@@ -98,7 +135,7 @@ final class ProductController extends Controller
         $this->productService->update($product, $request->validated());
 
         return redirect()
-            ->route('admin.products.index')
+            ->route('app.products.index')
             ->with('success', 'Product updated successfully.');
     }
 
@@ -107,7 +144,7 @@ final class ProductController extends Controller
         $product->delete();
 
         return redirect()
-            ->route('admin.products.index')
+            ->route('app.products.index')
             ->with('success', 'Product deleted successfully.');
     }
 

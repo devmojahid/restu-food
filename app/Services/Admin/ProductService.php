@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace App\Services\Admin;
 
 use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 
 final class ProductService
 {
-    public function create(array $data): Product
+    public function store(array $data): Product
     {
         return DB::transaction(function () use ($data) {
             // Create the product
@@ -21,31 +22,47 @@ final class ProductService
                 'sku' => $data['sku'] ?? $this->generateSku($data['name']),
             ]);
 
-            // Attach categories
+            // Handle file uploads
+            $this->handleProductFiles($product, $data);
+
+            // Handle categories
             if (isset($data['categories'])) {
-                $product->categories()->attach($data['categories']);
+                $categoryData = collect($data['categories'])->mapWithKeys(function ($categoryId, $index) {
+                    return [$categoryId => ['sort_order' => $index]];
+                })->all();
+                
+                $product->categories()->attach($categoryData);
             }
 
-            // Create variants
-            if (isset($data['variants'])) {
-                $product->variants()->createMany($data['variants']);
-            }
+            // Handle variations with files
+            if (!empty($data['variations'])) {
+                foreach ($data['variations'] as $variation) {
+                    $variant = $product->variants()->create([
+                        'sku' => $variation['sku'] ?? $product->generateVariantSku($variation['attributes'] ?? []),
+                        'price' => $variation['price'] ?? 0,
+                        'sale_price' => $variation['sale_price'] ?? null,
+                        'stock' => $variation['stock'] ?? 0,
+                        'enabled' => $variation['enabled'] ?? true,
+                        'virtual' => $variation['virtual'] ?? false,
+                        'downloadable' => $variation['downloadable'] ?? false,
+                        'manage_stock' => $variation['manage_stock'] ?? true,
+                        'stock_status' => ($variation['stock'] ?? 0) > 0 ? 'instock' : 'outofstock',
+                        'weight' => $variation['weight'] ?? null,
+                        'length' => $variation['dimensions']['length'] ?? null,
+                        'width' => $variation['dimensions']['width'] ?? null,
+                        'height' => $variation['dimensions']['height'] ?? null,
+                        'description' => $variation['description'] ?? null,
+                    ]);
 
-            // Add specifications
-            if (isset($data['specifications'])) {
-                foreach ($data['specifications'] as $specId => $value) {
-                    $product->specifications()->attach($specId, ['value' => $value]);
+                    // Handle variation image
+                    dd($variation);
+                    if (!empty($variation['thumbnail'])) {
+                        $variant->handleFile($variation['thumbnail'], ProductVariant::COLLECTION_THUMBNAIL);
+                    }
                 }
             }
 
-            // Set metadata
-            if (isset($data['metadata'])) {
-                foreach ($data['metadata'] as $key => $value) {
-                    $product->setMeta($key, $value);
-                }
-            }
-
-            return $product;
+            return $product->fresh();
         });
     }
 
@@ -58,24 +75,27 @@ final class ProductService
                 'slug' => $data['slug'] ?? Str::slug($data['name']),
             ]);
 
+            // Handle file updates
+            $this->handleProductFiles($product, $data);
+
+            // Update variants with files
+            if (isset($data['variants'])) {
+                foreach ($data['variants'] as $variantData) {
+                    $variant = $product->variants()->updateOrCreate(
+                        ['id' => $variantData['id'] ?? null],
+                        array_except($variantData, ['image'])
+                    );
+
+                    // Handle variation image
+                    if (isset($variantData['image'])) {
+                        $variant->handleFile($variantData['image'], ProductVariant::COLLECTION_THUMBNAIL);
+                    }
+                }
+            }
+
             // Sync categories
             if (isset($data['categories'])) {
                 $product->categories()->sync($data['categories']);
-            }
-
-            // Update variants
-            if (isset($data['variants'])) {
-                // Delete removed variants
-                $variantIds = collect($data['variants'])->pluck('id')->filter();
-                $product->variants()->whereNotIn('id', $variantIds)->delete();
-
-                // Update or create variants
-                foreach ($data['variants'] as $variant) {
-                    $product->variants()->updateOrCreate(
-                        ['id' => $variant['id'] ?? null],
-                        $variant
-                    );
-                }
             }
 
             // Update specifications
@@ -133,5 +153,38 @@ final class ProductService
             'sale_price_from' => $startDate,
             'sale_price_to' => $endDate,
         ]);
+    }
+
+    /**
+     * Handle product file uploads and updates
+     */
+    private function handleProductFiles(Product $product, array $data): void
+    {
+        // Handle product files
+        $files = array_filter([
+            Product::COLLECTION_THUMBNAIL => $data['thumbnail'] ?? null,
+            Product::COLLECTION_GALLERY => $data['gallery'] ?? null,
+        ]);
+
+        if (!empty($files)) {
+            $product->handleFiles($files);
+        }
+
+        // Handle variation files
+        if (!empty($data['variations'])) {
+            foreach ($data['variations'] as $variation) {
+                if (empty($variation['id'])) continue;
+
+                $variant = $product->variants()->find($variation['id']);
+                if (!$variant) continue;
+
+                if (isset($variation['thumbnail'])) {
+                    $variant->handleFile(
+                        $variation['thumbnail'], 
+                        ProductVariant::COLLECTION_THUMBNAIL
+                    );
+                }
+            }
+        }
     }
 } 

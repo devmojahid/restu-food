@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Traits\HasFiles;
-use App\Traits\HasCache;
+use App\Traits\HandlesFiles;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 final class Blog extends Model
 {
-    use HasFiles, HasCache, SoftDeletes;
+    use HasFiles, HandlesFiles, SoftDeletes;
 
     // File collection constants
     public const COLLECTION_THUMBNAIL = 'thumbnail';

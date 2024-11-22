@@ -15,38 +15,32 @@ import { Label } from "@/Components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
 import { cn } from "@/lib/utils";
 import {
-  X,
   Save,
   ArrowLeft,
   AlertCircle,
-  Plus,
-  Trash2,
-  CheckCircle,
-  Settings2,
-  ClipboardList,
-  Settings,
-  HelpCircle,
-  Check,
+  FolderTree,
+  ChevronRight,
 } from "lucide-react";
 import FileUploader from "@/Components/Admin/Filesystem/FileUploader";
 import { Alert, AlertDescription, AlertTitle } from "@/Components/ui/alert";
-import toast from "react-hot-toast";
 import ProductVariations from "../Components/Variations/Index";
+import { Badge } from "@/Components/ui/badge";
+import MultiSelect from "@/Components/ui/multi-select";
 
 const FILE_COLLECTIONS = {
   THUMBNAIL: {
     name: "thumbnail",
     maxFiles: 1,
     fileType: "image",
-    title: "Thumbnail",
-    description: "Upload a thumbnail image (recommended size: 800x800px)",
+    title: "Product Thumbnail",
+    description: "Upload a product thumbnail (recommended size: 800x800px)",
   },
   GALLERY: {
     name: "gallery",
     maxFiles: 5,
     fileType: "image",
     title: "Product Gallery",
-    description: "Upload up to 5 product images",
+    description: "Upload product gallery images (up to 5)",
   }
 };
 
@@ -54,29 +48,19 @@ const INITIAL_FORM_STATE = {
   restaurant_id: "",
   name: "",
   slug: "",
-  sku: "",
   description: "",
   short_description: "",
   price: "",
   cost_per_item: "",
   discounted_price: "",
-  sale_price_from: "",
-  sale_price_to: "",
-  nutritional_info: {},
   is_featured: false,
   is_taxable: true,
   tax_rate: "",
   status: "active",
-  stock_quantity: 0,
-  weight: "",
   length: "",
-  width: "",
-  height: "",
   categories: [],
-  labels: [],
   thumbnail: null,
   gallery: [],
-  metadata: {},
   stock_management: {
     manage_stock: true,
     low_stock_threshold: 5,
@@ -108,17 +92,28 @@ const ErrorAlert = ({ errors }) => {
   );
 };
 
+// First, let's create a helper function to format categories for the select component
+const formatCategoriesForSelect = (categories = []) => {
+  if (!Array.isArray(categories)) return [];
+  
+  return categories.map(category => ({
+    value: category.id.toString(),
+    label: category.name,
+    ...(category.parent && {
+      label: `${category.name} (${category.parent.name})`,
+      parent: category.parent
+    })
+  }));
+};
 
-export default function CreateProductForm({ restaurants, categories, specificationGroups}) {
-  restaurants = [
-    {
-      id: 1,
-      name: "Restaurant 1"
-    }
-  ];
+export default function CreateProductForm({ restaurants, categories, globalAttributes }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [autoUpdateSlug, setAutoUpdateSlug] = useState(true);
   const [selectedGroupId, setSelectedGroupId] = useState(null);
+  const [variationsData, setVariationsData] = useState({
+    attributes: [],
+    variations: []
+  });
 
   const { data, setData, post, processing, errors } = useForm(INITIAL_FORM_STATE);
 
@@ -138,6 +133,16 @@ export default function CreateProductForm({ restaurants, categories, specificati
     e.preventDefault();
     setIsSubmitting(true);
     post(route("app.products.store"));
+  };
+
+  const handleVariationsChange = (data) => {
+    setVariationsData(data);
+    // Also update the main form data
+    setData(prev => ({
+      ...prev,
+      variations: data.variations,
+      attributes: data.attributes
+    }));
   };
 
   return (
@@ -171,11 +176,11 @@ export default function CreateProductForm({ restaurants, categories, specificati
           </Button>
           <Button
             type="submit"
-            disabled={processing || isSubmitting}
+            disabled={processing}
             className="flex items-center"
           >
             <Save className="w-4 h-4 mr-2" />
-            {processing || isSubmitting ? "Saving..." : "Save Product"}
+            {processing ? "Saving..." : "Save Product"}
           </Button>
         </div>
       </div>
@@ -192,20 +197,34 @@ export default function CreateProductForm({ restaurants, categories, specificati
                 <div className="space-y-2">
                   <Label htmlFor="restaurant_id">Restaurant</Label>
                   <Select
-                    value={data.restaurant_id}
+                    value={data.restaurant_id?.toString() || ""}
                     onValueChange={(value) => setData("restaurant_id", value)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id="restaurant_id" className={cn(errors.restaurant_id && "border-red-500")}>
                       <SelectValue placeholder="Select a restaurant" />
                     </SelectTrigger>
                     <SelectContent>
-                      {restaurants.map((restaurant) => (
-                        <SelectItem key={restaurant.id} value={restaurant.id}>
-                          {restaurant.name}
+                      {restaurants?.length > 0 ? (
+                        restaurants.map((restaurant) => (
+                          <SelectItem 
+                            key={restaurant.id} 
+                            value={restaurant.id.toString()}
+                          >
+                            {restaurant.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="" disabled>
+                          No restaurants available
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
+                  {errors.restaurant_id && (
+                    <p className="text-sm text-destructive mt-1">
+                      {errors.restaurant_id}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -317,7 +336,13 @@ export default function CreateProductForm({ restaurants, categories, specificati
           </Card>
 
           {/* <WorkableVariations /> */}
-          <ProductVariations />
+          <ProductVariations
+            initialAttributes={[]}
+            initialVariations={[]}
+            onChange={handleVariationsChange}
+            readOnly={false}
+            globalAttributes={globalAttributes}
+          />
 
           {/* Stock Management Card */}
           <Card>
@@ -418,46 +443,64 @@ export default function CreateProductForm({ restaurants, categories, specificati
           {/* Categories Card */}
           <Card>
             <CardHeader>
-              <CardTitle>Categories</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <FolderTree className="h-4 w-4" />
+                Categories
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <Select
-                value={data.categories}
-                onValueChange={(value) => setData("categories", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="categories">
+                  Select Categories
+                  <span className="text-xs text-muted-foreground ml-2">
+                    (You can select multiple)
+                  </span>
+                </Label>
+                
+                <MultiSelect
+                  options={categories.map(category => ({
+                    value: category.id.toString(),
+                    label: category.name,
+                    ...(category.parent && {
+                      parent: category.parent
+                    })
+                  }))}
+                  selected={data.categories || []}
+                  onChange={(values) => setData("categories", values)}
+                  placeholder="Select categories"
+                  error={errors.categories}
+                />
+
+                {errors.categories && (
+                  <p className="text-sm text-destructive mt-1">
+                    {errors.categories}
+                  </p>
+                )}
+              </div>
             </CardContent>
           </Card>
 
           {/* File Uploaders */}
-          {Object.values(FILE_COLLECTIONS).map((collection) => (
-            <Card key={collection.name}>
-              <CardHeader>
-                <CardTitle>{collection.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <FileUploader
-                  maxFiles={collection.maxFiles}
-                  fileType={collection.fileType}
-                  collection={collection.name}
-                  value={data[collection.name]}
-                  onUpload={(files) => setData(collection.name, files)}
-                  description={collection.description}
-                  error={errors[collection.name]}
-                />
-              </CardContent>
-            </Card>
-          ))}
+          <div className="space-y-6">
+            {Object.values(FILE_COLLECTIONS).map((collection) => (
+              <Card key={collection.name}>
+                <CardHeader>
+                  <CardTitle>{collection.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <FileUploader
+                    maxFiles={collection.maxFiles}
+                    fileType={collection.fileType}
+                    collection={collection.name}
+                    value={data[collection.name]}
+                    onUpload={(files) => setData(collection.name, files)}
+                    description={collection.description}
+                    error={errors[collection.name]}
+                  />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
     </form>

@@ -1,10 +1,11 @@
 import React, { useState } from 'react'
-import { DollarSign, Package, Trash2 } from 'lucide-react'
+import { DollarSign, Package, Trash2, ChevronDown } from 'lucide-react'
 import { Button } from "@/Components/ui/button"
 import { Input } from "@/Components/ui/input"
 import { Label } from "@/Components/ui/label"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/Components/ui/dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/Components/ui/dropdown-menu"
+import { cn } from "@/lib/utils"
 
 export default function BulkEditor({
   selectedVariations,
@@ -27,64 +28,98 @@ export default function BulkEditor({
     setBulkEditValue('')
   }
 
+  const selectedCount = selectedVariations.length
+
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline">Bulk actions</Button>
+          <Button 
+            variant="outline" 
+            className={cn(
+              "flex items-center gap-2",
+              selectedCount > 0 && "border-primary"
+            )}
+            disabled={selectedCount === 0}
+          >
+            <span>Bulk actions</span>
+            {selectedCount > 0 && (
+              <span className="px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground text-xs font-medium">
+                {selectedCount}
+              </span>
+            )}
+            <ChevronDown className="h-4 w-4 opacity-50" />
+          </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          <DropdownMenuItem onSelect={() => setBulkEditField('price')}>
+        <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuItem 
+            onSelect={() => setBulkEditField('price')}
+            className="flex items-center"
+          >
             <DollarSign className="mr-2 h-4 w-4" />
-            Set Regular Prices
+            <span>Set Regular Prices</span>
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => setBulkEditField('stock')}>
+          <DropdownMenuItem 
+            onSelect={() => setBulkEditField('stock')}
+            className="flex items-center"
+          >
             <Package className="mr-2 h-4 w-4" />
-            Set Stock
+            <span>Set Stock</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem 
-            className="text-destructive" 
+            className="text-destructive focus:text-destructive flex items-center" 
             onSelect={() => {
               setVariations(variations.filter(v => !selectedVariations.includes(v.id)))
               setSelectedVariations([])
             }}
           >
             <Trash2 className="mr-2 h-4 w-4" />
-            Delete Selected
+            <span>Delete Selected</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
       {/* Bulk Edit Dialog */}
-      {bulkEditField && (
-        <Dialog open={true} onOpenChange={() => setBulkEditField('')}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Bulk Edit {bulkEditField}</DialogTitle>
-              <DialogDescription>
-                Set {bulkEditField} for all selected variations
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>{bulkEditField}</Label>
-                <Input
-                  type={bulkEditField === 'price' || bulkEditField === 'stock' ? 'number' : 'text'}
-                  value={bulkEditValue}
-                  onChange={(e) => setBulkEditValue(e.target.value)}
-                />
-              </div>
+      <Dialog 
+        open={!!bulkEditField} 
+        onOpenChange={() => setBulkEditField('')}
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+      >
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>
+              Bulk Edit {bulkEditField === 'price' ? 'Prices' : 'Stock'}
+            </DialogTitle>
+            <DialogDescription>
+              Set {bulkEditField} for {selectedCount} selected variation{selectedCount !== 1 ? 's' : ''}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>
+                {bulkEditField === 'price' ? 'Regular Price' : 'Stock Quantity'}
+              </Label>
+              <Input
+                type="number"
+                value={bulkEditValue}
+                onChange={(e) => setBulkEditValue(e.target.value)}
+                placeholder={bulkEditField === 'price' ? '0.00' : '0'}
+                step={bulkEditField === 'price' ? '0.01' : '1'}
+              />
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setBulkEditField('')}>
-                Cancel
-              </Button>
-              <Button onClick={handleBulkEdit}>Apply</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkEditField('')}>
+              Cancel
+            </Button>
+            <Button onClick={handleBulkEdit}>
+              Apply to {selectedCount} variation{selectedCount !== 1 ? 's' : ''}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 } 

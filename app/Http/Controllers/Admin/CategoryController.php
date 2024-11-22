@@ -34,7 +34,6 @@ final class CategoryController extends Controller
 
         // Get categories with relationships
         $categories = $this->categoryService->getPaginated($filters);
-
         // Load counts and files
         $categories->each(function ($category) {
             $category->loadCount('blogs');

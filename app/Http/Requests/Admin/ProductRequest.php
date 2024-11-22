@@ -17,7 +17,8 @@ final class ProductRequest extends FormRequest
     public function rules(): array
     {
         $rules = [
-            'restaurant_id' => ['required', 'exists:restaurants,id'],
+            // 'restaurant_id' => ['required', 'exists:restaurants,id'],
+            'restaurant_id' => ['required'],
             'name' => ['required', 'string', 'max:255'],
             'slug' => [
                 'nullable', 
@@ -43,7 +44,7 @@ final class ProductRequest extends FormRequest
             'is_taxable' => ['boolean'],
             'tax_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'status' => ['required', 'in:active,inactive'],
-            'stock_quantity' => ['required', 'integer', 'min:0'],
+            'stock_quantity' => ['nullable', 'integer', 'min:0'],
             'weight' => ['nullable', 'numeric', 'min:0'],
             'length' => ['nullable', 'numeric', 'min:0'],
             'width' => ['nullable', 'numeric', 'min:0'],
@@ -62,6 +63,40 @@ final class ProductRequest extends FormRequest
             
             'metadata' => ['nullable', 'array'],
             'metadata.*' => ['nullable'],
+            
+            // Add validation for variations
+            'variations' => ['nullable', 'array'],
+            'variations.*.id' => ['nullable'],
+            'variations.*.sku' => ['nullable', 'string', 'max:100'],
+            'variations.*.price' => ['required_with:variations', 'numeric', 'min:0'],
+            'variations.*.stock' => ['nullable', 'integer', 'min:0'],
+            'variations.*.enabled' => ['boolean'],
+            'variations.*.weight' => ['nullable', 'numeric', 'min:0'],
+            'variations.*.dimensions' => ['nullable', 'array'],
+            'variations.*.dimensions.length' => ['nullable', 'numeric', 'min:0'],
+            'variations.*.dimensions.width' => ['nullable', 'numeric', 'min:0'],
+            'variations.*.dimensions.height' => ['nullable', 'numeric', 'min:0'],
+            
+            // Add validation for attributes
+            'attributes' => ['nullable', 'array'],
+            'attributes.*.name' => ['required_with:attributes', 'string', 'max:255'],
+            'attributes.*.values' => ['required_with:attributes', 'array'],
+            'attributes.*.values.*' => ['string', 'max:255'],
+            'attributes.*.variation' => ['boolean'],
+            
+            // Add file validation rules
+            'thumbnail' => ['nullable', 'array'],
+            'thumbnail.id' => ['nullable', 'exists:files,id'],
+            'thumbnail.uuid' => ['nullable', 'string'],
+            
+            'gallery' => ['nullable', 'array'],
+            'gallery.*.id' => ['nullable', 'exists:files,id'],
+            'gallery.*.uuid' => ['nullable', 'string'],
+            
+            // Variation files
+            'variations.*.thumbnail' => ['nullable', 'array'],
+            'variations.*.thumbnail.id' => ['nullable', 'exists:files,id'],
+            'variations.*.thumbnail.uuid' => ['nullable', 'string'],
         ];
 
         return $rules;

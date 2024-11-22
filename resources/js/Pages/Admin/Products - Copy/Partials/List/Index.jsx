@@ -51,26 +51,26 @@ const useProductActions = () => {
     try {
       const actions = {
         delete: {
-          route: 'admin.products.bulk-delete',
+          route: 'app.products.bulk-delete',
           method: 'delete',
           data: { ids: selectedIds },
           successMessage: "Selected products deleted successfully",
           confirmMessage: 'Are you sure you want to delete the selected products?',
         },
         archive: {
-          route: 'admin.products.bulk-archive',
+          route: 'app.products.bulk-archive',
           method: 'put',
           data: { ids: selectedIds, archived: true },
           successMessage: "Selected products archived successfully",
         },
         restore: {
-          route: 'admin.products.bulk-archive',
+          route: 'app.products.bulk-archive',
           method: 'put',
           data: { ids: selectedIds, archived: false },
           successMessage: "Selected products restored successfully",
         },
         feature: {
-          route: 'admin.products.bulk-feature',
+          route: 'app.products.bulk-feature',
           method: 'put',
           data: { ids: selectedIds, featured: true },
           successMessage: "Selected products featured successfully",
@@ -107,7 +107,7 @@ const useProductActions = () => {
     setActionLoading(prev => ({ ...prev, [loadingKey]: true }));
     
     try {
-      await router.put(route("admin.products.toggle-featured", product.id));
+      await router.put(route("app.products.toggle-featured", product.id));
       toast({
         title: "Success",
         description: `Product ${product.is_featured ? "removed from" : "marked as"} featured`,
@@ -128,7 +128,7 @@ const useProductActions = () => {
     setActionLoading(prev => ({ ...prev, [loadingKey]: true }));
 
     try {
-      await router.put(route("admin.products.toggle-archive", product.id));
+      await router.put(route("app.products.toggle-archive", product.id));
       toast({
         title: "Success",
         description: `Product ${product.is_archived ? "restored" : "archived"} successfully`,
@@ -358,9 +358,9 @@ export default function ListProducts({ products }) {
         <RowActions
           row={row}
           actions={{
-            view: "admin.products.show",
-            edit: "admin.products.edit",
-            delete: "admin.products.destroy",
+            view: "app.products.show",
+            edit: "app.products.edit",
+            delete: "app.products.destroy",
           }}
           customActions={[
             {

@@ -5,6 +5,7 @@ import { Input } from "@/Components/ui/input"
 import { Checkbox } from "@/Components/ui/checkbox"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/Components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/Components/ui/dropdown-menu"
+import { cn } from "@/lib/utils"
 
 export default function VariationTable({
   variations,
@@ -29,6 +30,15 @@ export default function VariationTable({
       }
       reader.readAsDataURL(file)
     }
+  }
+
+  // Helper function to get image URL
+  const getImageUrl = (variation) => {
+    if (!variation.image) return null
+    // Handle both URL string and file object cases
+    return typeof variation.image === 'string' 
+      ? variation.image 
+      : variation.image.url || variation.image
   }
 
   return (
@@ -107,15 +117,17 @@ export default function VariationTable({
               />
             </TableCell>
             <TableCell>
-              {variation.image ? (
-                <img 
-                  src={variation.image} 
-                  alt="Variation" 
-                  className="w-16 h-16 object-cover rounded"
-                />
+              {variation.thumbnail ? (
+                <div className="w-16 h-16 relative group">
+                  <img 
+                    src={variation.thumbnail.url}
+                    alt={variation.thumbnail.original_name || 'Variation image'} 
+                    className="w-16 h-16 object-cover rounded-lg ring-1 ring-border"
+                  />
+                </div>
               ) : (
-                <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center">
-                  <ImageIcon className="h-8 w-8 text-gray-400" />
+                <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center">
+                  <ImageIcon className="h-8 w-8 text-muted-foreground" />
                 </div>
               )}
             </TableCell>
@@ -177,8 +189,12 @@ export default function VariationTable({
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={() => {
-                      const newVariation = { ...variation, id: Date.now() }
-                      setVariations([...variations, newVariation])
+                      const newVariation = { 
+                        ...variation, 
+                        id: Date.now(),
+                        thumbnail: null // Reset thumbnail for new variation
+                      };
+                      setVariations([...variations, newVariation]);
                     }}
                     disabled={readOnly}
                   >
@@ -187,27 +203,11 @@ export default function VariationTable({
                   </DropdownMenuItem>
                   {!readOnly && (
                     <>
-                      <DropdownMenuItem>
-                        <label 
-                          htmlFor={`image-upload-${variation.id}`} 
-                          className="cursor-pointer flex items-center"
-                        >
-                          <Upload className="mr-2 h-4 w-4" />
-                          Upload Image
-                        </label>
-                        <input
-                          id={`image-upload-${variation.id}`}
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => handleImageUpload(variation.id, e.target.files[0])}
-                        />
-                      </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
                         className="text-destructive"
                         onClick={() => {
-                          setVariations(variations.filter(v => v.id !== variation.id))
+                          setVariations(variations.filter(v => v.id !== variation.id));
                         }}
                       >
                         <Trash2 className="mr-2 h-4 w-4" />

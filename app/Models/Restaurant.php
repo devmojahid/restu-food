@@ -29,6 +29,8 @@ final class Restaurant extends Model
         'status',
         'is_featured',
         'opening_hours',
+        'opening_time',
+        'closing_time',
         'delivery_radius',
         'minimum_order',
         'delivery_fee',

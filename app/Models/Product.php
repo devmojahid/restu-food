@@ -11,10 +11,15 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Collection;
+use App\Traits\HasFiles;
+use App\Traits\HandlesFiles;
 
 final class Product extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasFiles, HandlesFiles;
+
+    public const COLLECTION_THUMBNAIL = 'thumbnail';
+    public const COLLECTION_GALLERY = 'gallery';
 
     protected $fillable = [
         'restaurant_id',
@@ -57,6 +62,8 @@ final class Product extends Model
         'height' => 'decimal:2',
     ];
 
+    protected $appends = ['thumbnail', 'gallery'];
+
     public function restaurant(): BelongsTo
     {
         return $this->belongsTo(Restaurant::class);
@@ -64,12 +71,32 @@ final class Product extends Model
 
     public function categories(): BelongsToMany
     {
-        return $this->belongsToMany(Category::class);
+        return $this->belongsToMany(Category::class, 'product_categories')
+            ->withTimestamps()
+            ->withPivot('sort_order')
+            ->orderByPivot('sort_order');
     }
 
     public function variants(): HasMany
     {
-        return $this->hasMany(ProductVariant::class);
+        return $this->hasMany(ProductVariant::class)->orderBy('created_at');
+    }
+
+    public function getVariantByAttributes(array $attributes): ?ProductVariant
+    {
+        return $this->variants()
+            ->where('enabled', true)
+            ->whereJsonContains('attributes', $attributes)
+            ->first();
+    }
+
+    public function generateVariantSku(array $attributes): string
+    {
+        $attributeValues = collect($attributes)
+            ->map(fn($value) => substr(preg_replace('/[^A-Za-z0-9]/', '', $value), 0, 3))
+            ->join('-');
+        
+        return strtoupper("{$this->sku}-{$attributeValues}");
     }
 
     public function orderItems(): HasMany
@@ -300,5 +327,20 @@ final class Product extends Model
         }
 
         return ($metrics->total_orders / $metrics->total_views) * 100;
+    }
+
+    public function specificAttributes(): HasMany
+    {
+        return $this->hasMany(ProductSpecificAttribute::class)->orderBy('sort_order');
+    }
+
+    public function getThumbnailAttribute(): ?File
+    {
+        return $this->getFileFrom(self::COLLECTION_THUMBNAIL);
+    }
+
+    public function getGalleryAttribute(): Collection
+    {
+        return $this->getFilesFrom(self::COLLECTION_GALLERY);
     }
 }

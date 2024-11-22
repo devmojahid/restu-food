@@ -8,14 +8,38 @@ export default function ProductVariations({
   initialAttributes = [],
   initialVariations = [],
   onChange = () => {},
-  readOnly = false
+  readOnly = false,
+  globalAttributes = []
 }) {
   const [attributes, setAttributes] = useState(initialAttributes)
   const [variations, setVariations] = useState(initialVariations)
 
   // Update parent component when variations/attributes change
   useEffect(() => {
-    onChange({ attributes, variations })
+    onChange({
+      attributes: attributes.map(attr => ({
+        name: attr.name,
+        values: attr.values,
+        variation: attr.variation
+      })),
+      variations: variations.map(variation => ({
+        id: variation.id,
+        sku: variation.sku,
+        price: variation.price,
+        stock: variation.stock,
+        enabled: variation.enabled,
+        image: variation.image,
+        weight: variation.weight,
+        dimensions: variation.dimensions,
+        // Include attribute values
+        ...attributes
+          .filter(attr => attr.variation)
+          .reduce((acc, attr) => ({
+            ...acc,
+            [attr.name]: variation[attr.name]
+          }), {})
+      }))
+    })
   }, [attributes, variations])
 
   const generateVariations = useCallback(() => {
@@ -74,6 +98,7 @@ export default function ProductVariations({
               attributes={attributes}
               setAttributes={setAttributes}
               readOnly={readOnly}
+              globalAttributes={globalAttributes}
             />
           </TabsContent>
           

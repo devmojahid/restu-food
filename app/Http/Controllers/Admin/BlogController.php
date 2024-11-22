@@ -48,16 +48,14 @@ final class BlogController extends Controller
         try {
             $data = $request->validated();
             $data['user_id'] = auth()->user()->id;
-            
-            $data['files'] = array_filter([
-                'thumbnail' => $request->input('thumbnail'),
-                'featured_image' => $request->input('featured_image'),
-                'images' => $request->input('images', []),
-                'videos' => $request->input('videos', []),
-                'attachments' => $request->input('attachments', [])
-            ]);
 
-            $blog = $this->blogService->store($data);
+            $blog = $this->blogService->store($data, [
+                Blog::COLLECTION_THUMBNAIL => $request->input('thumbnail'),
+                Blog::COLLECTION_FEATURED => $request->input('featured_image'),
+                Blog::COLLECTION_IMAGES => $request->input('images'),
+                Blog::COLLECTION_VIDEOS => $request->input('videos'),
+                Blog::COLLECTION_ATTACHMENTS => $request->input('attachments')
+            ]);
             
             return redirect()
                 ->route('app.blogs.edit', $blog)
