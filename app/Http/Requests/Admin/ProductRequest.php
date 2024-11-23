@@ -97,6 +97,8 @@ final class ProductRequest extends FormRequest
             'variations.*.thumbnail' => ['nullable', 'array'],
             'variations.*.thumbnail.id' => ['nullable', 'exists:files,id'],
             'variations.*.thumbnail.uuid' => ['nullable', 'string'],
+            'variations.*.thumbnail.url' => ['nullable', 'string'],
+            'variations.*.thumbnail.original_name' => ['nullable', 'string'],
         ];
 
         return $rules;

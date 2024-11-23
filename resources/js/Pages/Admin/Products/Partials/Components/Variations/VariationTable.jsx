@@ -24,7 +24,7 @@ export default function VariationTable({
       const reader = new FileReader()
       reader.onloadend = () => {
         const newVariations = variations.map(v =>
-          v.id === variationId ? { ...v, image: reader.result } : v
+          v.id === variationId ? { ...v, thumbnail: reader.result } : v
         )
         setVariations(newVariations)
       }
@@ -34,11 +34,11 @@ export default function VariationTable({
 
   // Helper function to get image URL
   const getImageUrl = (variation) => {
-    if (!variation.image) return null
+    if (!variation.thumbnail) return null
     // Handle both URL string and file object cases
-    return typeof variation.image === 'string' 
-      ? variation.image 
-      : variation.image.url || variation.image
+    return typeof variation.thumbnail === 'string' 
+      ? variation.thumbnail 
+      : variation.thumbnail.url || variation.thumbnail
   }
 
   return (
@@ -57,7 +57,7 @@ export default function VariationTable({
               disabled={readOnly}
             />
           </TableHead>
-          <TableHead className="w-[100px]">Image</TableHead>
+          <TableHead className="w-[100px]">Thumbnail</TableHead>
           {attributes.filter(a => a.variation).map((attr, index) => (
             <TableHead 
               key={index} 
@@ -121,7 +121,7 @@ export default function VariationTable({
                 <div className="w-16 h-16 relative group">
                   <img 
                     src={variation.thumbnail.url}
-                    alt={variation.thumbnail.original_name || 'Variation image'} 
+                    alt={variation.thumbnail.original_name || 'Variation thumbnail'} 
                     className="w-16 h-16 object-cover rounded-lg ring-1 ring-border"
                   />
                 </div>

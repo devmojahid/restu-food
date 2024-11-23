@@ -94,15 +94,13 @@ final class ProductController extends Controller
     {
         try {
             $data = $request->validated();
-            
-            // Handle file uploads
-            $data['thumbnail'] = $request->input('thumbnail');
-            $data['gallery'] = $request->input('gallery');
-            
-            // Handle variation files
+            // Ensure variations data is properly structured
             if (!empty($data['variations'])) {
                 foreach ($data['variations'] as &$variation) {
-                    $variation['thumbnail'] = $variation['thumbnail'] ?? null;
+                    // Ensure thumbnail data is properly formatted
+                    if (!empty($variation['thumbnail'])) {
+                        $variation['thumbnail'] = array_filter($variation['thumbnail']);
+                    }
                 }
             }
 
@@ -112,6 +110,7 @@ final class ProductController extends Controller
                 ->route('app.products.edit', $product)
                 ->with('success', 'Product created successfully.');
         } catch (\Exception $e) {
+            \Log::error('Error creating product: ' . $e->getMessage());
             return back()
                 ->withInput()
                 ->with('error', 'Error creating product: ' . $e->getMessage());
@@ -120,23 +119,90 @@ final class ProductController extends Controller
 
     public function edit(Product $product): Response
     {
-        $product->load(['categories', 'variants', 'specifications', 'metadata']);
+        $product->load([
+            'restaurant', 
+            'categories', 
+            'variants', 
+            'specifications', 
+            'metadata',
+            'specificAttributes'
+        ]);
+
+        // Transform specific attributes to match the format expected by the frontend
+        $productAttributes = $product->specificAttributes->map(function ($attr) {
+            return [
+                'name' => $attr->name,
+                'values' => $attr->values,
+                'variation' => $attr->is_variation,
+                'sort_order' => $attr->sort_order,
+            ];
+        })->values();
+
+        // Merge the transformed data into the product array
+        $productData = array_merge($product->toArray(), [
+            'attributes' => $productAttributes
+        ]);
 
         return Inertia::render('Admin/Products/Edit', [
-            'product' => $product,
-            'restaurants' => Restaurant::select('id', 'name')->get(),
-            'categories' => Category::select('id', 'name')->get(),
-            'specificationGroups' => SpecificationGroup::with('specifications')->get(),
+            'product' => $productData,
+            'restaurants' => Restaurant::select(['id', 'name'])
+                ->orderBy('name')
+                ->get(),
+            'categories' => Category::select(['id', 'name', 'slug', 'parent_id'])
+                ->where('type', 'product')
+                ->where('is_active', true)
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->with(['parent:id,name'])
+                ->get()
+                ->map(fn ($category) => [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                    'slug' => $category->slug,
+                    'parent' => $category->parent ? [
+                        'id' => $category->parent->id,
+                        'name' => $category->parent->name
+                    ] : null
+                ])
+                ->values()
+                ->all(),
+            'globalAttributes' => ProductAttribute::with(['values' => function($query) {
+                $query->orderBy('sort_order');
+            }])
+            ->orderBy('sort_order')
+            ->get()
+            ->map(function ($attribute) {
+                return [
+                    'id' => $attribute->id,
+                    'name' => $attribute->name,
+                    'type' => $attribute->type,
+                    'values' => $attribute->values->map(function ($value) {
+                        return [
+                            'id' => $value->id,
+                            'value' => $value->value,
+                            'label' => $value->label,
+                            'color_code' => $value->color_code,
+                        ];
+                    })->values()->all(),
+                ];
+            }),
         ]);
     }
 
     public function update(ProductRequest $request, Product $product): RedirectResponse
     {
-        $this->productService->update($product, $request->validated());
+        try {
+            $this->productService->update($product, $request->validated());
 
-        return redirect()
-            ->route('app.products.index')
-            ->with('success', 'Product updated successfully.');
+            return redirect()
+                ->route('app.products.index')
+                ->with('success', 'Product updated successfully.');
+        } catch (\Exception $e) {
+            Log::error('Error updating product: ' . $e->getMessage());
+            return back()
+                ->withInput()
+                ->with('error', 'Error updating product: ' . $e->getMessage());
+        }
     }
 
     public function destroy(Product $product): RedirectResponse

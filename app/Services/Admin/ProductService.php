@@ -9,6 +9,8 @@ use App\Models\ProductVariant;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
 
 final class ProductService
 {
@@ -34,9 +36,25 @@ final class ProductService
                 $product->categories()->attach($categoryData);
             }
 
+            // Store product-specific attributes
+            if (!empty($data['attributes'])) {
+                foreach ($data['attributes'] as $index => $attribute) {
+                    $product->specificAttributes()->create([
+                    'name' => $attribute['name'],
+                    'values' => $attribute['values'],
+                    'is_variation' => $attribute['variation'] ?? true,
+                    'sort_order' => $index,
+                ]);
+                }
+            }
+
             // Handle variations with files
             if (!empty($data['variations'])) {
                 foreach ($data['variations'] as $variation) {
+                    // Debug log before creating variant
+                    \Log::info('Processing variation:', ['variation' => $variation]);
+
+                    // Create variant first
                     $variant = $product->variants()->create([
                         'sku' => $variation['sku'] ?? $product->generateVariantSku($variation['attributes'] ?? []),
                         'price' => $variation['price'] ?? 0,
@@ -52,12 +70,23 @@ final class ProductService
                         'width' => $variation['dimensions']['width'] ?? null,
                         'height' => $variation['dimensions']['height'] ?? null,
                         'description' => $variation['description'] ?? null,
+                        'attributes' => collect($variation)
+                            ->only(array_column($data['attributes'] ?? [], 'name'))
+                            ->filter()
+                            ->toArray()
                     ]);
 
-                    // Handle variation image
-                    dd($variation);
+                    // Handle thumbnail for the variant
                     if (!empty($variation['thumbnail'])) {
-                        $variant->handleFile($variation['thumbnail'], ProductVariant::COLLECTION_THUMBNAIL);
+                        \Log::info('Processing variation thumbnail', [
+                            'variation_id' => $variant->id,
+                            'thumbnail' => $variation['thumbnail']
+                        ]);
+
+                        // If thumbnail is an array with file data
+                        if (is_array($variation['thumbnail']) && isset($variation['thumbnail']['id'])) {
+                            $variant->handleFile($variation['thumbnail'], ProductVariant::COLLECTION_THUMBNAIL);
+                        }
                     }
                 }
             }
@@ -75,44 +104,109 @@ final class ProductService
                 'slug' => $data['slug'] ?? Str::slug($data['name']),
             ]);
 
-            // Handle file updates
-            $this->handleProductFiles($product, $data);
+            // Handle categories
+            if (isset($data['categories'])) {
+                $categoryData = collect($data['categories'])->mapWithKeys(function ($categoryId, $index) {
+                    return [$categoryId => ['sort_order' => $index]];
+                })->all();
+                
+                $product->categories()->sync($categoryData);
+            }
 
-            // Update variants with files
-            if (isset($data['variants'])) {
-                foreach ($data['variants'] as $variantData) {
-                    $variant = $product->variants()->updateOrCreate(
-                        ['id' => $variantData['id'] ?? null],
-                        array_except($variantData, ['image'])
+            // Handle product-specific attributes
+            if (isset($data['attributes'])) {
+                // First, remove attributes that are no longer present
+                $product->specificAttributes()
+                    ->whereNotIn('name', collect($data['attributes'])->pluck('name'))
+                    ->delete();
+
+                // Update or create attributes
+                foreach ($data['attributes'] as $index => $attribute) {
+                    $product->specificAttributes()->updateOrCreate(
+                        ['name' => $attribute['name']],
+                        [
+                            'values' => $attribute['values'],
+                            'is_variation' => $attribute['variation'] ?? true,
+                            'sort_order' => $index,
+                        ]
                     );
+                }
+            }
 
-                    // Handle variation image
-                    if (isset($variantData['image'])) {
-                        $variant->handleFile($variantData['image'], ProductVariant::COLLECTION_THUMBNAIL);
+            // Handle variations
+            if (isset($data['variations'])) {
+                // Get existing variation IDs
+                $existingVariationIds = $product->variants()->pluck('id')->toArray();
+                $updatedVariationIds = collect($data['variations'])->pluck('id')->filter()->toArray();
+                
+                // Delete variations that are no longer present
+                $product->variants()
+                    ->whereNotIn('id', $updatedVariationIds)
+                    ->delete();
+
+                foreach ($data['variations'] as $variation) {
+                    $variantData = [
+                        'sku' => $variation['sku'] ?? $product->generateVariantSku($variation['attributes'] ?? []),
+                        'price' => $variation['price'] ?? 0,
+                        'sale_price' => $variation['sale_price'] ?? null,
+                        'stock' => $variation['stock'] ?? 0,
+                        'enabled' => $variation['enabled'] ?? true,
+                        'virtual' => $variation['virtual'] ?? false,
+                        'downloadable' => $variation['downloadable'] ?? false,
+                        'manage_stock' => $variation['manage_stock'] ?? true,
+                        'stock_status' => ($variation['stock'] ?? 0) > 0 ? 'instock' : 'outofstock',
+                        'weight' => $variation['weight'] ?? null,
+                        'length' => $variation['dimensions']['length'] ?? null,
+                        'width' => $variation['dimensions']['width'] ?? null,
+                        'height' => $variation['dimensions']['height'] ?? null,
+                        'description' => $variation['description'] ?? null,
+                        'attributes' => collect($variation)
+                            ->only(array_column($data['attributes'] ?? [], 'name'))
+                            ->filter()
+                            ->toArray()
+                    ];
+
+                    if (!empty($variation['id'])) {
+                        // Update existing variation
+                        $variant = $product->variants()->find($variation['id']);
+                        if ($variant) {
+                            $variant->update($variantData);
+
+                            // Only update thumbnail if new one is provided
+                            if (!empty($variation['thumbnail']) && is_array($variation['thumbnail'])) {
+                                $variant->handleFile($variation['thumbnail'], ProductVariant::COLLECTION_THUMBNAIL);
+                            }
+                        }
+                    } else {
+                        // Create new variation
+                        $variant = $product->variants()->create($variantData);
+
+                        // Handle thumbnail for new variation
+                        if (!empty($variation['thumbnail'])) {
+                            $variant->handleFile($variation['thumbnail'], ProductVariant::COLLECTION_THUMBNAIL);
+                        }
                     }
                 }
             }
 
-            // Sync categories
-            if (isset($data['categories'])) {
-                $product->categories()->sync($data['categories']);
-            }
-
-            // Update specifications
-            if (isset($data['specifications'])) {
-                $syncData = collect($data['specifications'])
-                    ->mapWithKeys(fn ($value, $specId) => [$specId => ['value' => $value]]);
-                $product->specifications()->sync($syncData);
-            }
-
-            // Update metadata
-            if (isset($data['metadata'])) {
-                foreach ($data['metadata'] as $key => $value) {
-                    $product->setMeta($key, $value);
+            // Handle files only if they are provided in the update
+            if (array_key_exists('thumbnail', $data)) {
+                if (empty($data['thumbnail'])) {
+                    $product->clearFiles(Product::COLLECTION_THUMBNAIL);
+                } elseif (is_array($data['thumbnail'])) {
+                    $product->handleFile($data['thumbnail'], Product::COLLECTION_THUMBNAIL);
                 }
             }
 
-            return $product->fresh();
+            if (array_key_exists('gallery', $data)) {
+                if (empty($data['gallery'])) {
+                    $product->clearFiles(Product::COLLECTION_GALLERY);
+                } elseif (is_array($data['gallery'])) {
+                    $product->handleFile($data['gallery'], Product::COLLECTION_GALLERY);
+                }
+            }
+
+            return $product->fresh(['categories', 'variants', 'specificAttributes']);
         });
     }
 

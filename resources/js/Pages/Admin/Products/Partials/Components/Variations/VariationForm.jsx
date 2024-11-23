@@ -47,12 +47,19 @@ export default function VariationForm({
         ...prevData,
         thumbnail: thumbnail
       };
-      console.log('Updated formData:', newData);
       return newData;
     });
   };
 
   const handleSave = () => {
+    const thumbnailData = formData.thumbnail ? {
+      id: formData.thumbnail.id,
+      uuid: formData.thumbnail.uuid,
+      url: formData.thumbnail.url,
+      original_name: formData.thumbnail.original_name,
+      collection_name: 'thumbnail'
+    } : null;
+
     const dataToSave = {
       id: formData.id,
       sku: formData.sku || '',
@@ -69,14 +76,13 @@ export default function VariationForm({
         width: formData.dimensions?.width || '',
         height: formData.dimensions?.height || ''
       },
+      thumbnail: thumbnailData,
       ...attributes.filter(a => a.variation).reduce((acc, attr) => ({
         ...acc,
         [attr.name]: formData[attr.name] || ''
-      }), {}),
-      thumbnail: formData.thumbnail || null
+      }), {})
     };
 
-    console.log('Saving variation with thumbnail:', formData.thumbnail);
     onSave(dataToSave);
   };
 

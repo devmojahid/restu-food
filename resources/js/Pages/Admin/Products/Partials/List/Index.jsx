@@ -267,12 +267,18 @@ export default function ListProducts({ products }) {
             ))}
           </div>
           <div className="flex items-center gap-2 text-sm">
-            <span className="font-medium text-primary">
-              {formatCurrency(row.price)}
-            </span>
-            {row.discounted_price && (
-              <span className="text-gray-500 line-through">
-                {formatCurrency(row.discounted_price)}
+            {row.discounted_price ? (
+              <>
+                <span className="font-medium text-primary">
+                  {formatCurrency(row.discounted_price)}
+                </span>
+                <span className="text-gray-500 line-through">
+                  {formatCurrency(row.price)}
+                </span>
+              </>
+            ) : (
+              <span className="font-medium text-primary">
+                {formatCurrency(row.price)}
               </span>
             )}
           </div>

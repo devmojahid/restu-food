@@ -28,7 +28,7 @@ export default function ProductVariations({
         price: variation.price,
         stock: variation.stock,
         enabled: variation.enabled,
-        image: variation.image,
+        thumbnail: variation.thumbnail,
         weight: variation.weight,
         dimensions: variation.dimensions,
         // Include attribute values
@@ -73,7 +73,7 @@ export default function ProductVariations({
         manage_stock: existingVariation?.manage_stock ?? true,
         weight: existingVariation?.weight || '',
         dimensions: existingVariation?.dimensions || { length: '', width: '', height: '' },
-        image: existingVariation?.image || null
+        thumbnail: existingVariation?.thumbnail || null
       }
     })
 

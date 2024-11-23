@@ -19,12 +19,10 @@ import {
   ArrowLeft,
   AlertCircle,
   FolderTree,
-  ChevronRight,
 } from "lucide-react";
 import FileUploader from "@/Components/Admin/Filesystem/FileUploader";
 import { Alert, AlertDescription, AlertTitle } from "@/Components/ui/alert";
 import ProductVariations from "../Components/Variations/Index";
-import { Badge } from "@/Components/ui/badge";
 import MultiSelect from "@/Components/ui/multi-select";
 
 const FILE_COLLECTIONS = {
@@ -42,33 +40,6 @@ const FILE_COLLECTIONS = {
     title: "Product Gallery",
     description: "Upload product gallery images (up to 5)",
   }
-};
-
-const INITIAL_FORM_STATE = {
-  restaurant_id: "",
-  name: "",
-  slug: "",
-  description: "",
-  short_description: "",
-  price: "",
-  cost_per_item: "",
-  discounted_price: "",
-  is_featured: false,
-  is_taxable: true,
-  tax_rate: "",
-  status: "active",
-  length: "",
-  categories: [],
-  thumbnail: null,
-  gallery: [],
-  variations: [],
-  attributes: [],
-  stock_management: {
-    manage_stock: true,
-    low_stock_threshold: 5,
-    stock_status: 'in_stock',
-    backorders_allowed: false,
-  },
 };
 
 const ErrorAlert = ({ errors }) => {
@@ -94,33 +65,43 @@ const ErrorAlert = ({ errors }) => {
   );
 };
 
-// First, let's create a helper function to format categories for the select component
-const formatCategoriesForSelect = (categories = []) => {
-  if (!Array.isArray(categories)) return [];
-  
-  return categories.map(category => ({
-    value: category.id.toString(),
-    label: category.name,
-    ...(category.parent && {
-      label: `${category.name} (${category.parent.name})`,
-      parent: category.parent
-    })
-  }));
-};
-
-export default function CreateProductForm({ restaurants, categories, globalAttributes }) {
+export default function EditProductForm({ 
+  product, 
+  restaurants, 
+  categories, 
+  globalAttributes 
+}) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [autoUpdateSlug, setAutoUpdateSlug] = useState(true);
-  const [selectedGroupId, setSelectedGroupId] = useState(null);
-  const [variationsData, setVariationsData] = useState({
-    attributes: [],
-    variations: []
+  const [autoUpdateSlug, setAutoUpdateSlug] = useState(false);
+
+  const { data, setData, put, processing, errors } = useForm({
+    restaurant_id: product.restaurant_id?.toString() || "",
+    name: product.name || "",
+    slug: product.slug || "",
+    description: product.description || "",
+    short_description: product.short_description || "",
+    price: product.price || "",
+    cost_per_item: product.cost_per_item || "",
+    discounted_price: product.discounted_price || "",
+    is_featured: product.is_featured || false,
+    is_taxable: product.is_taxable ?? true,
+    tax_rate: product.tax_rate || "",
+    status: product.status || "active",
+    length: product.length || "",
+    categories: product.categories?.map(cat => cat.id.toString()) || [],
+    thumbnail: product.thumbnail || null,
+    gallery: product.gallery || [],
+    variations: product.variants || [],
+    attributes: product.attributes || [],
+    stock_management: {
+      manage_stock: product.stock_management?.manage_stock ?? true,
+      low_stock_threshold: product.stock_management?.low_stock_threshold || 5,
+      stock_status: product.stock_management?.stock_status || 'in_stock',
+      backorders_allowed: product.stock_management?.backorders_allowed || false,
+    },
   });
 
-  const { data, setData, post, processing, errors } = useForm(INITIAL_FORM_STATE);
-
-console.log(data);
-  // Auto-generate slug from name
+  // Auto-generate slug from name if enabled
   useEffect(() => {
     if (data.name && autoUpdateSlug) {
       const slug = data.name
@@ -134,43 +115,37 @@ console.log(data);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Submitting data:', data);
     setIsSubmitting(true);
-    post(route("app.products.store"));
+
+    put(route("app.products.update", product.id), {
+      preserveState: true,
+      preserveScroll: true,
+      onSuccess: () => {
+        setIsSubmitting(false);
+      },
+      onError: () => {
+        setIsSubmitting(false);
+      },
+    });
   };
 
   const handleVariationsChange = (variationData) => {
-    setVariationsData(variationData);
-    
-    const mappedVariations = variationData.variations.map(variation => ({
-      ...variation,
-      thumbnail: variation.thumbnail || null,
-    }));
-
     setData(prev => ({
       ...prev,
-      variations: mappedVariations,
+      variations: variationData.variations,
       attributes: variationData.attributes
     }));
   };
 
   return (
-    <form 
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (e.target === e.currentTarget) {
-          handleSubmit(e);
-        }
-      }} 
-      className="space-y-8"
-    >
+    <form onSubmit={handleSubmit} className="space-y-8">
       <ErrorAlert errors={errors} />
 
       {/* Form Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-            Create New Product
+            Edit Product: {product.name}
           </h1>
         </div>
         <div className="flex space-x-3">
@@ -185,11 +160,11 @@ console.log(data);
           </Button>
           <Button
             type="submit"
-            disabled={processing}
+            disabled={processing || isSubmitting}
             className="flex items-center"
           >
             <Save className="w-4 h-4 mr-2" />
-            {processing ? "Saving..." : "Save Product"}
+            {processing || isSubmitting ? "Saving..." : "Save Changes"}
           </Button>
         </div>
       </div>
@@ -344,10 +319,10 @@ console.log(data);
             </CardContent>
           </Card>
 
-          {/* <WorkableVariations /> */}
+          {/* Variations */}
           <ProductVariations
-            initialAttributes={[]}
-            initialVariations={[]}
+            initialAttributes={data.attributes}
+            initialVariations={data.variations}
             onChange={handleVariationsChange}
             readOnly={false}
             globalAttributes={globalAttributes}
