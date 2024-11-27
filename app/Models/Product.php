@@ -17,10 +17,11 @@ use App\Traits\HasPrice;
 use App\Models\Currency;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Cache;
+use App\Traits\HasReviews;
 
 final class Product extends Model
 {
-    use HasFactory, SoftDeletes, HasFiles, HandlesFiles, HasPrice;
+    use HasFactory, SoftDeletes, HasFiles, HandlesFiles, HasPrice, HasReviews;
 
     public const COLLECTION_THUMBNAIL = 'thumbnail';
     public const COLLECTION_GALLERY = 'gallery';

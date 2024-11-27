@@ -6,4 +6,5 @@ return [
     App\Providers\OptionsServiceProvider::class,
     App\Providers\UserMetaServiceProvider::class,
     App\Providers\SocialAuthServiceProvider::class,
+    \App\Providers\MapsServiceProvider::class,
 ];

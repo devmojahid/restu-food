@@ -78,6 +78,11 @@ export const routes = {
                 path: "/app/coupons",
                 icon: "Settings"
             },
+            reviews: {
+                name: "Reviews",
+                path: "/app/reviews",
+                icon: "Settings"
+            },
             productOptions: {
                 name: "Product Options",
                 path: "/app/products/options",
@@ -126,6 +131,17 @@ export const routes = {
             }
         }
     },
+    marketplace: {
+        name: "Marketplace",
+        icon: "ShoppingBag",
+        submenu: {
+            restaurants: {
+                name: "Restaurants",
+                path: "/app/restaurants",
+                icon: "Package"
+            }
+        }
+    }
 
     // Add other menu items similarly...
 };

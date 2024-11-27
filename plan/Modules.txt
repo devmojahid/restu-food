@@ -1,0 +1,29 @@
+
+Ecommerce
+	--Report [dashboard]
+	--Inventory
+	--Reviews  ---
+	--coupon ---
+	--customers
+
+Order .. 4
+	--orders
+	--Incomplete Orders
+	--Shipmenets
+	--Invoices
+
+Marketplace
+	-- Restorants  2.
+	--Reports [dashboard]
+	-- Withdrawals
+	--unverified Restorants
+
+Payments .. 5
+	--Transactions
+	--Payment Logs
+	--Paymenet Methods
+
+Locations ... 3
+	-- Countries
+	-- States
+	-- Cities

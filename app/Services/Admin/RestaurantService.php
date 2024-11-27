@@ -14,18 +14,21 @@ final class RestaurantService extends BaseService
 {
     protected string $model = Restaurant::class;
     protected string $cachePrefix = 'restaurants:';
-    protected array $searchableFields = ['name', 'email', 'phone', 'address'];
+    protected array $searchableFields = ['name', 'email', 'address'];
     protected array $filterableFields = ['status', 'is_featured'];
     protected array $sortableFields = ['name', 'created_at', 'status'];
-    protected array $relationships = ['owner', 'files'];
+    protected array $relationships = ['files', 'owner'];
 
     public function store(array $data): Restaurant
     {
         try {
             DB::beginTransaction();
 
-            // Generate slug
-            $data['slug'] = Str::slug($data['name']);
+            // Generate slug if not provided
+            $data['slug'] = $data['slug'] ?? Str::slug($data['name']);
+            
+            // Set user_id to current authenticated user
+            $data['user_id'] = auth()->id();
 
             // Create restaurant
             $restaurant = $this->model::create($data);
@@ -35,14 +38,8 @@ final class RestaurantService extends BaseService
                 $this->handleFileUploads($restaurant, $data['files']);
             }
 
-            // Handle meta data
-            if (!empty($data['meta'])) {
-                $restaurant->syncMeta($data['meta']);
-            }
-
             DB::commit();
-
-            return $restaurant->fresh(['owner', 'files']);
+            return $restaurant->fresh(['files']);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Restaurant creation failed', [
@@ -62,25 +59,19 @@ final class RestaurantService extends BaseService
 
             // Update slug if name changed
             if (isset($data['name']) && $data['name'] !== $restaurant->name) {
-                $data['slug'] = Str::slug($data['name']);
+                $data['slug'] = $data['slug'] ?? Str::slug($data['name']);
             }
 
             // Update restaurant
             $restaurant->update($data);
 
-            // Handle file uploads
+            // Handle file updates
             if (isset($data['files'])) {
                 $this->syncFileCollections($restaurant, $data['files']);
             }
 
-            // Handle meta data
-            if (isset($data['meta'])) {
-                $restaurant->syncMeta($data['meta']);
-            }
-
             DB::commit();
-
-            return $restaurant->fresh(['owner', 'files']);
+            return $restaurant->fresh(['files']);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Restaurant update failed', [
@@ -92,52 +83,214 @@ final class RestaurantService extends BaseService
         }
     }
 
-    public function getNearby(float $latitude, float $longitude, float $radius = 5.0): array
+    protected function handleFileUploads(Restaurant $restaurant, array $files): void
     {
-        return $this->model::select([
-            '*',
-            DB::raw('(
-                6371 * acos(
-                    cos(radians(?)) * cos(radians(latitude)) *
-                    cos(radians(longitude) - radians(?)) +
-                    sin(radians(?)) * sin(radians(latitude))
-                )
-            ) AS distance')
-        ])
-        ->having('distance', '<=', $radius)
-        ->orderBy('distance')
-        ->setBindings([$latitude, $longitude, $latitude])
-        ->get()
-        ->toArray();
+        // Handle logo
+        if (!empty($files['logo'])) {
+            $restaurant->attachFile($files['logo'], 'logo');
+        }
+
+        // Handle banner
+        if (!empty($files['banner'])) {
+            $restaurant->attachFile($files['banner'], 'banner');
+        }
+
+        // Handle gallery
+        if (!empty($files['gallery'])) {
+            $restaurant->syncFiles($files['gallery'], 'gallery');
+        }
     }
 
-    public function updateStatus(int $id, string $status): bool
+    protected function syncFileCollections(Restaurant $restaurant, array $files): void
+    {
+        // Sync logo
+        if (isset($files['logo'])) {
+            if (empty($files['logo'])) {
+                $restaurant->clearFiles('logo');
+            } else {
+                $restaurant->syncFiles([$files['logo']], 'logo');
+            }
+        }
+
+        // Sync banner
+        if (isset($files['banner'])) {
+            if (empty($files['banner'])) {
+                $restaurant->clearFiles('banner');
+            } else {
+                $restaurant->syncFiles([$files['banner']], 'banner');
+            }
+        }
+
+        // Sync gallery
+        if (isset($files['gallery'])) {
+            if (empty($files['gallery'])) {
+                $restaurant->clearFiles('gallery');
+            } else {
+                $restaurant->syncFiles($files['gallery'], 'gallery');
+            }
+        }
+    }
+
+    public function bulkDelete(array $ids): bool
     {
         try {
-            $restaurant = $this->findOrFail($id);
-            $restaurant->update(['status' => $status]);
+            DB::beginTransaction();
+
+            $restaurants = $this->model::whereIn('id', $ids)->get();
+            foreach ($restaurants as $restaurant) {
+                // Clear all files
+                $restaurant->clearFiles('logo');
+                $restaurant->clearFiles('banner');
+                $restaurant->clearFiles('gallery');
+                
+                $restaurant->delete();
+            }
+
+            DB::commit();
             return true;
         } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Bulk delete failed', [
+                'ids' => $ids,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
+    }
+
+    public function bulkUpdateStatus(array $ids, bool $status, string $field = 'is_active'): bool
+    {
+        try {
+            DB::beginTransaction();
+
+            // Map boolean status to restaurant status enum
+            $restaurantStatus = $status ? 'active' : 'inactive';
+
+            $this->model::whereIn('id', $ids)->update([
+                'status' => $restaurantStatus
+            ]);
+
+            DB::commit();
+            $this->clearCache();
+            return true;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Bulk status update failed', [
+                'ids' => $ids,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
+    }
+
+    public function updateRestaurantStatus(array $ids, string $status): bool
+    {
+        try {
+            DB::beginTransaction();
+
+            $this->model::whereIn('id', $ids)->update([
+                'status' => $status
+            ]);
+
+            DB::commit();
+            $this->clearCache();
+            return true;
+        } catch (\Exception $e) {
+            DB::rollBack();
             Log::error('Restaurant status update failed', [
-                'id' => $id,
+                'ids' => $ids,
                 'error' => $e->getMessage()
             ]);
-            return false;
+            throw $e;
         }
     }
 
-    public function toggleFeatured(int $id): bool
+    public function updateOperatingHours(int $id, array $hours): Restaurant
     {
         try {
+            DB::beginTransaction();
+            
             $restaurant = $this->findOrFail($id);
-            $restaurant->update(['is_featured' => !$restaurant->is_featured]);
-            return true;
-        } catch (\Exception $e) {
-            Log::error('Restaurant featured toggle failed', [
-                'id' => $id,
-                'error' => $e->getMessage()
+            $restaurant->update([
+                'opening_hours' => $hours
             ]);
-            return false;
+            
+            DB::commit();
+            return $restaurant->fresh();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
         }
+    }
+
+    public function updateDeliverySettings(int $id, array $settings): Restaurant
+    {
+        try {
+            DB::beginTransaction();
+            
+            $restaurant = $this->findOrFail($id);
+            $restaurant->update([
+                'delivery_radius' => $settings['delivery_radius'] ?? $restaurant->delivery_radius,
+                'minimum_order' => $settings['minimum_order'] ?? $restaurant->minimum_order,
+                'delivery_fee' => $settings['delivery_fee'] ?? $restaurant->delivery_fee
+            ]);
+            
+            DB::commit();
+            return $restaurant->fresh();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+
+    public function updateMenuItems(int $id, array $items): Restaurant
+    {
+        try {
+            DB::beginTransaction();
+            
+            $restaurant = $this->findOrFail($id);
+            
+            // Update menu items logic here
+            // This would interact with a MenuItem model/table
+            
+            DB::commit();
+            return $restaurant->fresh(['menuItems']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+
+    public function updateDeliveryZones(int $id, array $zones): Restaurant
+    {
+        try {
+            DB::beginTransaction();
+            
+            $restaurant = $this->findOrFail($id);
+            
+            // Update delivery zones logic here
+            // This would interact with a DeliveryZone model/table
+            
+            DB::commit();
+            return $restaurant->fresh(['deliveryZones']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+
+    public function getAnalytics(int $id, array $params = []): array
+    {
+        $restaurant = $this->findOrFail($id);
+        
+        // Calculate various metrics
+        return [
+            'total_orders' => 0, // Implement actual calculation
+            'total_revenue' => 0,
+            'average_order_value' => 0,
+            'popular_items' => [],
+            'peak_hours' => [],
+            'customer_satisfaction' => 0,
+        ];
     }
 } 

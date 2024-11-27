@@ -97,6 +97,10 @@ const AdminLayout = ({ children, title = "Dashboard" }) => {
     <>
       <Head>
         <title>{`${title} - NextGen Admin`}</title>
+        <meta 
+          name="google-maps-key" 
+          content={window.googleMapsKey}
+        />
       </Head>
 
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">

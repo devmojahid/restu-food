@@ -27,9 +27,11 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,
             // CategoryPermissionSeeder::class,
             ProductAttributeSeeder::class,
-            RestaurantSeeder::class,
             CategorySeeder::class,
             CurrencySeeder::class,
+            ReviewSeeder::class,
+            RestaurantSeeder::class,
+            MenuCategorySeeder::class,
         ]);
     }
 }

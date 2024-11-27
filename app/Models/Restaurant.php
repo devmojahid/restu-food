@@ -6,15 +6,17 @@ namespace App\Models;
 
 use App\Traits\HasFiles;
 use App\Traits\HasMeta;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Permission\Traits\HasRoles;
+use App\Traits\HasMenu;
 
 final class Restaurant extends Model
 {
-    use HasFiles, HasMeta, HasRoles, SoftDeletes;
+    use HasFactory, HasFiles, HasMeta, HasRoles, SoftDeletes, HasMenu;
 
     protected $fillable = [
         'user_id',
@@ -53,45 +55,42 @@ final class Restaurant extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    // public function menus(): HasMany
-    // {
-    //     return $this->hasMany(Menu::class);
-    // }
+    public function deliveryZones(): HasMany
+    {
+        return $this->hasMany(DeliveryZone::class)->where('is_active', true);
+    }
 
-    // public function categories(): HasMany
-    // {
-    //     return $this->hasMany(Category::class);
-    // }
+    public function isDeliveryAvailable(float $latitude, float $longitude): bool
+    {
+        // First check if point is within any delivery zone
+        foreach ($this->deliveryZones as $zone) {
+            if ($zone->containsPoint($latitude, $longitude)) {
+                return true;
+            }
+        }
 
-    // public function orders(): HasMany
-    // {
-    //     return $this->hasMany(Order::class);
-    // }
+        // If no zones defined, fall back to radius check
+        if ($this->deliveryZones->isEmpty() && $this->delivery_radius > 0) {
+            $distance = $this->getDistance($latitude, $longitude);
+            return $distance <= $this->delivery_radius;
+        }
 
-    // public function reviews(): HasMany
-    // {
-    //     return $this->hasMany(Review::class);
-    // }
+        return false;
+    }
 
-    // public function getAverageRatingAttribute(): float
-    // {
-    //     return (float) $this->reviews()->avg('rating') ?? 0.0;
-    // }
+    private function getDistance(float $latitude, float $longitude): float
+    {
+        $earthRadius = 6371; // Radius of the earth in km
 
-    // public function getTotalReviewsAttribute(): int
-    // {
-    //     return $this->reviews()->count();
-    // }
+        $latDelta = deg2rad($latitude - $this->latitude);
+        $lonDelta = deg2rad($longitude - $this->longitude);
 
-    // public function isOpen(): bool
-    // {
-    //     // Implement opening hours logic
-    //     return true;
-    // }
+        $a = sin($latDelta / 2) * sin($latDelta / 2) +
+            cos(deg2rad($this->latitude)) * cos(deg2rad($latitude)) *
+            sin($lonDelta / 2) * sin($lonDelta / 2);
 
-    // public function isDeliveryAvailable(float $latitude, float $longitude): bool
-    // {
-    //     // Implement delivery radius check
-    //     return true;
-    // }
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return $earthRadius * $c;
+    }
 }
