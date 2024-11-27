@@ -160,3 +160,19 @@ if (!function_exists('log_user_activity')) {
         set_user_meta($userId, 'activity_log', $log);
     }
 }
+
+if (!function_exists('currency')) {
+    function currency($amount): string
+    {
+        return '$' . number_format($amount, 2);
+    }
+}
+
+if (!function_exists('currency')) {
+    function currency($amount, $currency = 'USD', $decimals = 2): string
+    {
+        $formatter = new NumberFormatter(app()->getLocale(), NumberFormatter::CURRENCY);
+        $formatter->setAttribute(NumberFormatter::FRACTION_DIGITS, $decimals);
+        return $formatter->formatCurrency($amount, $currency);
+    }
+}

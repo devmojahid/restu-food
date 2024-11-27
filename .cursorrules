@@ -17,6 +17,28 @@ You are an expert in Laravel, PHP, and related web development technologies.
 - my Support location: app/Support
 - my Trait folder location: app/Traits
 
+# Laravel 11 Streamlined Application Structure [should be followed strictly]
+- Laravel 11 introduces a streamlined application structure for new Laravel applications.
+- The new application bootstrap file is located at: bootstrap/app.php
+- there are no karnel.php file in this project and not any default middleware files all middleware files now not show default.
+
+bootstrap/app.php file look like this
+return Application::configure(basePath: dirname(__DIR__))
+    ->withRouting(
+        web: __DIR__.'/../routes/web.php',
+        commands: __DIR__.'/../routes/console.php',
+        health: '/up',
+    )
+    ->withMiddleware(function (Middleware $middleware) {
+        //
+    })
+    ->withExceptions(function (Exceptions $exceptions) {
+        //
+    })->create();
+  
+
+
+
  ## Core Principles
 - Write concise, technical code following SOLID principles
 - Design for scalability and maintainability

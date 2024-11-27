@@ -12,11 +12,11 @@ class CategoryPermissionSeeder extends Seeder
     {
         // Create category permissions
         $permissions = [
-            'view categories',
-            'create categories',
-            'edit categories',
-            'delete categories',
-            'manage categories',
+            'category.list',
+            'category.create',
+            'category.edit',
+            'category.delete',
+            'manage.categories',
         ];
 
         foreach ($permissions as $permission) {

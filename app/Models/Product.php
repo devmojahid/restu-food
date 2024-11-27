@@ -13,10 +13,14 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Collection;
 use App\Traits\HasFiles;
 use App\Traits\HandlesFiles;
+use App\Traits\HasPrice;
+use App\Models\Currency;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Cache;
 
 final class Product extends Model
 {
-    use HasFactory, SoftDeletes, HasFiles, HandlesFiles;
+    use HasFactory, SoftDeletes, HasFiles, HandlesFiles, HasPrice;
 
     public const COLLECTION_THUMBNAIL = 'thumbnail';
     public const COLLECTION_GALLERY = 'gallery';
@@ -131,10 +135,10 @@ final class Product extends Model
         return true;
     }
 
-    public function getCurrentPrice(): float
-    {
-        return $this->isOnSale() ? $this->discounted_price : $this->price;
-    }
+    // public function getCurrentPrice(): float
+    // {
+    //     return $this->isOnSale() ? $this->discounted_price : $this->price;
+    // }
 
     public function updateStock(int $quantity, string $operation = 'subtract', ?string $reason = null): void
     {
@@ -342,5 +346,29 @@ final class Product extends Model
     public function getGalleryAttribute(): Collection
     {
         return $this->getFilesFrom(self::COLLECTION_GALLERY);
+    }
+
+    public function getCurrentPrice(): float
+    {
+        return $this->convertPrice($this->price);
+    }
+
+    public function getFormattedPrice(): string
+    {
+        $currencyCode = Session::get('currency');
+        $currency = Cache::remember("currency_code_{$currencyCode}", 3600, function () use ($currencyCode) {
+            return Currency::where('code', $currencyCode)
+                ->where('is_enabled', true)
+                ->first() ?? Currency::where('is_default', true)->first();
+        });
+
+        return $currency->format($this->price);
+    }
+
+    public function toArray()
+    {
+        $array = parent::toArray();
+        $array['formatted_price'] = $this->formatted_price;
+        return $array;
     }
 }

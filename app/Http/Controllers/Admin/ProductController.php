@@ -117,6 +117,13 @@ final class ProductController extends Controller
         }
     }
 
+    public function show(Product $product): Response
+    {
+        return Inertia::render('Admin/Products/Show', [
+            'product' => $product
+        ]);
+    }
+
     public function edit(Product $product): Response
     {
         $product->load([

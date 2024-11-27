@@ -12,10 +12,11 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Traits\HasCoupons;
 
 final class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasApiTokens, HasFactory, Notifiable, HasRoles, HasFiles, HasMeta;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles, HasFiles, HasMeta, HasCoupons;
 
     public const COLLECTION_AVATAR = 'avatar';
 

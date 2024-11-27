@@ -29,6 +29,13 @@ final class RolePermissionSeeder extends Seeder
                 'blog.delete',
                 'blog.approve',
             ],
+            'category' => [
+                'category.list',
+                'category.create',
+                'category.edit',
+                'category.delete',
+                'manage.categories',
+            ],
             'admin' => [
                 'admin.list',
                 'admin.create',
@@ -57,8 +64,19 @@ final class RolePermissionSeeder extends Seeder
                 'delivery.assign',
                 'delivery.status.update',
             ],
+            'product-attributes' => [
+                'product-attributes.list',
+                'product-attributes.create',
+                'product-attributes.edit',
+                'product-attributes.delete',
+            ],
+            'currency' => [
+                'currency.list',
+                'currency.create',
+                'currency.edit',
+                'currency.delete',
+            ],
         ];
-
         // Create permissions
         foreach ($permissions as $group => $groupPermissions) {
             foreach ($groupPermissions as $permission) {

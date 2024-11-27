@@ -3,8 +3,11 @@
 use App\Http\Controllers\Admin\{
     BlogController,
     CategoryController,
+    CouponController,
+    CurrencyController,
     DashboardController,
     FileController,
+    ProductAttributeController,
     ProductController,
     RoleController,
     UserController
@@ -57,31 +60,31 @@ Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
             Route::group(['prefix' => 'categories', 'as' => 'categories.'], function () {
                 Route::get('/', [CategoryController::class, 'index'])->name('index');
                 Route::post('/', [CategoryController::class, 'store'])
-                    ->middleware('permission:create categories')
+                    ->middleware('permission:category.create')
                     ->name('store');
                 Route::get('/{category}', [CategoryController::class, 'show'])
-                    ->middleware('permission:view categories')
+                    ->middleware('permission:category.list')
                     ->name('show');
                 Route::put('/{category}', [CategoryController::class, 'update'])
-                    ->middleware('permission:edit categories')
+                    ->middleware('permission:category.edit')
                     ->name('update');
                 Route::delete('/{category}', [CategoryController::class, 'destroy'])
-                    ->middleware('permission:delete categories')
+                    ->middleware('permission:category.delete')
                     ->name('destroy');
                 Route::put('/reorder', [CategoryController::class, 'reorder'])
-                    ->middleware('permission:edit categories')
+                    ->middleware('permission:category.edit')
                     ->name('reorder');
                 Route::put('/{category}/move', [CategoryController::class, 'move'])
-                    ->middleware('permission:edit categories')
+                    ->middleware('permission:category.edit')
                     ->name('move');
                 Route::put('/{category}/status', [CategoryController::class, 'updateStatus'])
                     ->name('status')
-                    ->middleware('permission:edit categories');
+                    ->middleware('permission:category.edit');
                 Route::delete('/bulk-delete', [CategoryController::class, 'bulkDelete'])
-                    ->middleware('permission:delete categories')
+                    ->middleware('permission:category.delete')
                     ->name('bulk-delete');
                 Route::put('/bulk-status', [CategoryController::class, 'bulkUpdateStatus'])
-                    ->middleware('permission:edit categories')
+                    ->middleware('permission:category.edit')
                     ->name('bulk-status');
             });
         });
@@ -204,11 +207,93 @@ Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
         Route::get('/auth', [OptionsController::class, 'auth'])->name('auth');
     });
 
+    Route::name('app.')->group(function () {
+        // Product Attributes routes
+        Route::prefix('product-attributes')->name('product-attributes.')->group(function () {
+            Route::get('/', [ProductAttributeController::class, 'index'])->name('index');
+            Route::post('/', [ProductAttributeController::class, 'store'])
+                // ->middleware('permission:product-attributes.create')
+                ->name('store');
+            Route::get('/{attribute}', [ProductAttributeController::class, 'show'])
+                // ->middleware('permission:product-attributes.list')
+                ->name('show');
+            Route::get('/{attribute}/edit', [ProductAttributeController::class, 'edit'])
+                // ->middleware('permission:product-attributes.edit')
+                ->name('edit');
+            Route::put('/{attribute}', [ProductAttributeController::class, 'update'])
+                // ->middleware('permission:product-attributes.edit')
+                ->name('update');
+            Route::delete('/{attribute}', [ProductAttributeController::class, 'destroy'])
+                // ->middleware('permission:product-attributes.delete')
+                ->name('destroy');
+            Route::put('/reorder', [ProductAttributeController::class, 'updateOrder'])
+                // ->middleware('permission:product-attributes.edit')
+                ->name('reorder');
+            Route::put('/{attribute}/status', [ProductAttributeController::class, 'updateStatus'])
+                ->name('status');
+                // ->middleware('permission:product-attributes.edit');
+            Route::delete('/bulk-delete', [ProductAttributeController::class, 'bulkDelete'])
+                // ->middleware('permission:product-attributes.delete')
+                ->name('bulk-delete');
+            Route::put('/bulk-status', [ProductAttributeController::class, 'bulkUpdateStatus'])
+                // ->middleware('permission:product-attributes.edit')
+                ->name('bulk-status');
+            Route::get('/{attribute}/values', [ProductAttributeController::class, 'getValues'])
+                ->name('values');
+            Route::put('/{attribute}/values', [ProductAttributeController::class, 'updateValues'])
+                // ->middleware('permission:product-attributes.edit')
+                ->name('values.update');
+        });
+
+        // Coupons Management
+        Route::group(['prefix' => 'coupons', 'as' => 'coupons.'], function () {
+            Route::get('/', [CouponController::class, 'index'])->name('index');
+            Route::post('/', [CouponController::class, 'store'])
+                // ->middleware('permission:coupon.create')
+                ->name('store');
+            Route::put('/{coupon}', [CouponController::class, 'update'])
+                // ->middleware('permission:coupon.edit')
+                ->name('update');
+            Route::delete('/{coupon}', [CouponController::class, 'destroy'])
+                // ->middleware('permission:coupon.delete')
+                ->name('destroy');
+            Route::put('/{coupon}/status', [CouponController::class, 'updateStatus'])
+                // ->middleware('permission:coupon.edit')
+                ->name('status');
+            Route::delete('/bulk-delete', [CouponController::class, 'bulkDelete'])
+                // ->middleware('permission:coupon.delete')
+                ->name('bulk-delete');
+            Route::put('/bulk-status', [CouponController::class, 'bulkUpdateStatus'])
+                // ->middleware('permission:coupon.edit')
+                ->name('bulk-status');
+            Route::post('/validate', [CouponController::class, 'validate'])
+                ->name('validate');
+        });
+    });
+
+
+
 });
 
 
 Route::middleware(['auth', 'role:Admin|Branch Manager|Kitchen Staff|Delivery Personnel|Customer'])->group(function () {
     Route::get('app/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 });
+
+// Currency routes
+Route::middleware(['auth'])->prefix('app/settings')->name('app.settings.')->group(function () {
+    Route::get('currencies', [CurrencyController::class, 'index'])->name('currencies.index');
+    Route::post('currencies', [CurrencyController::class, 'store'])->name('currencies.store');
+    Route::put('currencies/{currency}', [CurrencyController::class, 'update'])->name('currencies.update');
+    Route::delete('currencies/{currency}', [CurrencyController::class, 'destroy'])->name('currencies.destroy');
+    Route::post('currencies/update-rates', [CurrencyController::class, 'updateRates'])->name('currencies.update-rates');
+    Route::put('currencies/{currency}/toggle', [CurrencyController::class, 'toggleStatus'])->name('currencies.toggle');
+    Route::post('currencies/bulk-action', [CurrencyController::class, 'bulkAction'])->name('currencies.bulk-action');
+    Route::post('currencies/convert', [CurrencyController::class, 'convert'])->name('currencies.convert');
+});
+
+Route::post('currency/switch', [\App\Http\Controllers\CurrencyController::class, 'switch'])
+    ->middleware(['auth'])
+    ->name('currency.switch');
 
 require __DIR__ . '/auth.php';

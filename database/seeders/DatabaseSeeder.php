@@ -29,6 +29,7 @@ class DatabaseSeeder extends Seeder
             ProductAttributeSeeder::class,
             RestaurantSeeder::class,
             CategorySeeder::class,
+            CurrencySeeder::class,
         ]);
     }
 }

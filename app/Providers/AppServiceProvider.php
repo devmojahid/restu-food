@@ -6,6 +6,8 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Session;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\URL;
+use App\Models\Currency;
+use App\Observers\CurrencyObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -45,5 +47,7 @@ class AppServiceProvider extends ServiceProvider
                 ];
             },
         ]);
+
+        Currency::observe(CurrencyObserver::class);
     }
 }

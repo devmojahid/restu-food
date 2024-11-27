@@ -63,10 +63,10 @@ final class CategoryController extends Controller
                 'root' => Category::whereNull('parent_id')->count(),
             ],
             'can' => [
-                'create' => Auth::user()?->can('create categories'),
-                'edit' => Auth::user()?->can('edit categories'),
-                'delete' => Auth::user()?->can('delete categories'),
-                'manage' => Auth::user()?->can('manage categories'),
+                'create' => Auth::user()?->can('category.create'),
+                'edit' => Auth::user()?->can('category.edit'),
+                'delete' => Auth::user()?->can('category.delete'),
+                'manage' => Auth::user()?->can('manage.categories'),
             ],
         ]);
     }
@@ -192,7 +192,7 @@ final class CategoryController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->back()
-                ->withErrors(['error' => 'Failed to delete categories: ' . $e->getMessage()]);
+                ->withErrors(['error' => 'Failed to category.delete: ' . $e->getMessage()]);
         }
     }
 

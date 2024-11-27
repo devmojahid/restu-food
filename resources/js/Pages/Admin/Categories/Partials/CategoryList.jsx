@@ -298,7 +298,7 @@ const CategoryList = ({ categories, filters, onEdit, can }) => {
       labelFull: "Delete Selected",
       icon: Trash2,
       variant: "destructive",
-      confirmTitle: "Delete Categories",
+      confirmTitle: "category.delete",
       confirmMessage:
         "Are you sure you want to delete the selected categories? This action cannot be undone.",
       confirmText: "Delete",

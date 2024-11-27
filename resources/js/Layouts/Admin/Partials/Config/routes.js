@@ -68,6 +68,16 @@ export const routes = {
                 path: "/app/categories?type=product",
                 icon: "Folder"
             },
+            productAttributes: {
+                name: "Product Attributes",
+                path: "/app/product-attributes",
+                icon: "Settings"
+            },
+            coupons: {
+                name: "Coupons",
+                path: "/app/coupons",
+                icon: "Settings"
+            },
             productOptions: {
                 name: "Product Options",
                 path: "/app/products/options",

@@ -31,7 +31,7 @@ return new class extends Migration
             $table->integer('sort_order')->default(0);
             $table->timestamps();
 
-            $table->unique(['attribute_id', 'value']);
+            $table->unique(['attribute_id', 'value'], 'attribute_value_unique');
         });
 
         Schema::create('product_attribute_sets', function (Blueprint $table) {

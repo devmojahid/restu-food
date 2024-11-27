@@ -5,6 +5,8 @@ namespace App\Http\Middleware;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
+use App\Models\Currency;
+use Illuminate\Support\Facades\Session;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -37,6 +39,12 @@ class HandleInertiaRequests extends Middleware
                 'roles' => $request->user() ? $request->user()->roles->pluck('name') : [],
                 'permissions' => $request->user() ? $request->user()->getAllPermissions()->pluck('name') : []
             ],
+            'currencies' => fn () => Currency::where('is_enabled', true)
+                ->orderBy('is_default', 'desc')
+                ->orderBy('code')
+                ->get(),
+            'currentCurrency' => fn () => Currency::where('code', Session::get('currency'))
+                ->first() ?? Currency::where('is_default', true)->first(),
             'ziggy' => fn() => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
