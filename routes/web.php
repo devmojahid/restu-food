@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\OptionsController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\Admin\RestaurantStatsController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -357,3 +358,14 @@ Route::post('currency/switch', [\App\Http\Controllers\CurrencyController::class,
     ->name('currency.switch');
 
 require __DIR__ . '/auth.php';
+
+// Restaurant Stats API
+Route::get('api/restaurants/stats', [RestaurantStatsController::class, 'index'])
+    ->name('api.restaurants.stats')
+    ->middleware(['auth']);
+
+// Restaurant Stats Routes
+Route::group(['prefix' => 'app/restaurants', 'as' => 'app.restaurants.'], function () {
+    Route::get('stats', [RestaurantStatsController::class, 'index'])->name('stats');
+    Route::post('stats/filter', [RestaurantStatsController::class, 'filter'])->name('stats.filter');
+});

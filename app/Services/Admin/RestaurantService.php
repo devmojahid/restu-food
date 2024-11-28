@@ -293,4 +293,70 @@ final class RestaurantService extends BaseService
             'customer_satisfaction' => 0,
         ];
     }
+
+    public function getDetailedStats(int $range = 30): array
+    {
+        try {
+            $now = now();
+            $startDate = $now->copy()->subDays($range);
+
+            // Generate fake data for demonstration
+            $revenueChart = collect(range(0, $range))->map(function ($day) use ($startDate) {
+                $date = $startDate->copy()->addDays($day);
+                return [
+                    'date' => $date->format('Y-m-d'),
+                    'revenue' => rand(1000, 5000),
+                    'orders' => rand(10, 50)
+                ];
+            })->toArray();
+
+            // Generate fake peak hours data
+            $peakHours = collect(range(0, 23))->map(function ($hour) {
+                return [
+                    'hour' => $hour,
+                    'orders' => rand(5, 100)
+                ];
+            })->toArray();
+
+            // Generate fake category distribution
+            $categories = [
+                ['name' => 'Fast Food', 'value' => rand(100, 500)],
+                ['name' => 'Beverages', 'value' => rand(50, 300)],
+                ['name' => 'Desserts', 'value' => rand(30, 200)],
+                ['name' => 'Main Course', 'value' => rand(80, 400)]
+            ];
+
+            return [
+                'totalRestaurants' => rand(50, 100),
+                'activeRestaurants' => rand(30, 50),
+                'totalOrders' => rand(500, 1000),
+                'totalRevenue' => rand(10000, 50000),
+                'totalCustomers' => rand(200, 500),
+                'averageRating' => rand(35, 50) / 10,
+                'activeLocations' => rand(10, 30),
+                'popularItems' => rand(20, 40),
+                'growthRate' => rand(5, 15),
+                'orderTrend' => rand(-10, 20),
+                'revenueTrend' => rand(-5, 25),
+                'customerTrend' => rand(-8, 18),
+                'growthTrend' => rand(1, 10),
+                'revenueChart' => $revenueChart,
+                'orderChart' => $revenueChart, // Using same data for orders
+                'peakHours' => $peakHours,
+                'categoryDistribution' => $categories,
+                'timeRanges' => [
+                    ['value' => '7', 'label' => 'Last 7 days'],
+                    ['value' => '30', 'label' => 'Last 30 days'],
+                    ['value' => '90', 'label' => 'Last 90 days'],
+                    ['value' => '365', 'label' => 'Last year'],
+                ],
+            ];
+        } catch (\Exception $e) {
+            Log::error('Error generating restaurant statistics', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
+    }
 } 

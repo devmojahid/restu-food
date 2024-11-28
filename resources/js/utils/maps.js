@@ -22,7 +22,8 @@ export const loadGoogleMaps = () => {
     }
 
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${config.key}&libraries=${config.libraries}&callback=initGoogleMaps`;
+    // script.src = `https://maps.googleapis.com/maps/api/js?key=${config.key}&libraries=${config.libraries}&callback=initGoogleMaps`;
+    script.src = `https://maps.gomaps.pro/maps/api/js?sensor=false&callback=initGoogleMaps&libraries=places`;
     script.async = true;
     script.defer = true;
 
