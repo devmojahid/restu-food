@@ -25,7 +25,10 @@ Marketplace
 Marketing
 	--Offers [https://shop.activeitzone.com/admin]
 	--News Letters
-	- Subscribers
+	-- Subscribers
+	-- Bulk SMS
+	--Campaign [ https://yoori.spagreen.net/admin/campaign]
+	--Campaign Request [ https://yoori.spagreen.net/admin/campaign]
 
 Payments .. 5
 	--Transactions
@@ -40,7 +43,11 @@ Locations ... 3
 Others .. sitemaps
 	--clear cache button
 
-Support Chat
+Support 
+	-- Chat
+	-- tickets
+	-- depertmeent [ https://yoori.spagreen.net]
+	-- Contact messages [ https://yoori.spagreen.net]
 
 Delivery Boy.. 
 	-- ALL Delivery Boy
@@ -49,6 +56,9 @@ Delivery Boy..
 	--cencel request
 	--paymenet history
 	--collections history
+	-- Commission History
+	-- diposit history
+	-- cencel orders
 
 System 
 	-- Updater system
