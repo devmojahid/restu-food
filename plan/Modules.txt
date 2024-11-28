@@ -5,6 +5,7 @@ Ecommerce
 	--Reviews  ---
 	--coupon ---
 	--customers
+	--Addon managmenet
 
 Order .. 4
 	--orders
@@ -17,6 +18,14 @@ Marketplace
 	--Reports [dashboard]
 	-- Withdrawals
 	--unverified Restorants
+	-- Restorants Varification Form
+	-- Payouts
+	-- Payouts Request
+
+Marketing
+	--Offers [https://shop.activeitzone.com/admin]
+	--News Letters
+	- Subscribers
 
 Payments .. 5
 	--Transactions
@@ -27,3 +36,27 @@ Locations ... 3
 	-- Countries
 	-- States
 	-- Cities
+
+Others .. sitemaps
+	--clear cache button
+
+Support Chat
+
+Delivery Boy.. 
+	-- ALL Delivery Boy
+	-- add delivery boy
+	-- Delivery boy configurations
+	--cencel request
+	--paymenet history
+	--collections history
+
+System 
+	-- Updater system
+	-- site helth
+	-- server status
+
+API managmenet
+
+
+
+
