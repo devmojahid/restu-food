@@ -29,6 +29,7 @@ Marketing
 	-- Bulk SMS
 	--Campaign [ https://yoori.spagreen.net/admin/campaign]
 	--Campaign Request [ https://yoori.spagreen.net/admin/campaign]
+	--Special Offers
 
 Payments .. 5
 	--Transactions
@@ -48,6 +49,8 @@ Support
 	-- tickets
 	-- depertmeent [ https://yoori.spagreen.net]
 	-- Contact messages [ https://yoori.spagreen.net]
+	--Customer Support Tickets
+	--Feedback and Reviews
 
 Delivery Boy.. 
 	-- ALL Delivery Boy
@@ -64,6 +67,79 @@ System
 	-- Updater system
 	-- site helth
 	-- server status
+	--Activity Logs
+	--Error Logs
+
+Reports and Analytics
+
+	--Sales Reports
+	--Order Reports
+	--Customer Reports
+	--Delivery Performance
+
+Delivery Management
+
+	Delivery Agents
+		--All Agents
+		--Add New Agent
+		--Agent Tracking
+	-Delivery Zones
+		--Manage Zones
+		--Add New Zone
+		--Delivery Time Slots
+		--Manage Time Slots
+		--Peak Hours
+
+ZIP Code-Based Zones: List of ZIP codes where delivery is available.
+Radius-Based Zones: Delivery available within a certain radius from the branch location.
+
+Delivery Time Slot Management
+
+Features:
+
+Time Slots:
+
+Define available delivery time slots for each branch.
+Set maximum orders per time slot to prevent overbooking.
+Peak and Off-Peak Hours:
+
+Differentiate between peak and off-peak hours.
+Adjust delivery fees based on demand.
+Customer Selection:
+
+Customers select a delivery time slot during checkout.
+Only show available slots based on current capacity.
+Implementation Details:
+
+Models: DeliveryTimeSlot, possibly PeakHour.
+
+
+*** Tips and Delivery Fees Management
+
+Purpose: Allow customers to add tips and manage delivery fees dynamically.
+
+Features:
+
+Tips:
+
+Option for customers to add a tip during checkout.
+Include tip amount in the total payment.
+Delivery Fees:
+
+Calculate delivery fees based on factors like distance, time of day (peak/off-peak), and order value.
+Implement multi-tier delivery fees (base fee + surcharges).
+Implementation Details:
+
+Calculations:
+
+Update order total calculations to include tips and delivery fees.
+Adjust fees dynamically based on predefined rules.
+Admin Settings:
+
+Configure delivery fee structures.
+Set base fees and surcharges.
+
+
 
 API managmenet
 
