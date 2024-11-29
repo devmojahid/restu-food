@@ -12,15 +12,20 @@ use App\Http\Controllers\Admin\{
     RestaurantController,
     ReviewController,
     RoleController,
-    UserController
+    UserController,
+    OptionsController
 };
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Admin\OptionsController;
+use App\Http\Controllers\Admin\RestaurantStatsController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use App\Http\Controllers\Admin\RestaurantStatsController;
 
+/*
+|--------------------------------------------------------------------------
+| Welcome/Landing Page Route
+|--------------------------------------------------------------------------
+*/
 Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
@@ -30,71 +35,88 @@ Route::get('/', function () {
     ]);
 });
 
+/*
+|--------------------------------------------------------------------------
+| Authentication Required Routes
+|--------------------------------------------------------------------------
+*/
 Route::middleware(['auth'])->group(function () {
+    // File Management
     Route::post('app/files/upload', [FileController::class, 'upload']);
     Route::delete('app/files/{file}', [FileController::class, 'destroy']);
-    // User profile routes
+    
+    // User Profile Updates
     Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
     Route::put('/users/{user}/meta', [UserController::class, 'updateMeta'])->name('users.meta.update');
     Route::put('/users/{user}/avatar', [UserController::class, 'updateAvatar'])->name('users.avatar.update');
+    
+    // Currency Switching
+    Route::post('currency/switch', [\App\Http\Controllers\CurrencyController::class, 'switch'])
+        ->name('currency.switch');
 });
 
-// Route::get('admin/dashboard', function () {
-//     return Inertia::render('Admin/Dashboard/Index');
-// })->middleware(['auth', 'verified'])->name('dashboard');
-
+/*
+|--------------------------------------------------------------------------
+| Authenticated & Verified Routes
+|--------------------------------------------------------------------------
+*/
 Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
+    // Profile Management
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
     /*
-    * Blogs
+    |--------------------------------------------------------------------------
+    | Content Management Routes
+    |--------------------------------------------------------------------------
     */
     Route::name('app.')->group(function () {
+        // Blog Management
         Route::resource('blogs', BlogController::class);
         Route::get('blogs/{blog}/preview', [BlogController::class, 'preview'])->name('blogs.preview');
         Route::delete('blogs/bulk-delete', [BlogController::class, 'bulkDelete'])->name('blogs.bulk-delete');
         Route::put('blogs/bulk-status', [BlogController::class, 'bulkUpdateStatus'])->name('blogs.bulk-status');
-        /*
-        * Categories
-        */
-        Route::name('app.')->group(function () {
-            // Categories routes with permissions
-            Route::group(['prefix' => 'categories', 'as' => 'categories.'], function () {
-                Route::get('/', [CategoryController::class, 'index'])->name('index');
-                Route::post('/', [CategoryController::class, 'store'])
-                    ->middleware('permission:category.create')
-                    ->name('store');
-                Route::get('/{category}', [CategoryController::class, 'show'])
-                    ->middleware('permission:category.list')
-                    ->name('show');
-                Route::put('/{category}', [CategoryController::class, 'update'])
-                    ->middleware('permission:category.edit')
-                    ->name('update');
-                Route::delete('/{category}', [CategoryController::class, 'destroy'])
-                    ->middleware('permission:category.delete')
-                    ->name('destroy');
-                Route::put('/reorder', [CategoryController::class, 'reorder'])
-                    ->middleware('permission:category.edit')
-                    ->name('reorder');
-                Route::put('/{category}/move', [CategoryController::class, 'move'])
-                    ->middleware('permission:category.edit')
-                    ->name('move');
-                Route::put('/{category}/status', [CategoryController::class, 'updateStatus'])
-                    ->name('status')
-                    ->middleware('permission:category.edit');
-                Route::delete('/bulk-delete', [CategoryController::class, 'bulkDelete'])
-                    ->middleware('permission:category.delete')
-                    ->name('bulk-delete');
-                Route::put('/bulk-status', [CategoryController::class, 'bulkUpdateStatus'])
-                    ->middleware('permission:category.edit')
-                    ->name('bulk-status');
-            });
+
+        // Category Management with Permissions
+        Route::group(['prefix' => 'categories', 'as' => 'categories.'], function () {
+            Route::get('/', [CategoryController::class, 'index'])->name('index');
+            Route::post('/', [CategoryController::class, 'store'])
+                ->middleware('permission:category.create')
+                ->name('store');
+            Route::get('/{category}', [CategoryController::class, 'show'])
+                ->middleware('permission:category.list')
+                ->name('show');
+            Route::put('/{category}', [CategoryController::class, 'update'])
+                ->middleware('permission:category.edit')
+                ->name('update');
+            Route::delete('/{category}', [CategoryController::class, 'destroy'])
+                ->middleware('permission:category.delete')
+                ->name('destroy');
+            Route::put('/reorder', [CategoryController::class, 'reorder'])
+                ->middleware('permission:category.edit')
+                ->name('reorder');
+            Route::put('/{category}/move', [CategoryController::class, 'move'])
+                ->middleware('permission:category.edit')
+                ->name('move');
+            Route::put('/{category}/status', [CategoryController::class, 'updateStatus'])
+                ->name('status')
+                ->middleware('permission:category.edit');
+            Route::delete('/bulk-delete', [CategoryController::class, 'bulkDelete'])
+                ->middleware('permission:category.delete')
+                ->name('bulk-delete');
+            Route::put('/bulk-status', [CategoryController::class, 'bulkUpdateStatus'])
+                ->middleware('permission:category.edit')
+                ->name('bulk-status');
         });
     });
-    /**
-     * Users Management
-     */
+
+    /*
+    |--------------------------------------------------------------------------
+    | User & Role Management Routes
+    |--------------------------------------------------------------------------
+    */
+    // Users Management
     Route::group(['prefix' => 'users', 'as' => 'app.users.'], function () {
         Route::get('/', [UserController::class, 'index'])->name('index');
         Route::get('/create', [UserController::class, 'create'])->name('create');
@@ -106,112 +128,24 @@ Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
         Route::delete('/bulk-delete', [UserController::class, 'bulkDelete'])->name('bulk-delete');
         Route::put('/bulk-status', [UserController::class, 'bulkUpdateStatus'])->name('bulk-status');
     });
+
     Route::name('app.')->group(function () {
-        /**
-         * Roles Management
-         */
+        // Roles Management
         Route::resource('roles', RoleController::class);
         Route::put('roles/{role}/permissions', [RoleController::class, 'updatePermissions'])
             ->name('roles.permissions.update');
-        
-        /**
-         * Categories Management
-         */
-        Route::resource('categories', CategoryController::class);
-        Route::put('categories/reorder', [CategoryController::class, 'reorder'])->name('categories.reorder');
-        Route::put('categories/{category}/move', [CategoryController::class, 'move'])->name('categories.move');
-        Route::put('categories/{category}/status', [CategoryController::class, 'updateStatus'])->name('categories.status');
-
-        /**
-         * Products Management
-         */
-        Route::resource('products', ProductController::class);
-    });
-
-    // Options Management Routes
-    Route::group(['prefix' => 'options', 'as' => 'options.'], function () {
-        Route::get('/', [OptionsController::class, 'index'])->name('index');
-        Route::post('/', [OptionsController::class, 'store'])->name('store');
-        Route::delete('{key}', [OptionsController::class, 'destroy'])->name('destroy');
     });
 
     /*
-    * Settings
+    |--------------------------------------------------------------------------
+    | E-commerce Related Routes
+    |--------------------------------------------------------------------------
     */
-    Route::group(['prefix' => 'settings', 'as' => 'settings.'], function () {
-        // Route::get('/', [SettingsController::class, 'index'])->name('index');
-        // Route::get('/', [SettingsController::class, 'index'])->name('index');
-        Route::get('/', function () {
-            return Inertia::render('Admin/Settings/Index');
-        })->name('index');
-        Route::get('/store', function () {
-            return Inertia::render('Admin/Settings/Store/Index');
-        })->name('store');
-        // Route::post('/store/update', [SettingsController::class, 'storeUpdate'])->name('store.update');
-        // Route::get('/profile', [SettingsController::class, 'profile'])->name('profile');
-        Route::get('/profile', function () {
-            //
-        })->name('profile');
-        // Route::post('/profile/update', [SettingsController::class, 'profileUpdate'])->name('profile.update');
-        // Route::get('/email', [SettingsController::class, 'email'])->name('email');
-        Route::get('/email', [OptionsController::class, 'email'])->name('email');
-        // Route::post('/email/update', [SettingsController::class, 'emailUpdate'])->name('email.update');
-        // Route::get('/security', [SettingsController::class, 'security'])->name('security');
-        Route::get('/security', function () {
-            return Inertia::render('Admin/Settings/Security/Index');
-        })->name('security');
-        // Route::post('/security/update', [SettingsController::class, 'securityUpdate'])->name('security.update');
-        // Route::get('/localization', [SettingsController::class, 'localization'])->name('localization');
-        Route::get('/localization', function () {
-            //
-        })->name('localization');
-
-        Route::get('/theme', function () {
-            //
-        })->name('theme');
-        Route::get('/display', function () {
-            //
-        })->name('display');
-        Route::get('/payments', function () {
-            //
-        })->name('payments');
-        Route::get('/shipping', function () {
-            //
-        })->name('shipping');
-        Route::get('/taxes', function () {
-            //
-        })->name('taxes');
-        Route::get('/media', function () {
-            //
-        })->name('media');
-        Route::get('/seo', function () {
-            //
-        })->name('seo');
-        Route::get('/google', function () {
-            //
-        })->name('google');
-        Route::get('/social', function () {
-            //
-        })->name('social');
-        Route::get('/api', function () {
-            //
-        })->name('api');
-        Route::get('/cache', function () {
-            //
-        })->name('cache');
-        Route::get('/logs', function () {
-            //
-        })->name('logs');
-        Route::get('/notifications', function () {
-            //
-        })->name('notifications');
-        // Route::post('/localization/update', [SettingsController::class, 'localizationUpdate'])->name('localization.update');
-        // Add more routes as needed
-        Route::get('/auth', [OptionsController::class, 'auth'])->name('auth');
-    });
-
     Route::name('app.')->group(function () {
-        // Product Attributes routes
+        // Product Management
+        Route::resource('products', ProductController::class);
+        
+        // Product Attributes
         Route::prefix('product-attributes')->name('product-attributes.')->group(function () {
             Route::get('/', [ProductAttributeController::class, 'index'])->name('index');
             Route::post('/', [ProductAttributeController::class, 'store'])
@@ -295,9 +229,13 @@ Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
         });
     });
 
-    // Restaurant Management Routes with Role-Based Access
+    /*
+    |--------------------------------------------------------------------------
+    | Restaurant Management Routes
+    |--------------------------------------------------------------------------
+    */
     Route::middleware(['auth', 'verified'])->prefix('app')->name('app.')->group(function () {
-        // Restaurant Stats Routes - Available to Restaurant Owners and Admins
+        // Restaurant Stats Routes
         Route::group([
             'prefix' => 'restaurants',
             'as' => 'restaurants.',
@@ -310,7 +248,7 @@ Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
                 ->name('stats.export');
         });
 
-        // Restaurant Management Routes - Admin Only
+        // Admin-Only Restaurant Management
         Route::group([
             'prefix' => 'restaurants',
             'as' => 'restaurants.',
@@ -321,53 +259,120 @@ Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
             Route::post('{restaurant}/reject', [RestaurantController::class, 'reject'])->name('reject');
             Route::post('bulk-approve', [RestaurantController::class, 'bulkApprove'])->name('bulk-approve');
         });
-
-        // Restaurant Dashboard Routes - Restaurant Staff
-        // Route::group([
-        //     'prefix' => 'restaurants',
-        //     'as' => 'restaurants.',
-        //     'middleware' => ['role:Restaurant Owner|Branch Manager|Kitchen Staff']
-        // ], function () {
-        //     Route::get('dashboard', [RestaurantDashboardController::class, 'index'])->name('dashboard');
-        //     Route::get('orders', [RestaurantOrderController::class, 'index'])->name('orders.index');
-        //     Route::get('menu', [RestaurantMenuController::class, 'index'])->name('menu.index');
-        //     Route::get('staff', [RestaurantStaffController::class, 'index'])
-        //         ->middleware('permission:manage-staff')
-        //         ->name('staff.index');
-        // });
     });
 
+    /*
+    |--------------------------------------------------------------------------
+    | Settings & Configuration Routes
+    |--------------------------------------------------------------------------
+    */
+    // Options Management
+    Route::group(['prefix' => 'options', 'as' => 'options.'], function () {
+        Route::get('/', [OptionsController::class, 'index'])->name('index');
+        Route::post('/', [OptionsController::class, 'store'])->name('store');
+        Route::delete('{key}', [OptionsController::class, 'destroy'])->name('destroy');
+    });
+
+    // Settings Management
+    Route::group(['prefix' => 'settings', 'as' => 'settings.'], function () {
+        // Route::get('/', [SettingsController::class, 'index'])->name('index');
+        // Route::get('/', [SettingsController::class, 'index'])->name('index');
+        Route::get('/', function () {
+            return Inertia::render('Admin/Settings/Index');
+        })->name('index');
+        Route::get('/store', function () {
+            return Inertia::render('Admin/Settings/Store/Index');
+        })->name('store');
+        // Route::post('/store/update', [SettingsController::class, 'storeUpdate'])->name('store.update');
+        // Route::get('/profile', [SettingsController::class, 'profile'])->name('profile');
+        Route::get('/profile', function () {
+            //
+        })->name('profile');
+        // Route::post('/profile/update', [SettingsController::class, 'profileUpdate'])->name('profile.update');
+        // Route::get('/email', [SettingsController::class, 'email'])->name('email');
+        Route::get('/email', [OptionsController::class, 'email'])->name('email');
+        // Route::post('/email/update', [SettingsController::class, 'emailUpdate'])->name('email.update');
+        // Route::get('/security', [SettingsController::class, 'security'])->name('security');
+        Route::get('/security', function () {
+            return Inertia::render('Admin/Settings/Security/Index');
+        })->name('security');
+        // Route::post('/security/update', [SettingsController::class, 'securityUpdate'])->name('security.update');
+        // Route::get('/localization', [SettingsController::class, 'localization'])->name('localization');
+        Route::get('/localization', function () {
+            //
+        })->name('localization');
+
+        Route::get('/theme', function () {
+            //
+        })->name('theme');
+        Route::get('/display', function () {
+            //
+        })->name('display');
+        Route::get('/payments', function () {
+            //
+        })->name('payments');
+        Route::get('/shipping', function () {
+            //
+        })->name('shipping');
+        Route::get('/taxes', function () {
+            //
+        })->name('taxes');
+        Route::get('/media', function () {
+            //
+        })->name('media');
+        Route::get('/seo', function () {
+            //
+        })->name('seo');
+        Route::get('/google', function () {
+            //
+        })->name('google');
+        Route::get('/social', function () {
+            //
+        })->name('social');
+        Route::get('/api', function () {
+            //
+        })->name('api');
+        Route::get('/cache', function () {
+            //
+        })->name('cache');
+        Route::get('/logs', function () {
+            //
+        })->name('logs');
+        Route::get('/notifications', function () {
+            //
+        })->name('notifications');
+        // Route::post('/localization/update', [SettingsController::class, 'localizationUpdate'])->name('localization.update');
+        // Add more routes as needed
+        Route::get('/auth', [OptionsController::class, 'auth'])->name('auth');
+    });
+
+    // Currency Settings
+    Route::middleware(['auth'])->prefix('app/settings')->name('app.settings.')->group(function () {
+        Route::get('currencies', [CurrencyController::class, 'index'])->name('currencies.index');
+        Route::post('currencies', [CurrencyController::class, 'store'])->name('currencies.store');
+        Route::put('currencies/{currency}', [CurrencyController::class, 'update'])->name('currencies.update');
+        Route::delete('currencies/{currency}', [CurrencyController::class, 'destroy'])->name('currencies.destroy');
+        Route::post('currencies/update-rates', [CurrencyController::class, 'updateRates'])->name('currencies.update-rates');
+        Route::put('currencies/{currency}/toggle', [CurrencyController::class, 'toggleStatus'])->name('currencies.toggle');
+        Route::post('currencies/bulk-action', [CurrencyController::class, 'bulkAction'])->name('currencies.bulk-action');
+        Route::post('currencies/convert', [CurrencyController::class, 'convert'])->name('currencies.convert');
+    });
 });
 
-
+/*
+|--------------------------------------------------------------------------
+| Role-Based Dashboard Access
+|--------------------------------------------------------------------------
+*/
 Route::middleware(['auth', 'role:Admin|Branch Manager|Kitchen Staff|Delivery Personnel|Customer'])->group(function () {
     Route::get('app/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 });
 
-// Currency routes
-Route::middleware(['auth'])->prefix('app/settings')->name('app.settings.')->group(function () {
-    Route::get('currencies', [CurrencyController::class, 'index'])->name('currencies.index');
-    Route::post('currencies', [CurrencyController::class, 'store'])->name('currencies.store');
-    Route::put('currencies/{currency}', [CurrencyController::class, 'update'])->name('currencies.update');
-    Route::delete('currencies/{currency}', [CurrencyController::class, 'destroy'])->name('currencies.destroy');
-    Route::post('currencies/update-rates', [CurrencyController::class, 'updateRates'])->name('currencies.update-rates');
-    Route::put('currencies/{currency}/toggle', [CurrencyController::class, 'toggleStatus'])->name('currencies.toggle');
-    Route::post('currencies/bulk-action', [CurrencyController::class, 'bulkAction'])->name('currencies.bulk-action');
-    Route::post('currencies/convert', [CurrencyController::class, 'convert'])->name('currencies.convert');
-});
-
-Route::post('currency/switch', [\App\Http\Controllers\CurrencyController::class, 'switch'])
-    ->middleware(['auth'])
-    ->name('currency.switch');
-
-require __DIR__ . '/auth.php';
-
-// Restaurant Stats API
-Route::get('api/restaurants/stats', [RestaurantStatsController::class, 'index'])
-    ->name('api.restaurants.stats')
-    ->middleware(['auth']);
-
-// Restaurant Stats Routes
+/*
+|--------------------------------------------------------------------------
+| Restaurant Public Routes
+|--------------------------------------------------------------------------
+*/
 Route::group(['prefix' => 'app/restaurants', 'as' => 'app.restaurants.'], function () {
     Route::get('/', [RestaurantController::class, 'index'])->name('index');
     Route::get('/create', [RestaurantController::class, 'create'])->name('create'); 
@@ -378,3 +383,15 @@ Route::group(['prefix' => 'app/restaurants', 'as' => 'app.restaurants.'], functi
     Route::get('stats', [RestaurantStatsController::class, 'index'])->name('stats');
     Route::post('stats/filter', [RestaurantStatsController::class, 'filter'])->name('stats.filter');
 });
+
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+*/
+Route::get('api/restaurants/stats', [RestaurantStatsController::class, 'index'])
+    ->name('api.restaurants.stats')
+    ->middleware(['auth']);
+
+// Include authentication routes
+require __DIR__ . '/auth.php';
