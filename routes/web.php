@@ -62,7 +62,7 @@ Route::middleware(['auth'])->group(function () {
 | Authenticated & Verified Routes
 |--------------------------------------------------------------------------
 */
-Route::prefix('app')->name('app.')->middleware(['auth'])->group(function () {
+Route::prefix('app')->name('app.')->middleware(['auth', 'verified'])->group(function () {
     // Profile Management
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -378,6 +378,20 @@ Route::prefix('app')->name('app.')->middleware(['auth'])->group(function () {
         Route::get('/kitchen/staff', [BecomeController::class, 'kitchen'])->name('kitchen');
         Route::get('/delivery/staff', [BecomeController::class, 'delivery'])->name('delivery');
     });
+
+    // Admin routes
+    Route::middleware(['role:Admin'])->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        // Other admin routes...
+    });
+
+    // Restaurant routes
+    Route::middleware(['role:Restaurant'])->prefix('restaurant')->name('restaurant.')->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        // Other restaurant routes...
+    });
+
+    // Similar route groups for other roles...
 });
 
 /*

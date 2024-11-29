@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\BaseService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Str;
 
@@ -29,12 +30,12 @@ final class RestaurantInquiryService extends BaseService
 
             $inquiry = $this->findOrFail($id);
             
-            // Update inquiry status using auth()->user()->id instead of auth()->id()
+            // Update inquiry status using Auth facade
             $inquiry->update([
                 'status' => 'approved',
-                'rejection_reason' => $inquiry->rejection_reason ? null : $inquiry->rejection_reason,
+                'rejection_reason' => null,
                 'approved_at' => now(),
-                'approved_by' => auth()->user()->id,
+                'approved_by' => Auth::id(),
             ]);
 
             // Create restaurant from inquiry
@@ -59,18 +60,14 @@ final class RestaurantInquiryService extends BaseService
 
             if ($inquiry->user) {
                 $inquiry->user->roles()->detach();
-            }
-
-            if ($inquiry->user) {
                 $inquiry->user->assignRole('Restaurant');
             }
-        
 
             // Add logging to track the process
             Log::info('Restaurant inquiry approved', [
                 'inquiry_id' => $id,
                 'restaurant_id' => $restaurant->id,
-                'approved_by' => auth()->user()->id
+                'approved_by' => Auth::id()
             ]);
 
             DB::commit();
