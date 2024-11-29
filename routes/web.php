@@ -295,43 +295,46 @@ Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
         });
     });
 
-    // Restaurant Management Routes
-    Route::group(['prefix' => 'restaurants', 'as' => 'app.restaurants.'], function () {
-        Route::get('/', [RestaurantController::class, 'index'])->name('index');
-        Route::post('/', [RestaurantController::class, 'store'])
-            // ->middleware('permission:restaurant.create')
-            ->name('store');
-        Route::get('/create', [RestaurantController::class, 'create'])
-            // ->middleware('permission:restaurant.create')
-            ->name('create');
-        Route::get('/{restaurant}', [RestaurantController::class, 'show'])
-            // ->middleware('permission:restaurant.view')
-            ->name('show');
-        Route::get('/{restaurant}/edit', [RestaurantController::class, 'edit'])
-            // ->middleware('permission:restaurant.edit')
-            ->name('edit');
-        Route::put('/{restaurant}', [RestaurantController::class, 'update'])
-            // ->middleware('permission:restaurant.edit')
-            ->name('update');
-        Route::delete('/{restaurant}', [RestaurantController::class, 'destroy'])
-            // ->middleware('permission:restaurant.delete')
-            ->name('destroy');
-        Route::delete('/bulk-delete', [RestaurantController::class, 'bulkDelete'])
-            // ->middleware('permission:restaurant.delete')
-            ->name('bulk-delete');
-        Route::put('/bulk-status', [RestaurantController::class, 'bulkUpdateStatus'])
-            // ->middleware('permission:restaurant.edit')
-            ->name('bulk-status');
+    // Restaurant Management Routes with Role-Based Access
+    Route::middleware(['auth', 'verified'])->prefix('app')->name('app.')->group(function () {
+        // Restaurant Stats Routes - Available to Restaurant Owners and Admins
+        Route::group([
+            'prefix' => 'restaurants',
+            'as' => 'restaurants.',
+            'middleware' => ['role:Admin|Restaurant Owner|Branch Manager']
+        ], function () {
+            Route::get('stats', [RestaurantStatsController::class, 'index'])->name('stats');
+            Route::post('stats/filter', [RestaurantStatsController::class, 'filter'])->name('stats.filter');
+            Route::get('stats/export', [RestaurantStatsController::class, 'export'])
+                ->middleware('permission:export-stats')
+                ->name('stats.export');
+        });
 
-        // Additional restaurant management routes
-        Route::get('{restaurant}/analytics', [RestaurantController::class, 'analytics'])
-            ->name('analytics');
-        
-        Route::get('{restaurant}/menu', [RestaurantController::class, 'menu'])
-            ->name('menu');
-        
-        Route::get('{restaurant}/delivery-zones', [RestaurantController::class, 'deliveryZones'])
-            ->name('delivery-zones');
+        // Restaurant Management Routes - Admin Only
+        Route::group([
+            'prefix' => 'restaurants',
+            'as' => 'restaurants.',
+            'middleware' => ['role:Admin']
+        ], function () {
+            Route::get('pending', [RestaurantController::class, 'pending'])->name('pending');
+            Route::post('{restaurant}/approve', [RestaurantController::class, 'approve'])->name('approve');
+            Route::post('{restaurant}/reject', [RestaurantController::class, 'reject'])->name('reject');
+            Route::post('bulk-approve', [RestaurantController::class, 'bulkApprove'])->name('bulk-approve');
+        });
+
+        // Restaurant Dashboard Routes - Restaurant Staff
+        // Route::group([
+        //     'prefix' => 'restaurants',
+        //     'as' => 'restaurants.',
+        //     'middleware' => ['role:Restaurant Owner|Branch Manager|Kitchen Staff']
+        // ], function () {
+        //     Route::get('dashboard', [RestaurantDashboardController::class, 'index'])->name('dashboard');
+        //     Route::get('orders', [RestaurantOrderController::class, 'index'])->name('orders.index');
+        //     Route::get('menu', [RestaurantMenuController::class, 'index'])->name('menu.index');
+        //     Route::get('staff', [RestaurantStaffController::class, 'index'])
+        //         ->middleware('permission:manage-staff')
+        //         ->name('staff.index');
+        // });
     });
 
 });
@@ -366,6 +369,12 @@ Route::get('api/restaurants/stats', [RestaurantStatsController::class, 'index'])
 
 // Restaurant Stats Routes
 Route::group(['prefix' => 'app/restaurants', 'as' => 'app.restaurants.'], function () {
+    Route::get('/', [RestaurantController::class, 'index'])->name('index');
+    Route::get('/create', [RestaurantController::class, 'create'])->name('create'); 
+    Route::get('{restaurant}', [RestaurantController::class, 'show'])->name('show');
+    Route::get('{restaurant}/edit', [RestaurantController::class, 'edit'])->name('edit');
+    Route::put('{restaurant}', [RestaurantController::class, 'update'])->name('update');
+    Route::delete('{restaurant}', [RestaurantController::class, 'destroy'])->name('destroy');
     Route::get('stats', [RestaurantStatsController::class, 'index'])->name('stats');
     Route::post('stats/filter', [RestaurantStatsController::class, 'filter'])->name('stats.filter');
 });
