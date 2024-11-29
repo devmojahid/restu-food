@@ -40,7 +40,7 @@ const UserMenu = ({ userMenuRef, isOpen, onToggle, user, onLogout }) => {
           
           <div className="py-1">
             <Link
-              href={route("profile.edit")}
+              href={route("app.profile.edit")}
               className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
             >
               <User className="h-4 w-4 mr-3" />
@@ -48,7 +48,7 @@ const UserMenu = ({ userMenuRef, isOpen, onToggle, user, onLogout }) => {
             </Link>
             
             <Link
-              href={route("settings.index")}
+              href={route("app.settings.index")}
               className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
             >
               <Settings className="h-4 w-4 mr-3" />

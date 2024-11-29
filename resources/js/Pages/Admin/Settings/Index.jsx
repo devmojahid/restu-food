@@ -216,7 +216,7 @@ const sidebarNavItems = [
       {
         title: "Store Information",
         icon: <Building2 size={18} />,
-        href: route("settings.store"),
+        href: route("app.settings.store"),
         description: "Basic store details and information",
         status: { label: "Required", variant: "default" },
         tooltip: "Configure your store's basic information and contact details",
@@ -224,14 +224,14 @@ const sidebarNavItems = [
       {
         title: "Profile",
         icon: <User size={18} />,
-        href: route("settings.profile"),
+        href: route("app.settings.profile"),
         description: "Your account settings and preferences",
         status: { label: "Active", variant: "success" },
       },
       {
         title: "Email Settings",
         icon: <Mail size={18} />,
-        href: route("settings.email"),
+        href: route("app.settings.email"),
         description: "Email configuration and templates",
         status: { label: "Setup Required", variant: "warning" },
       },
@@ -244,7 +244,7 @@ const sidebarNavItems = [
       {
         title: "Theme",
         icon: <Palette size={18} />,
-        href: route("settings.theme"),
+        href: route("app.settings.theme"),
         description: "Customize your store's appearance",
         status: { label: "Pro", variant: "default" },
         tooltip: "Advanced theme customization options (Pro feature)",
@@ -252,7 +252,7 @@ const sidebarNavItems = [
       {
         title: "Display",
         icon: <Monitor size={18} />,
-        href: route("settings.display"),
+        href: route("app.settings.display"),
         description: "Layout and display preferences",
         status: { label: "Pro", variant: "default" },
         tooltip: "Advanced display customization options (Pro feature)",
@@ -266,7 +266,7 @@ const sidebarNavItems = [
       {
         title: "Payment Methods",
         icon: <CreditCard size={18} />,
-        href: route("settings.payments"),
+        href: route("app.settings.payments"),
         description: "Configure payment gateways",
         status: { label: "Pro", variant: "default" },
         tooltip: "Advanced payment methods customization options (Pro feature)",
@@ -274,7 +274,7 @@ const sidebarNavItems = [
       {
         title: "Shipping",
         icon: <Truck size={18} />,
-        href: route("settings.shipping"),
+        href: route("app.settings.shipping"),
         description: "Shipping zones and methods",
         status: { label: "Pro", variant: "default" },
         tooltip: "Advanced shipping customization options (Pro feature)",
@@ -282,7 +282,7 @@ const sidebarNavItems = [
       {
         title: "Taxes",
         icon: <BarChart size={18} />,
-        href: route("settings.taxes"),
+        href: route("app.settings.taxes"),
         description: "Tax rates and configurations",
         status: { label: "Pro", variant: "default" },
         tooltip: "Advanced tax customization options (Pro feature)",
@@ -296,7 +296,7 @@ const sidebarNavItems = [
       {
         title: "Security",
         icon: <Lock size={18} />,
-        href: route("settings.security"),
+        href: route("app.settings.security"),
         description: "Security settings and authentication",
         status: { label: "Pro", variant: "default" },
         tooltip: "Advanced security customization options (Pro feature)",
@@ -304,7 +304,7 @@ const sidebarNavItems = [
       {
         title: "Localization",
         icon: <Languages size={18} />,
-        href: route("settings.localization"),
+        href: route("app.settings.localization"),
         description: "Language and regional settings",
         status: { label: "Pro", variant: "default" },
         tooltip: "Advanced localization customization options (Pro feature)",
@@ -312,7 +312,7 @@ const sidebarNavItems = [
       {
         title: "Media Storage",
         icon: <Upload size={18} />,
-        href: route("settings.media"),
+        href: route("app.settings.media"),
         description: "File storage and upload settings",
         status: { label: "Pro", variant: "default" },
         tooltip: "Advanced media storage customization options (Pro feature)",
@@ -326,7 +326,7 @@ const sidebarNavItems = [
       {
         title: "SEO",
         icon: <Search size={18} />,
-        href: route("settings.seo"),
+        href: route("app.settings.seo"),
         description: "Search engine optimization settings",
         status: { label: "Pro", variant: "default" },
         tooltip: "Advanced SEO customization options (Pro feature)",
@@ -334,7 +334,7 @@ const sidebarNavItems = [
       {
         title: "Google Services",
         icon: <Chrome size={18} />,
-        href: route("settings.google"),
+        href: route("app.settings.google"),
         description: "Google Analytics and services",
         status: { label: "Pro", variant: "default" },
         tooltip: "Advanced Google services customization options (Pro feature)",
@@ -342,7 +342,7 @@ const sidebarNavItems = [
       {
         title: "Social Media",
         icon: <Share2 size={18} />,
-        href: route("settings.social"),
+        href: route("app.settings.social"),
         description: "Social media connections",
         status: { label: "Pro", variant: "default" },
         tooltip:
@@ -351,7 +351,7 @@ const sidebarNavItems = [
       {
         title: "API Keys",
         icon: <Webhook size={18} />,
-        href: route("settings.api"),
+        href: route("app.settings.api"),
         description: "API configuration and keys",
         status: { label: "Pro", variant: "default" },
         tooltip: "Advanced API customization options (Pro feature)",
@@ -365,7 +365,7 @@ const sidebarNavItems = [
       {
         title: "Cache",
         icon: <RefreshCw size={18} />,
-        href: route("settings.cache"),
+        href: route("app.settings.cache"),
         description: "Cache management",
         status: { label: "Pro", variant: "default" },
         tooltip:
@@ -374,7 +374,7 @@ const sidebarNavItems = [
       {
         title: "Logs",
         icon: <FileText size={18} />,
-        href: route("settings.logs"),
+        href: route("app.settings.logs"),
         description: "System logs and debugging",
         status: { label: "Pro", variant: "default" },
         tooltip: "Advanced logs management customization options (Pro feature)",
@@ -382,7 +382,7 @@ const sidebarNavItems = [
       {
         title: "Notifications",
         icon: <Bell size={18} />,
-        href: route("settings.notifications"),
+        href: route("app.settings.notifications"),
         description: "Notification preferences",
         status: { label: "Pro", variant: "default" },
         tooltip:

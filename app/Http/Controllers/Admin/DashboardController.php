@@ -35,7 +35,7 @@ final class DashboardController extends Controller
         //             'blogs' => Blog::count(),
         //         ];
         //         break;
-        //     case 'Branch Manager':
+        //     case 'Restaurant':
         //         $data['stats'] = [
         //             'orders' => Order::where('restaurant_id', $user->restaurant_id)->count(),
         //             'revenue' => Order::where('restaurant_id', $user->restaurant_id)

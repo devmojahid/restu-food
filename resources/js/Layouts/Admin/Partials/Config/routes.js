@@ -31,6 +31,7 @@ export const routes = {
     blog: {
         name: "Blog",
         icon: "ShoppingBag",
+        role: ["Admin", "Restaurant"],
         submenu: {
             blog: {
                 name: "Blog",
@@ -52,6 +53,7 @@ export const routes = {
     ecommerce: {
         name: "E-commerce",
         icon: "ShoppingBag",
+        role: ["Admin", "Restaurant"],
         submenu: {
             products: {
                 name: "Products",
@@ -128,20 +130,59 @@ export const routes = {
                 name: "Cancelled Orders",
                 path: "/app/orders/cancelled",
                 icon: "XCircle"
+            },
+            orderCancelRequests: {
+                name: "Order Cancel Requests",
+                path: "/app/orders/cancel-requests",
+                icon: "XCircle"
             }
         }
     },
     marketplace: {
         name: "Marketplace",
         icon: "ShoppingBag",
+        role: ["Admin"],
         submenu: {
             restaurants: {
                 name: "Restaurants",
                 path: "/app/restaurants",
                 icon: "Package"
+            },
+            pendingRestaurants: {
+                name: "Pending Restaurants",
+                path: "/app/restaurants/applications",
+                icon: "Package"
+            },
+            pendingDeliveryStaff: {
+                name: "Pending Delivery Staff",
+                path: "/app/delivery-staff/pending",
+                icon: "Package"
+            }
+        }
+    },
+    become: {
+        name: "Become",
+        icon: "Package",
+        role: ["Customer"],
+        submenu: {
+            becomeRestaurant: {
+                name: "Become Restaurant",
+                path: route("app.become.restaurant"),
+                icon: "Package"
+            },
+            becomeKitchenStaff: {
+                name: "Become Kitchen Staff",
+                path: route("app.become.kitchen"),
+                icon: "Package"
+            },
+            becomeDeliveryStaff: {
+                name: "Become Delivery Staff",
+                path: route("app.become.delivery"),
+                icon: "Package"
             }
         }
     }
+
 
     // Add other menu items similarly...
 };

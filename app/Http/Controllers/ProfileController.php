@@ -54,7 +54,7 @@ class ProfileController extends Controller
 
         $this->updateMeta($request, $request->user());
 
-        return Redirect::route('profile.edit');
+        return Redirect::route('app.profile.edit');
     }
 
     public function updateMeta(ProfileUpdateRequest $request, User $user): bool

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\{
+    BecomeController,
     BlogController,
     CategoryController,
     CouponController,
@@ -13,7 +14,8 @@ use App\Http\Controllers\Admin\{
     ReviewController,
     RoleController,
     UserController,
-    OptionsController
+    OptionsController,
+    RestaurantApplicationController
 };
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\RestaurantStatsController;
@@ -60,7 +62,7 @@ Route::middleware(['auth'])->group(function () {
 | Authenticated & Verified Routes
 |--------------------------------------------------------------------------
 */
-Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
+Route::prefix('app')->name('app.')->middleware(['auth'])->group(function () {
     // Profile Management
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -71,44 +73,45 @@ Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
     | Content Management Routes
     |--------------------------------------------------------------------------
     */
-    Route::name('app.')->group(function () {
+    Route::prefix('blogs')->name('blogs.')->group(function () {
         // Blog Management
-        Route::resource('blogs', BlogController::class);
-        Route::get('blogs/{blog}/preview', [BlogController::class, 'preview'])->name('blogs.preview');
-        Route::delete('blogs/bulk-delete', [BlogController::class, 'bulkDelete'])->name('blogs.bulk-delete');
-        Route::put('blogs/bulk-status', [BlogController::class, 'bulkUpdateStatus'])->name('blogs.bulk-status');
+        Route::resource('/', BlogController::class);
+        Route::get('{blog}/preview', [BlogController::class, 'preview'])->name('preview');
+        Route::delete('bulk-delete', [BlogController::class, 'bulkDelete'])->name('bulk-delete');
+        Route::put('bulk-status', [BlogController::class, 'bulkUpdateStatus'])->name('bulk-status');
+    
+    });
 
-        // Category Management with Permissions
-        Route::group(['prefix' => 'categories', 'as' => 'categories.'], function () {
-            Route::get('/', [CategoryController::class, 'index'])->name('index');
-            Route::post('/', [CategoryController::class, 'store'])
-                ->middleware('permission:category.create')
-                ->name('store');
-            Route::get('/{category}', [CategoryController::class, 'show'])
-                ->middleware('permission:category.list')
-                ->name('show');
-            Route::put('/{category}', [CategoryController::class, 'update'])
-                ->middleware('permission:category.edit')
-                ->name('update');
-            Route::delete('/{category}', [CategoryController::class, 'destroy'])
-                ->middleware('permission:category.delete')
-                ->name('destroy');
-            Route::put('/reorder', [CategoryController::class, 'reorder'])
-                ->middleware('permission:category.edit')
-                ->name('reorder');
-            Route::put('/{category}/move', [CategoryController::class, 'move'])
-                ->middleware('permission:category.edit')
-                ->name('move');
-            Route::put('/{category}/status', [CategoryController::class, 'updateStatus'])
-                ->name('status')
-                ->middleware('permission:category.edit');
-            Route::delete('/bulk-delete', [CategoryController::class, 'bulkDelete'])
-                ->middleware('permission:category.delete')
-                ->name('bulk-delete');
-            Route::put('/bulk-status', [CategoryController::class, 'bulkUpdateStatus'])
-                ->middleware('permission:category.edit')
-                ->name('bulk-status');
-        });
+    // Category Management with Permissions
+    Route::group(['prefix' => 'categories', 'as' => 'categories.'], function () {
+        Route::get('/', [CategoryController::class, 'index'])->name('index');
+        Route::post('/', [CategoryController::class, 'store'])
+            ->middleware('permission:category.create')
+            ->name('store');
+        Route::get('/{category}', [CategoryController::class, 'show'])
+            ->middleware('permission:category.list')
+            ->name('show');
+        Route::put('/{category}', [CategoryController::class, 'update'])
+            ->middleware('permission:category.edit')
+            ->name('update');
+        Route::delete('/{category}', [CategoryController::class, 'destroy'])
+            ->middleware('permission:category.delete')
+            ->name('destroy');
+        Route::put('/reorder', [CategoryController::class, 'reorder'])
+            ->middleware('permission:category.edit')
+            ->name('reorder');
+        Route::put('/{category}/move', [CategoryController::class, 'move'])
+            ->middleware('permission:category.edit')
+            ->name('move');
+        Route::put('/{category}/status', [CategoryController::class, 'updateStatus'])
+            ->name('status')
+            ->middleware('permission:category.edit');
+        Route::delete('/bulk-delete', [CategoryController::class, 'bulkDelete'])
+            ->middleware('permission:category.delete')
+            ->name('bulk-delete');
+        Route::put('/bulk-status', [CategoryController::class, 'bulkUpdateStatus'])
+            ->middleware('permission:category.edit')
+            ->name('bulk-status');
     });
 
     /*
@@ -117,7 +120,7 @@ Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
     |--------------------------------------------------------------------------
     */
     // Users Management
-    Route::group(['prefix' => 'users', 'as' => 'app.users.'], function () {
+    Route::group(['prefix' => 'users', 'as' => 'users.'], function () {
         Route::get('/', [UserController::class, 'index'])->name('index');
         Route::get('/create', [UserController::class, 'create'])->name('create');
         Route::post('/', [UserController::class, 'store'])->name('store');
@@ -129,11 +132,11 @@ Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
         Route::put('/bulk-status', [UserController::class, 'bulkUpdateStatus'])->name('bulk-status');
     });
 
-    Route::name('app.')->group(function () {
+    Route::prefix('roles')->name('roles.')->group(function () {
         // Roles Management
-        Route::resource('roles', RoleController::class);
-        Route::put('roles/{role}/permissions', [RoleController::class, 'updatePermissions'])
-            ->name('roles.permissions.update');
+        Route::resource('/', RoleController::class);
+        Route::put('{role}/permissions', [RoleController::class, 'updatePermissions'])
+            ->name('permissions.update');
     });
 
     /*
@@ -141,125 +144,136 @@ Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
     | E-commerce Related Routes
     |--------------------------------------------------------------------------
     */
-    Route::name('app.')->group(function () {
-        // Product Management
-        Route::resource('products', ProductController::class);
-        
-        // Product Attributes
-        Route::prefix('product-attributes')->name('product-attributes.')->group(function () {
-            Route::get('/', [ProductAttributeController::class, 'index'])->name('index');
-            Route::post('/', [ProductAttributeController::class, 'store'])
-                // ->middleware('permission:product-attributes.create')
-                ->name('store');
-            Route::get('/{attribute}', [ProductAttributeController::class, 'show'])
-                // ->middleware('permission:product-attributes.list')
-                ->name('show');
-            Route::get('/{attribute}/edit', [ProductAttributeController::class, 'edit'])
-                // ->middleware('permission:product-attributes.edit')
-                ->name('edit');
-            Route::put('/{attribute}', [ProductAttributeController::class, 'update'])
-                // ->middleware('permission:product-attributes.edit')
-                ->name('update');
-            Route::delete('/{attribute}', [ProductAttributeController::class, 'destroy'])
-                // ->middleware('permission:product-attributes.delete')
-                ->name('destroy');
-            Route::put('/reorder', [ProductAttributeController::class, 'updateOrder'])
-                // ->middleware('permission:product-attributes.edit')
-                ->name('reorder');
-            Route::put('/{attribute}/status', [ProductAttributeController::class, 'updateStatus'])
-                ->name('status');
-                // ->middleware('permission:product-attributes.edit');
-            Route::delete('/bulk-delete', [ProductAttributeController::class, 'bulkDelete'])
-                // ->middleware('permission:product-attributes.delete')
-                ->name('bulk-delete');
-            Route::put('/bulk-status', [ProductAttributeController::class, 'bulkUpdateStatus'])
-                // ->middleware('permission:product-attributes.edit')
-                ->name('bulk-status');
-            Route::get('/{attribute}/values', [ProductAttributeController::class, 'getValues'])
-                ->name('values');
-            Route::put('/{attribute}/values', [ProductAttributeController::class, 'updateValues'])
-                // ->middleware('permission:product-attributes.edit')
-                ->name('values.update');
-        });
-
-        // Coupons Management
-        Route::group(['prefix' => 'coupons', 'as' => 'coupons.'], function () {
-            Route::get('/', [CouponController::class, 'index'])->name('index');
-            Route::post('/', [CouponController::class, 'store'])
-                // ->middleware('permission:coupon.create')
-                ->name('store');
-            Route::put('/{coupon}', [CouponController::class, 'update'])
-                // ->middleware('permission:coupon.edit')
-                ->name('update');
-            Route::delete('/{coupon}', [CouponController::class, 'destroy'])
-                // ->middleware('permission:coupon.delete')
-                ->name('destroy');
-            Route::put('/{coupon}/status', [CouponController::class, 'updateStatus'])
-                // ->middleware('permission:coupon.edit')
-                ->name('status');
-            Route::delete('/bulk-delete', [CouponController::class, 'bulkDelete'])
-                // ->middleware('permission:coupon.delete')
-                ->name('bulk-delete');
-            Route::put('/bulk-status', [CouponController::class, 'bulkUpdateStatus'])
-                // ->middleware('permission:coupon.edit')
-                ->name('bulk-status');
-            Route::post('/validate', [CouponController::class, 'validate'])
-                ->name('validate');
-            Route::get('/{coupon}/usage', [CouponController::class, 'usage'])
-                // ->middleware('permission:coupon.view')
-                ->name('usage');
-            Route::get('/{coupon}/settings', [CouponController::class, 'settings'])
-                // ->middleware('permission:coupon.edit')
-                ->name('settings');
-        });
-
-        // Reviews Management
-        Route::group(['prefix' => 'reviews', 'as' => 'reviews.'], function () {
-            Route::get('/', [ReviewController::class, 'index'])->name('index');
-            Route::get('/{review}', [ReviewController::class, 'show'])->name('show');
-            Route::put('/{review}/approve', [ReviewController::class, 'approve'])->name('approve');
-            Route::put('/{review}/reject', [ReviewController::class, 'reject'])->name('reject');
-            Route::delete('/{review}', [ReviewController::class, 'destroy'])->name('destroy');
-            Route::post('/bulk-approve', [ReviewController::class, 'bulkApprove'])->name('bulk-approve');
-            Route::post('/bulk-reject', [ReviewController::class, 'bulkReject'])->name('bulk-reject');
-            Route::delete('/bulk-delete', [ReviewController::class, 'bulkDelete'])->name('bulk-delete');
-            Route::post('/{review}/vote', [ReviewController::class, 'vote'])->name('vote');
-            Route::post('/{review}/report', [ReviewController::class, 'report'])->name('report');
-            Route::post('/{review}/reply', [ReviewController::class, 'reply'])->name('reply');
-        });
+    Route::resource('products', ProductController::class);
+    
+    // Product Attributes
+    Route::prefix('product-attributes')->name('product-attributes.')->group(function () {
+        Route::get('/', [ProductAttributeController::class, 'index'])->name('index');
+        Route::post('/', [ProductAttributeController::class, 'store'])
+            // ->middleware('permission:product-attributes.create')
+            ->name('store');
+        Route::get('/{attribute}', [ProductAttributeController::class, 'show'])
+            // ->middleware('permission:product-attributes.list')
+            ->name('show');
+        Route::get('/{attribute}/edit', [ProductAttributeController::class, 'edit'])
+            // ->middleware('permission:product-attributes.edit')
+            ->name('edit');
+        Route::put('/{attribute}', [ProductAttributeController::class, 'update'])
+            // ->middleware('permission:product-attributes.edit')
+            ->name('update');
+        Route::delete('/{attribute}', [ProductAttributeController::class, 'destroy'])
+            // ->middleware('permission:product-attributes.delete')
+            ->name('destroy');
+        Route::put('/reorder', [ProductAttributeController::class, 'updateOrder'])
+            // ->middleware('permission:product-attributes.edit')
+            ->name('reorder');
+        Route::put('/{attribute}/status', [ProductAttributeController::class, 'updateStatus'])
+            ->name('status');
+            // ->middleware('permission:product-attributes.edit');
+        Route::delete('/bulk-delete', [ProductAttributeController::class, 'bulkDelete'])
+            // ->middleware('permission:product-attributes.delete')
+            ->name('bulk-delete');
+        Route::put('/bulk-status', [ProductAttributeController::class, 'bulkUpdateStatus'])
+            // ->middleware('permission:product-attributes.edit')
+            ->name('bulk-status');
+        Route::get('/{attribute}/values', [ProductAttributeController::class, 'getValues'])
+            ->name('values');
+        Route::put('/{attribute}/values', [ProductAttributeController::class, 'updateValues'])
+            // ->middleware('permission:product-attributes.edit')
+            ->name('values.update');
     });
+
+    // Coupons Management
+    Route::group(['prefix' => 'coupons', 'as' => 'coupons.'], function () {
+        Route::get('/', [CouponController::class, 'index'])->name('index');
+        Route::post('/', [CouponController::class, 'store'])
+            // ->middleware('permission:coupon.create')
+            ->name('store');
+        Route::put('/{coupon}', [CouponController::class, 'update'])
+            // ->middleware('permission:coupon.edit')
+            ->name('update');
+        Route::delete('/{coupon}', [CouponController::class, 'destroy'])
+            // ->middleware('permission:coupon.delete')
+            ->name('destroy');
+        Route::put('/{coupon}/status', [CouponController::class, 'updateStatus'])
+            // ->middleware('permission:coupon.edit')
+            ->name('status');
+        Route::delete('/bulk-delete', [CouponController::class, 'bulkDelete'])
+            // ->middleware('permission:coupon.delete')
+            ->name('bulk-delete');
+        Route::put('/bulk-status', [CouponController::class, 'bulkUpdateStatus'])
+            // ->middleware('permission:coupon.edit')
+            ->name('bulk-status');
+        Route::post('/validate', [CouponController::class, 'validate'])
+            ->name('validate');
+        Route::get('/{coupon}/usage', [CouponController::class, 'usage'])
+            // ->middleware('permission:coupon.view')
+            ->name('usage');
+        Route::get('/{coupon}/settings', [CouponController::class, 'settings'])
+            // ->middleware('permission:coupon.edit')
+            ->name('settings');
+    });
+
+    // Reviews Management
+    Route::group(['prefix' => 'reviews', 'as' => 'reviews.'], function () {
+        Route::get('/', [ReviewController::class, 'index'])->name('index');
+        Route::get('/{review}', [ReviewController::class, 'show'])->name('show');
+        Route::put('/{review}/approve', [ReviewController::class, 'approve'])->name('approve');
+        Route::put('/{review}/reject', [ReviewController::class, 'reject'])->name('reject');
+        Route::delete('/{review}', [ReviewController::class, 'destroy'])->name('destroy');
+        Route::post('/bulk-approve', [ReviewController::class, 'bulkApprove'])->name('bulk-approve');
+        Route::post('/bulk-reject', [ReviewController::class, 'bulkReject'])->name('bulk-reject');
+        Route::delete('/bulk-delete', [ReviewController::class, 'bulkDelete'])->name('bulk-delete');
+        Route::post('/{review}/vote', [ReviewController::class, 'vote'])->name('vote');
+        Route::post('/{review}/report', [ReviewController::class, 'report'])->name('report');
+        Route::post('/{review}/reply', [ReviewController::class, 'reply'])->name('reply');
+    });
+    
 
     /*
     |--------------------------------------------------------------------------
     | Restaurant Management Routes
     |--------------------------------------------------------------------------
     */
-    Route::middleware(['auth', 'verified'])->prefix('app')->name('app.')->group(function () {
-        // Restaurant Stats Routes
-        Route::group([
-            'prefix' => 'restaurants',
-            'as' => 'restaurants.',
-            'middleware' => ['role:Admin|Restaurant Owner|Branch Manager']
-        ], function () {
-            Route::get('stats', [RestaurantStatsController::class, 'index'])->name('stats');
-            Route::post('stats/filter', [RestaurantStatsController::class, 'filter'])->name('stats.filter');
-            Route::get('stats/export', [RestaurantStatsController::class, 'export'])
-                ->middleware('permission:export-stats')
-                ->name('stats.export');
-        });
 
-        // Admin-Only Restaurant Management
-        Route::group([
-            'prefix' => 'restaurants',
-            'as' => 'restaurants.',
-            'middleware' => ['role:Admin']
+    // Restaurant Stats Routes
+    Route::group([
+        'prefix' => 'restaurants',
+        'as' => 'restaurants.',
+        'middleware' => ['role:Admin|Restaurant']
         ], function () {
-            Route::get('pending', [RestaurantController::class, 'pending'])->name('pending');
-            Route::post('{restaurant}/approve', [RestaurantController::class, 'approve'])->name('approve');
-            Route::post('{restaurant}/reject', [RestaurantController::class, 'reject'])->name('reject');
-            Route::post('bulk-approve', [RestaurantController::class, 'bulkApprove'])->name('bulk-approve');
-        });
+        Route::get('stats', [RestaurantStatsController::class, 'index'])->name('stats');
+        Route::post('stats/filter', [RestaurantStatsController::class, 'filter'])->name('stats.filter');
+        Route::get('stats/export', [RestaurantStatsController::class, 'export'])
+            ->middleware('permission:export-stats')
+            ->name('stats.export');
     });
+
+    // Restaurant Applications Management
+    Route::group([
+        'prefix' => 'restaurants/applications',
+        'as' => 'restaurants.applications.',
+    ], function () {
+        Route::get('/', [RestaurantApplicationController::class, 'index'])->name('index');
+        Route::post('/', [RestaurantApplicationController::class, 'store'])->name('store');
+        Route::get('/{inquiry}', [RestaurantApplicationController::class, 'show'])->name('show');
+        Route::post('/{inquiry}/approve', [RestaurantApplicationController::class, 'approve'])->name('approve');
+        Route::post('/{inquiry}/reject', [RestaurantApplicationController::class, 'reject'])->name('reject');
+        Route::post('/bulk-approve', [RestaurantApplicationController::class, 'bulkApprove'])->name('bulk-approve');
+    });
+
+    // Admin-Only Restaurant Management
+    Route::group([
+        'prefix' => 'restaurants',
+        'as' => 'restaurants.',
+        'middleware' => ['role:Admin']
+        ], function () {
+        Route::get('pending', [RestaurantController::class, 'pending'])->name('pending');
+        Route::post('{restaurant}/approve', [RestaurantController::class, 'approve'])->name('approve');
+        Route::post('{restaurant}/reject', [RestaurantController::class, 'reject'])->name('reject');
+        Route::post('bulk-approve', [RestaurantController::class, 'bulkApprove'])->name('bulk-approve');
+    });
+    
 
     /*
     |--------------------------------------------------------------------------
@@ -347,7 +361,7 @@ Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
     });
 
     // Currency Settings
-    Route::middleware(['auth'])->prefix('app/settings')->name('app.settings.')->group(function () {
+    Route::prefix('settings')->name('settings.')->group(function () {
         Route::get('currencies', [CurrencyController::class, 'index'])->name('currencies.index');
         Route::post('currencies', [CurrencyController::class, 'store'])->name('currencies.store');
         Route::put('currencies/{currency}', [CurrencyController::class, 'update'])->name('currencies.update');
@@ -357,6 +371,13 @@ Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
         Route::post('currencies/bulk-action', [CurrencyController::class, 'bulkAction'])->name('currencies.bulk-action');
         Route::post('currencies/convert', [CurrencyController::class, 'convert'])->name('currencies.convert');
     });
+
+    // Become Managemenet
+    Route::prefix('become')->name('become.')->group(function () {
+        Route::get('/restaurant', [BecomeController::class, 'restaurant'])->name('restaurant');
+        Route::get('/kitchen/staff', [BecomeController::class, 'kitchen'])->name('kitchen');
+        Route::get('/delivery/staff', [BecomeController::class, 'delivery'])->name('delivery');
+    });
 });
 
 /*
@@ -364,7 +385,7 @@ Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
 | Role-Based Dashboard Access
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'role:Admin|Branch Manager|Kitchen Staff|Delivery Personnel|Customer'])->group(function () {
+Route::middleware(['auth', 'role:Admin|Restaurant|Kitchen Staff|Delivery Personnel|Customer'])->group(function () {
     Route::get('app/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 });
 

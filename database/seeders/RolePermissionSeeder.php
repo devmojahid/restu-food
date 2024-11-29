@@ -91,7 +91,7 @@ final class RolePermissionSeeder extends Seeder
         // Create roles and assign permissions
         $roles = [
             'Admin' => Permission::all(),
-            'Branch Manager' => Permission::whereIn('name', [
+            'Restaurant' => Permission::whereIn('name', [
                 'dashboard.view',
                 'order.list',
                 'order.edit',

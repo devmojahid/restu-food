@@ -301,7 +301,7 @@ Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
         Route::group([
             'prefix' => 'restaurants',
             'as' => 'restaurants.',
-            'middleware' => ['role:Admin|Restaurant Owner|Branch Manager']
+            'middleware' => ['role:Admin|Restaurant']
         ], function () {
             Route::get('stats', [RestaurantStatsController::class, 'index'])->name('stats');
             Route::post('stats/filter', [RestaurantStatsController::class, 'filter'])->name('stats.filter');
@@ -326,7 +326,7 @@ Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
         // Route::group([
         //     'prefix' => 'restaurants',
         //     'as' => 'restaurants.',
-        //     'middleware' => ['role:Restaurant Owner|Branch Manager|Kitchen Staff']
+        //     'middleware' => ['role:Restaurant|Kitchen Staff']
         // ], function () {
         //     Route::get('dashboard', [RestaurantDashboardController::class, 'index'])->name('dashboard');
         //     Route::get('orders', [RestaurantOrderController::class, 'index'])->name('orders.index');
@@ -340,7 +340,7 @@ Route::prefix('app')->middleware(['auth', 'verified'])->group(function () {
 });
 
 
-Route::middleware(['auth', 'role:Admin|Branch Manager|Kitchen Staff|Delivery Personnel|Customer'])->group(function () {
+Route::middleware(['auth', 'role:Admin|Restaurant|Kitchen Staff|Delivery Personnel|Customer'])->group(function () {
     Route::get('app/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 });
 

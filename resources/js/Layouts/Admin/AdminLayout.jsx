@@ -3,6 +3,7 @@ import Sidebar from "./Partials/Sidebar/Sidebar";
 import Header from "./Partials/Header/Header";
 import { Head } from "@inertiajs/react";
 import FlashMessages from "@/Components/Admin/FlashMessages";
+import { LoadingAnimation } from "@/Components/ui/loading-animation";
 
 const AdminLayout = ({ children, title = "Dashboard" }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -91,7 +92,15 @@ const AdminLayout = ({ children, title = "Dashboard" }) => {
     }
   };
 
-  if (!pageReady) return null;
+  if (!pageReady) {
+    return (
+      <LoadingAnimation 
+        fullScreen 
+        size="lg"
+        text="Loading dashboard..."
+      />
+    );
+  }
 
   return (
     <>

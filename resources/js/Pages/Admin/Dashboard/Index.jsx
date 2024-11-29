@@ -27,6 +27,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { LoadingOverlay } from "@/Components/ui/loading-overlay";
 
 const lineChartData = [
   { name: "Jan", revenue: 4000, orders: 2400, expenses: 3200 },
@@ -91,6 +92,7 @@ export default function Dashboard(data) {
   const [activeModule, setActiveModule] = useState("E-commerce");
   const [chartView, setChartView] = useState("revenue");
   const [dateRange, setDateRange] = useState("This Week");
+  const [loading, setLoading] = useState(false);
 
   return (
     <AdminLayout>
@@ -130,36 +132,41 @@ export default function Dashboard(data) {
         </select>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Total Revenue"
-          value="$166,959.00"
-          change="+20.1%"
-          icon={DollarSign}
-          trend="up"
-        />
-        <StatCard
-          title="Total Orders"
-          value="38"
-          change="+180.1%"
-          icon={ShoppingCart}
-          trend="up"
-        />
-        <StatCard
-          title="Total Products"
-          value="57"
-          change="+19%"
-          icon={Package}
-          trend="up"
-        />
-        <StatCard
-          title="Active Customers"
-          value="10"
-          change="+201"
-          icon={Users}
-          trend="up"
-        />
-      </div>
+      <LoadingOverlay 
+        loading={loading} 
+        text="Fetching latest orders..."
+      >
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            title="Total Revenue"
+            value="$166,959.00"
+            change="+20.1%"
+            icon={DollarSign}
+            trend="up"
+          />
+          <StatCard
+            title="Total Orders"
+            value="38"
+            change="+180.1%"
+            icon={ShoppingCart}
+            trend="up"
+          />
+          <StatCard
+            title="Total Products"
+            value="57"
+            change="+19%"
+            icon={Package}
+            trend="up"
+          />
+          <StatCard
+            title="Active Customers"
+            value="10"
+            change="+201"
+            icon={Users}
+            trend="up"
+          />
+        </div>
+      </LoadingOverlay>
 
       <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-7">
         {/* Charts Section */}

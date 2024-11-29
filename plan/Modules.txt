@@ -1,20 +1,20 @@
 
 Ecommerce
-	--Report [dashboard]
-	--Inventory
+	--Report [dashboard] 4.1
+	--Inventory *
 	--Reviews  ---
 	--coupon ---
 	--customers
-	--Addon managmenet
+	--Addon managmenet 5.1
 
 Order .. 4
 	--orders
 	--Incomplete Orders
-	--Shipmenets
+	--Shipmenets **
 	--Invoices
 
 Marketplace
-	-- Restorants  2.
+	-- Restorants  1.
 	--Reports [dashboard]
 	-- Withdrawals
 	--unverified Restorants
@@ -22,21 +22,21 @@ Marketplace
 	-- Payouts
 	-- Payouts Request
 
-Marketing
-	--Offers [https://shop.activeitzone.com/admin]
-	--News Letters
-	-- Subscribers
-	-- Bulk SMS
+Marketing **
+	--Offers [https://shop.activeitzone.com/admin] **
+	--News Letters **
+	-- Subscribers **
+	-- Bulk SMS **
 	--Campaign [ https://yoori.spagreen.net/admin/campaign]
 	--Campaign Request [ https://yoori.spagreen.net/admin/campaign]
 	--Special Offers
 
-Payments .. 5
+Payments .. 6
 	--Transactions
 	--Payment Logs
 	--Paymenet Methods
 
-Locations ... 3
+Locations ... 5
 	-- Countries
 	-- States
 	-- Cities
@@ -44,7 +44,10 @@ Locations ... 3
 Others .. sitemaps
 	--clear cache button
 
-Support 
+ 	--- Kitchen managmenet role, dashboard 2
+ 	--- Delivary managmenet role, dashboard 3
+
+Support  **
 	-- Chat
 	-- tickets
 	-- depertmeent [ https://yoori.spagreen.net]

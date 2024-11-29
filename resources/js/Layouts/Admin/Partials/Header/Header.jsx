@@ -16,7 +16,7 @@ import {
   Settings,
   User as UserIcon,
 } from "lucide-react";
-import { usePage, router } from "@inertiajs/react";
+import { usePage, router, Link } from "@inertiajs/react";
 import NotificationPanel from "@/Components/Admin/Header/NotificationPanel";
 import UserMenu from "@/Components/Admin/Header/UserMenu";
 import QuickActionsPanel from "@/Components/Admin/Header/QuickActionsPanel";
@@ -135,9 +135,14 @@ const Header = ({ toggleSidebar, sidebarOpen, isMobile, theme, toggleTheme }) =>
           >
             <Menu className="h-5 w-5 text-gray-500 dark:text-gray-400" />
           </button>
-          <h1 className="hidden lg:block text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            NextGen Dashboard
-          </h1>
+          <Link
+            href="/"
+            target="_blank"
+            className="hidden lg:inline-flex items-center px-4 py-2 border-2 border-blue-500 dark:border-blue-400 text-blue-500 dark:text-blue-400 font-medium rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+          >
+            <Globe className="w-4 h-4 mr-2" />
+            View Website
+          </Link>
         </div>
 
         {/* Center section - Search */}
