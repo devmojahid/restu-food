@@ -1,144 +1,112 @@
-import React, { useEffect, useState } from 'react';
-import { Card } from '@/Components/ui/card';
+import React from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
-import { Button } from '@/Components/ui/button';
-import { Bell, Check, X } from 'lucide-react';
-import Echo from 'laravel-echo';
-
-const NotificationItem = ({ notification, onAction }) => {
-  const getTypeStyles = (type) => {
-    const styles = {
-      order: 'bg-blue-100 text-blue-800',
-      alert: 'bg-red-100 text-red-800',
-      update: 'bg-green-100 text-green-800',
-      default: 'bg-gray-100 text-gray-800'
-    };
-    return styles[type] || styles.default;
-  };
-
-  return (
-    <div className="flex items-start space-x-4 p-4 border-b last:border-0">
-      <div className={`w-2 h-2 rounded-full mt-2 ${getTypeStyles(notification.type)}`} />
-      <div className="flex-1">
-        <div className="flex justify-between items-start">
-          <div>
-            <p className="font-medium text-sm">{notification.title}</p>
-            <p className="text-sm text-gray-500">{notification.message}</p>
-          </div>
-          <Badge variant="outline" className="ml-2">
-            {notification.time}
-          </Badge>
-        </div>
-        {notification.actions && (
-          <div className="flex space-x-2 mt-2">
-            <Button 
-              size="sm" 
-              variant="outline"
-              onClick={() => onAction(notification.id, 'accept')}
-            >
-              <Check className="w-4 h-4 mr-1" />
-              Accept
-            </Button>
-            <Button 
-              size="sm" 
-              variant="outline" 
-              className="text-red-600"
-              onClick={() => onAction(notification.id, 'reject')}
-            >
-              <X className="w-4 h-4 mr-1" />
-              Reject
-            </Button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
+import { 
+  Bell, 
+  ShoppingBag, 
+  User, 
+  AlertCircle,
+  CheckCircle,
+  Clock
+} from 'lucide-react';
 
 const LiveNotifications = () => {
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Dummy notifications data
+  const notifications = [
+    {
+      id: 1,
+      type: 'order',
+      message: 'New order received',
+      time: '2 minutes ago',
+      status: 'new',
+      icon: ShoppingBag,
+      color: 'bg-blue-100 text-blue-600'
+    },
+    {
+      id: 2,
+      type: 'user',
+      message: 'New customer registration',
+      time: '5 minutes ago',
+      status: 'info',
+      icon: User,
+      color: 'bg-green-100 text-green-600'
+    },
+    {
+      id: 3,
+      type: 'alert',
+      message: 'Low stock warning',
+      time: '10 minutes ago',
+      status: 'warning',
+      icon: AlertCircle,
+      color: 'bg-yellow-100 text-yellow-600'
+    }
+  ];
 
-  useEffect(() => {
-    // Initialize Laravel Echo
-    const echo = new Echo({
-      broadcaster: 'pusher',
-      key: process.env.MIX_PUSHER_APP_KEY,
-      cluster: process.env.MIX_PUSHER_APP_CLUSTER,
-      forceTLS: true
-    });
-
-    // Subscribe to notification channel
-    echo.private('notifications')
-      .listen('NewNotification', (e) => {
-        setNotifications(prev => [e.notification, ...prev]);
-      });
-
-    // Fetch initial notifications
-    fetchNotifications();
-
-    return () => {
-      echo.leave('notifications');
+  const getStatusBadge = (status) => {
+    const statusConfig = {
+      new: { color: 'bg-blue-100 text-blue-800', label: 'New' },
+      info: { color: 'bg-green-100 text-green-800', label: 'Info' },
+      warning: { color: 'bg-yellow-100 text-yellow-800', label: 'Warning' }
     };
-  }, []);
 
-  const fetchNotifications = async () => {
-    try {
-      const response = await fetch('/api/notifications');
-      const data = await response.json();
-      setNotifications(data);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const config = statusConfig[status] || statusConfig.info;
 
-  const handleNotificationAction = async (id, action) => {
-    try {
-      await fetch(`/api/notifications/${id}/${action}`, { method: 'POST' });
-      setNotifications(prev => 
-        prev.filter(notification => notification.id !== id)
-      );
-    } catch (error) {
-      console.error('Error handling notification action:', error);
-    }
+    return (
+      <Badge className={config.color}>
+        {config.label}
+      </Badge>
+    );
   };
 
   return (
-    <Card className="overflow-hidden">
-      <div className="p-4 border-b bg-muted/50">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Bell className="w-5 h-5 text-primary" />
-            <h3 className="font-semibold">Live Notifications</h3>
-          </div>
+    <Card>
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-xl font-bold flex items-center">
+            <Bell className="w-5 h-5 mr-2" />
+            Live Notifications
+          </CardTitle>
           <Badge variant="secondary">
-            {notifications.length} New
+            {notifications.length} new
           </Badge>
         </div>
-      </div>
-      
-      <div className="divide-y max-h-[400px] overflow-y-auto">
-        {loading ? (
-          <div className="p-8 text-center">
-            <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2" />
-            <p className="text-sm text-gray-500">Loading notifications...</p>
+      </CardHeader>
+      <CardContent>
+        {notifications.length > 0 ? (
+          <div className="space-y-4">
+            {notifications.map((notification) => {
+              const Icon = notification.icon;
+              return (
+                <div
+                  key={notification.id}
+                  className="flex items-start space-x-4 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                >
+                  <div className={`p-2 rounded-full ${notification.color}`}>
+                    <Icon className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900">
+                      {notification.message}
+                    </p>
+                    <div className="flex items-center mt-1">
+                      <Clock className="w-3 h-3 text-gray-400 mr-1" />
+                      <p className="text-xs text-gray-500">
+                        {notification.time}
+                      </p>
+                    </div>
+                  </div>
+                  {getStatusBadge(notification.status)}
+                </div>
+              )
+            })}
           </div>
-        ) : notifications.length > 0 ? (
-          notifications.map((notification) => (
-            <NotificationItem
-              key={notification.id}
-              notification={notification}
-              onAction={handleNotificationAction}
-            />
-          ))
         ) : (
-          <div className="p-8 text-center text-gray-500">
-            No new notifications
+          <div className="flex flex-col items-center justify-center h-[200px] text-gray-500">
+            <Bell className="w-12 h-12 mb-4 opacity-50" />
+            <p>No new notifications</p>
           </div>
         )}
-      </div>
+      </CardContent>
     </Card>
   );
 };

@@ -21,6 +21,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\RestaurantStatsController;
 use App\Http\Controllers\Admin\RestaurantFavoriteController;
 use App\Http\Controllers\Admin\KitchenOrderController;
+use App\Http\Controllers\Admin\OrderController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -403,6 +404,15 @@ Route::prefix('app')->name('app.')->middleware(['auth'])->group(function () {
         Route::put('orders/{order}/progress', [KitchenOrderController::class, 'updatePreparationProgress'])->name('orders.progress');
         Route::get('load', [KitchenOrderController::class, 'getKitchenLoad'])->name('load');
     });
+
+    Route::middleware(['role:Admin|Restaurant'])->group(function () {
+        Route::prefix('products-management')->name('products-management.')->group(function () {
+            Route::get('/reports', [ProductController::class, 'reports'])->name('reports');
+            Route::get('/analytics', [ProductController::class, 'analytics'])->name('analytics');
+            Route::get('/stats', [ProductController::class, 'stats'])->name('stats');
+        });
+    });
+
 });
 
 /*
@@ -438,6 +448,14 @@ Route::group(['prefix' => 'app/restaurants', 'as' => 'app.restaurants.'], functi
 Route::get('api/restaurants/stats', [RestaurantStatsController::class, 'index'])
     ->name('api.restaurants.stats')
     ->middleware(['auth']);
-
+Route::get('/api/products/stats', [ProductController::class, 'apiStats'])
+    ->name('api.products.stats')
+    ->middleware(['auth']);
+Route::post('/api/orders/export', [OrderController::class, 'export'])
+    ->name('api.orders.export')
+    ->middleware(['auth']);
+Route::post('/api/orders/update-status', [OrderController::class, 'updateStatus'])
+    ->name('orders.update-status')
+    ->middleware(['auth']);
 // Include authentication routes
 require __DIR__ . '/auth.php';

@@ -1,10 +1,40 @@
 import React from 'react';
-import { Card } from '@/Components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Star, MapPin, Clock, Heart } from 'lucide-react';
 import { Link } from '@inertiajs/react';
+import { Skeleton } from '@/Components/ui/skeleton';
 
-const FavoriteRestaurants = ({ restaurants }) => {
+const FavoriteRestaurants = ({ restaurants = [], showViewAll = false, isLoading = false }) => {
+  if (isLoading) {
+    return (
+      <Card className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <Skeleton className="h-8 w-[200px]" />
+          <Skeleton className="h-10 w-[100px]" />
+        </div>
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="border rounded-lg p-4">
+              <div className="flex items-start space-x-4">
+                <Skeleton className="w-20 h-20 rounded-lg" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-6 w-[150px]" />
+                  <div className="flex items-center space-x-4">
+                    <Skeleton className="h-4 w-[50px]" />
+                    <Skeleton className="h-4 w-[70px]" />
+                    <Skeleton className="h-4 w-[60px]" />
+                  </div>
+                  <Skeleton className="h-4 w-[100px]" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <Card className="p-6">
       <div className="flex justify-between items-center mb-6">

@@ -3,7 +3,7 @@ export const routes = {
         name: "Dashboard",
         path: "/app/dashboard",
         icon: "LayoutDashboard",
-        role: ["Admin", "Customer"]
+        role: ["Admin", "Customer", "Restaurant", "Kitchen", "Delivery"]
     },
     settings: {
         name: "Settings",
@@ -55,6 +55,16 @@ export const routes = {
         icon: "ShoppingBag",
         role: ["Admin", "Restaurant"],
         submenu: {
+            reports: {
+                name: "Reports",
+                path: route('app.products-management.reports'),
+                icon: "Package"
+            },
+            analytics: {
+                name: "Analytics",
+                path: route('app.products-management.analytics'),
+                icon: "Package"
+            },
             products: {
                 name: "Products",
                 path: "/app/products",
@@ -149,7 +159,7 @@ export const routes = {
                 icon: "Package"
             },
             pendingRestaurants: {
-                name: "Pending Restaurants",
+                name: "Restaurants Applications",
                 path: "/app/restaurants/applications",
                 icon: "Package"
             },

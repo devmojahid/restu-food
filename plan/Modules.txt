@@ -1,6 +1,6 @@
 
 Ecommerce
-	--Report [dashboard] 4.1
+	--Report [dashboard] 4.1 ---
 	--Inventory *
 	--Reviews  ---
 	--coupon ---
@@ -44,14 +44,14 @@ Locations ... 5
 Others .. sitemaps
 	--clear cache button
 
- 	--- Kitchen managmenet role, dashboard 2
- 	--- Delivary managmenet role, dashboard 3
+ 	--- Kitchen managmenet role, dashboard 2 --
+ 	--- Delivary managmenet role, dashboard 3 --
 
 Support  **  -----Not now
 	-- Chat
 	-- tickets
 	-- depertmeent [ https://yoori.spagreen.net]
-	-- Contact messages [ https://yoori.spagreen.net]
+	-- Contact messages [ https://yoori.spagreen.net] 
 	--Customer Support Tickets
 	--Feedback and Reviews
 

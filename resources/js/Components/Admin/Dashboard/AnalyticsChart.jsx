@@ -1,6 +1,4 @@
 import React from 'react';
-import { Card } from '@/Components/ui/card';
-import { Select } from '@/Components/ui/select';
 import {
   AreaChart,
   Area,
@@ -9,38 +7,63 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer,
-  Brush
+  ResponsiveContainer
 } from 'recharts';
-import { format } from 'date-fns';
+import { Card } from '@/Components/ui/card';
+import { LoadingState } from '@/Components/ui/loading-state';
 
-const AnalyticsChart = ({ data, title, timeRange, onTimeRangeChange }) => {
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(value);
+const AnalyticsChart = ({ data, timeRange }) => {
+  if (!data) {
+    return <LoadingState message="Loading chart data..." />;
+  }
+
+  // Get the correct data array based on timeRange
+  const chartData = (() => {
+    switch(timeRange) {
+      case 'daily':
+        return data.hourly_data || [];
+      case 'weekly':
+        return data.daily_data || [];
+      case 'monthly':
+        return data.weekly_data || [];
+      default:
+        return [];
+    }
+  })();
+
+  // Format the data for the chart
+  const formattedData = chartData.map(item => ({
+    name: timeRange === 'daily' ? item.hour :
+          timeRange === 'weekly' ? new Date(item.date).toLocaleDateString('en-US', { weekday: 'short' }) :
+          item.week,
+    Revenue: item.revenue,
+    Orders: item.orders,
+    'Avg Order': item.avg_order_value
+  }));
+
+  // Calculate statistics
+  const stats = {
+    totalRevenue: data.total || 0,
+    totalOrders: data.orders || 0,
+    growth: data.growth || 0,
+    avgOrderValue: formattedData.length > 0 
+      ? formattedData.reduce((sum, item) => sum + (item['Avg Order'] || 0), 0) / formattedData.length
+      : 0
   };
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
-          <p className="font-medium text-gray-900 dark:text-gray-100 mb-2">
-            {format(new Date(label), 'MMM dd, yyyy')}
-          </p>
+        <div className="bg-white p-4 rounded-lg shadow-lg border">
+          <p className="font-medium mb-2">{label}</p>
           {payload.map((entry, index) => (
-            <div key={index} className="flex items-center space-x-2">
-              <div 
-                className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: entry.color }}
-              />
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                {entry.name}: {entry.name === 'Revenue' 
-                  ? formatCurrency(entry.value)
-                  : entry.value
-                }
-              </p>
+            <div key={index} className="flex justify-between space-x-8 text-sm">
+              <span style={{ color: entry.color }}>{entry.name}:</span>
+              <span className="font-medium">
+                {entry.name === 'Revenue' ? '$' : ''}
+                {entry.value.toLocaleString()}
+                {entry.name === 'Avg Order' ? '$' : ''}
+              </span>
             </div>
           ))}
         </div>
@@ -50,116 +73,81 @@ const AnalyticsChart = ({ data, title, timeRange, onTimeRangeChange }) => {
   };
 
   return (
-    <Card className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold dark:text-white">{title}</h2>
-        <Select
-          value={timeRange}
-          onValueChange={onTimeRangeChange}
-          className="w-32"
-        >
-          <option value="daily">Daily</option>
-          <option value="weekly">Weekly</option>
-          <option value="monthly">Monthly</option>
-          <option value="yearly">Yearly</option>
-        </Select>
+    <div>
+      {/* Stats Summary */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        <div>
+          <p className="text-sm text-gray-500">Total Revenue</p>
+          <p className="text-xl font-semibold">${stats.totalRevenue.toLocaleString()}</p>
+          <span className={`text-sm ${stats.growth >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+            {stats.growth >= 0 ? '+' : ''}{stats.growth}%
+          </span>
+        </div>
+        <div>
+          <p className="text-sm text-gray-500">Total Orders</p>
+          <p className="text-xl font-semibold">{stats.totalOrders.toLocaleString()}</p>
+        </div>
+        <div>
+          <p className="text-sm text-gray-500">Avg Order Value</p>
+          <p className="text-xl font-semibold">${stats.avgOrderValue.toFixed(2)}</p>
+        </div>
       </div>
-      
-      <div className="h-[400px] mt-4">
+
+      {/* Chart */}
+      <div className="h-[400px]">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data}>
+          <AreaChart data={formattedData}>
             <defs>
               <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
-                <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
+                <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
+                <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
               </linearGradient>
               <linearGradient id="colorOrders" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8}/>
-                <stop offset="95%" stopColor="#82ca9d" stopOpacity={0}/>
+                <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
+                <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" />
+            <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200" />
             <XAxis 
-              dataKey="date" 
-              tickFormatter={(date) => format(new Date(date), 'MMM dd')}
+              dataKey="name" 
+              className="text-xs"
+              tick={{ fill: '#6B7280' }}
             />
             <YAxis 
               yAxisId="left"
-              tickFormatter={formatCurrency}
+              className="text-xs"
+              tick={{ fill: '#6B7280' }}
+              tickFormatter={value => `$${value.toLocaleString()}`}
             />
             <YAxis 
               yAxisId="right" 
               orientation="right"
+              className="text-xs"
+              tick={{ fill: '#6B7280' }}
             />
             <Tooltip content={<CustomTooltip />} />
             <Legend />
             <Area
               yAxisId="left"
               type="monotone"
-              dataKey="revenue"
-              name="Revenue"
-              stroke="#8884d8"
+              dataKey="Revenue"
+              stroke="#3B82F6"
               fillOpacity={1}
               fill="url(#colorRevenue)"
             />
             <Area
               yAxisId="right"
               type="monotone"
-              dataKey="orders"
-              name="Orders"
-              stroke="#82ca9d"
+              dataKey="Orders"
+              stroke="#10B981"
               fillOpacity={1}
               fill="url(#colorOrders)"
             />
-            <Brush dataKey="date" height={30} stroke="#8884d8" />
           </AreaChart>
         </ResponsiveContainer>
       </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-        <SummaryCard
-          title="Total Revenue"
-          value={formatCurrency(data?.reduce((acc, curr) => acc + curr.revenue, 0) || 0)}
-          trend="up"
-          percentage="12.5"
-        />
-        <SummaryCard
-          title="Total Orders"
-          value={data?.reduce((acc, curr) => acc + curr.orders, 0) || 0}
-          trend="up"
-          percentage="8.2"
-        />
-        <SummaryCard
-          title="Average Order Value"
-          value={formatCurrency(
-            data?.reduce((acc, curr) => acc + curr.revenue, 0) / 
-            data?.reduce((acc, curr) => acc + curr.orders, 0) || 0
-          )}
-          trend="up"
-          percentage="5.3"
-        />
-        <SummaryCard
-          title="Conversion Rate"
-          value="3.2%"
-          trend="down"
-          percentage="2.1"
-        />
-      </div>
-    </Card>
+    </div>
   );
 };
-
-const SummaryCard = ({ title, value, trend, percentage }) => (
-  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</h3>
-    <p className="text-2xl font-semibold mt-1 text-gray-900 dark:text-white">{value}</p>
-    <p className={`text-sm mt-1 ${
-      trend === 'up' ? 'text-green-600' : 'text-red-600'
-    }`}>
-      {trend === 'up' ? '↑' : '↓'} {percentage}%
-    </p>
-  </div>
-);
 
 export default AnalyticsChart; 

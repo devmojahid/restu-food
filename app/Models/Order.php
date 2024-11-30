@@ -2,67 +2,40 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Order extends Model
 {
-    use HasFactory, SoftDeletes;
-
     protected $fillable = [
-        'user_id',
+        'customer_id',
         'restaurant_id',
-        'restaurant_branch_id',
-        'order_number',
-        'subtotal',
-        'tax',
-        'delivery_fee',
         'total',
         'status',
         'payment_status',
         'payment_method',
-        'delivery_address',
-        'delivery_latitude',
-        'delivery_longitude',
-        'special_instructions',
-        'estimated_delivery_time',
-        'actual_delivery_time',
-        'delivery_person_id',
+        'is_takeaway',
+        'notes'
     ];
 
     protected $casts = [
-        'estimated_delivery_time' => 'datetime',
-        'actual_delivery_time' => 'datetime',
+        'total' => 'decimal:2',
+        'is_takeaway' => 'boolean',
     ];
 
-    public function user()
+    public function customer(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'customer_id');
     }
 
-    public function restaurant()
+    public function restaurant(): BelongsTo
     {
         return $this->belongsTo(Restaurant::class);
     }
 
-    public function restaurantBranch()
-    {
-        return $this->belongsTo(RestaurantBranch::class);
-    }
-
-    public function deliveryPerson()
-    {
-        return $this->belongsTo(User::class, 'delivery_person_id');
-    }
-
-    public function orderItems()
+    public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
-    }
-
-    public function review()
-    {
-        return $this->hasOne(Review::class);
     }
 }

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Card } from '@/Components/ui/card';
+import { Skeleton } from '@/Components/ui/skeleton';
 import { ShoppingBag, Heart, Clock, Star } from 'lucide-react';
 
 const StatCard = ({ title, value, icon: Icon, trend, percentage, description }) => {
@@ -9,7 +10,9 @@ const StatCard = ({ title, value, icon: Icon, trend, percentage, description }) 
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <p className="text-sm font-medium text-gray-500">{title}</p>
-            <h3 className="text-2xl font-bold tracking-tight">{value}</h3>
+            <h3 className="text-2xl font-bold tracking-tight">
+              {typeof value === 'object' ? value.value : value}
+            </h3>
             {description && (
               <p className="text-sm text-gray-500">{description}</p>
             )}
@@ -35,39 +38,80 @@ const StatCard = ({ title, value, icon: Icon, trend, percentage, description }) 
   );
 };
 
-const CustomerStats = ({ stats }) => {
+const CustomerStats = ({ stats = {}, isLoading = false }) => {
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Card key={`skeleton-${i}`} className="p-6">
+            <div className="space-y-4">
+              <Skeleton className="h-4 w-[100px]" />
+              <Skeleton className="h-8 w-[120px]" />
+              <Skeleton className="h-4 w-[80px]" />
+            </div>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  const {
+    total_orders = { value: 0, growth: 0 },
+    total_spent = { value: 0, growth: 0 },
+    avg_order_value = { value: 0, growth: 0 },
+    rewards_level = { value: 'Bronze', points: 0 }
+  } = stats;
+
+  const statsConfig = [
+    {
+      key: 'total_orders',
+      title: 'Total Orders',
+      value: total_orders.value,
+      icon: ShoppingBag,
+      trend: total_orders.growth >= 0 ? 'up' : 'down',
+      percentage: Math.abs(total_orders.growth),
+      description: 'Lifetime orders'
+    },
+    {
+      key: 'total_spent',
+      title: 'Total Spent',
+      value: `$${total_spent.value}`,
+      icon: Heart,
+      trend: total_spent.growth >= 0 ? 'up' : 'down',
+      percentage: Math.abs(total_spent.growth),
+      description: 'Total spending'
+    },
+    {
+      key: 'avg_order',
+      title: 'Average Order',
+      value: `$${avg_order_value.value}`,
+      icon: Clock,
+      trend: avg_order_value.growth >= 0 ? 'up' : 'down',
+      percentage: Math.abs(avg_order_value.growth),
+      description: 'Per order value'
+    },
+    {
+      key: 'rewards',
+      title: 'Rewards Level',
+      value: rewards_level.value,
+      icon: Star,
+      description: `${rewards_level.points} points earned`
+    }
+  ];
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <StatCard
-        title="Total Orders"
-        value={stats.total_orders}
-        icon={ShoppingBag}
-        trend="up"
-        percentage="12.5"
-        description="Lifetime orders"
-      />
-      <StatCard
-        title="Favorite Places"
-        value={stats.favorite_restaurants_count}
-        icon={Heart}
-        description="Saved restaurants"
-      />
-      <StatCard
-        title="Average Order Time"
-        value={`${stats.avg_delivery_time}min`}
-        icon={Clock}
-        trend="down"
-        percentage="5.2"
-        description="Delivery time"
-      />
-      <StatCard
-        title="Review Score"
-        value={stats.avg_rating}
-        icon={Star}
-        trend="up"
-        percentage="2.3"
-        description="Average rating given"
-      />
+      {statsConfig.map((stat) => (
+        <StatCard
+          key={stat.key}
+          title={stat.title}
+          value={stat.value}
+          icon={stat.icon}
+          trend={stat.trend}
+          percentage={stat.percentage}
+          description={stat.description}
+        />
+      ))}
     </div>
   );
 };
