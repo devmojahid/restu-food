@@ -22,7 +22,7 @@ Marketplace
 	-- Payouts
 	-- Payouts Request
 
-Marketing **
+Marketing **  -----Not now
 	--Offers [https://shop.activeitzone.com/admin] **
 	--News Letters **
 	-- Subscribers **
@@ -47,7 +47,7 @@ Others .. sitemaps
  	--- Kitchen managmenet role, dashboard 2
  	--- Delivary managmenet role, dashboard 3
 
-Support  **
+Support  **  -----Not now
 	-- Chat
 	-- tickets
 	-- depertmeent [ https://yoori.spagreen.net]

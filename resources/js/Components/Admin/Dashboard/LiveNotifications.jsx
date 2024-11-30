@@ -1,152 +1,142 @@
 import React, { useEffect, useState } from 'react';
 import { Card } from '@/Components/ui/card';
-import { Bell, X, CheckCircle, AlertCircle } from 'lucide-react';
+import { Badge } from '@/Components/ui/badge';
+import { Button } from '@/Components/ui/button';
+import { Bell, Check, X } from 'lucide-react';
 import Echo from 'laravel-echo';
-import Pusher from 'pusher-js';
 
-const LiveNotifications = () => {
-  const [notifications, setNotifications] = useState([]);
-  const [isConnected, setIsConnected] = useState(false);
-
-  useEffect(() => {
-    // Initialize Laravel Echo
-    window.Pusher = Pusher;
-    
-    const echo = new Echo({
-      broadcaster: 'pusher',
-      key: import.meta.env.VITE_PUSHER_APP_KEY,
-      cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
-      forceTLS: true,
-      encrypted: true,
-      enabledTransports: ['ws', 'wss'],
-    });
-
-    // Connection status handling
-    echo.connector.pusher.connection.bind('connected', () => {
-      setIsConnected(true);
-    });
-
-    echo.connector.pusher.connection.bind('disconnected', () => {
-      setIsConnected(false);
-    });
-
-    // Listen for various notification types
-    echo.private('notifications')
-      .listen('NewOrder', (e) => {
-        addNotification({
-          type: 'order',
-          message: `New order #${e.order.id} received`,
-          time: new Date(),
-          priority: 'high'
-        });
-      })
-      .listen('OrderStatusChanged', (e) => {
-        addNotification({
-          type: 'status',
-          message: `Order #${e.order.id} status changed to ${e.order.status}`,
-          time: new Date(),
-          priority: 'medium'
-        });
-      })
-      .listen('LowStockAlert', (e) => {
-        addNotification({
-          type: 'inventory',
-          message: `Low stock alert: ${e.product.name}`,
-          time: new Date(),
-          priority: 'high'
-        });
-      })
-      .listen('CustomerFeedback', (e) => {
-        addNotification({
-          type: 'feedback',
-          message: `New feedback received from ${e.customer.name}`,
-          time: new Date(),
-          priority: 'medium'
-        });
-      });
-
-    return () => {
-      echo.disconnect();
-    };
-  }, []);
-
-  const addNotification = (notification) => {
-    setNotifications(prev => {
-      const newNotifications = [notification, ...prev].slice(0, 10);
-      // Play sound for high priority notifications
-      if (notification.priority === 'high') {
-        playNotificationSound();
-      }
-      return newNotifications;
-    });
-  };
-
-  const removeNotification = (index) => {
-    setNotifications(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const playNotificationSound = () => {
-    const audio = new Audio('/sounds/notification.mp3');
-    audio.play().catch(e => console.log('Audio play failed:', e));
-  };
-
-  const getNotificationStyle = (type) => {
+const NotificationItem = ({ notification, onAction }) => {
+  const getTypeStyles = (type) => {
     const styles = {
-      order: 'bg-blue-50 dark:bg-blue-900/50',
-      status: 'bg-green-50 dark:bg-green-900/50',
-      inventory: 'bg-red-50 dark:bg-red-900/50',
-      feedback: 'bg-purple-50 dark:bg-purple-900/50'
+      order: 'bg-blue-100 text-blue-800',
+      alert: 'bg-red-100 text-red-800',
+      update: 'bg-green-100 text-green-800',
+      default: 'bg-gray-100 text-gray-800'
     };
-    return styles[type] || 'bg-gray-50 dark:bg-gray-800';
+    return styles[type] || styles.default;
   };
 
   return (
-    <Card className="p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold flex items-center">
-          <Bell className="w-5 h-5 mr-2" />
-          Live Notifications
-        </h3>
-        <div className="flex items-center">
-          {isConnected ? (
-            <span className="flex items-center text-sm text-green-600">
-              <CheckCircle className="w-4 h-4 mr-1" />
-              Connected
-            </span>
-          ) : (
-            <span className="flex items-center text-sm text-red-600">
-              <AlertCircle className="w-4 h-4 mr-1" />
-              Disconnected
-            </span>
-          )}
+    <div className="flex items-start space-x-4 p-4 border-b last:border-0">
+      <div className={`w-2 h-2 rounded-full mt-2 ${getTypeStyles(notification.type)}`} />
+      <div className="flex-1">
+        <div className="flex justify-between items-start">
+          <div>
+            <p className="font-medium text-sm">{notification.title}</p>
+            <p className="text-sm text-gray-500">{notification.message}</p>
+          </div>
+          <Badge variant="outline" className="ml-2">
+            {notification.time}
+          </Badge>
+        </div>
+        {notification.actions && (
+          <div className="flex space-x-2 mt-2">
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={() => onAction(notification.id, 'accept')}
+            >
+              <Check className="w-4 h-4 mr-1" />
+              Accept
+            </Button>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="text-red-600"
+              onClick={() => onAction(notification.id, 'reject')}
+            >
+              <X className="w-4 h-4 mr-1" />
+              Reject
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const LiveNotifications = () => {
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Initialize Laravel Echo
+    const echo = new Echo({
+      broadcaster: 'pusher',
+      key: process.env.MIX_PUSHER_APP_KEY,
+      cluster: process.env.MIX_PUSHER_APP_CLUSTER,
+      forceTLS: true
+    });
+
+    // Subscribe to notification channel
+    echo.private('notifications')
+      .listen('NewNotification', (e) => {
+        setNotifications(prev => [e.notification, ...prev]);
+      });
+
+    // Fetch initial notifications
+    fetchNotifications();
+
+    return () => {
+      echo.leave('notifications');
+    };
+  }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      const response = await fetch('/api/notifications');
+      const data = await response.json();
+      setNotifications(data);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNotificationAction = async (id, action) => {
+    try {
+      await fetch(`/api/notifications/${id}/${action}`, { method: 'POST' });
+      setNotifications(prev => 
+        prev.filter(notification => notification.id !== id)
+      );
+    } catch (error) {
+      console.error('Error handling notification action:', error);
+    }
+  };
+
+  return (
+    <Card className="overflow-hidden">
+      <div className="p-4 border-b bg-muted/50">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Bell className="w-5 h-5 text-primary" />
+            <h3 className="font-semibold">Live Notifications</h3>
+          </div>
+          <Badge variant="secondary">
+            {notifications.length} New
+          </Badge>
         </div>
       </div>
       
-      <div className="space-y-3 max-h-[400px] overflow-y-auto">
-        {notifications.map((notification, index) => (
-          <div 
-            key={index} 
-            className={`flex items-center justify-between p-3 rounded-lg ${getNotificationStyle(notification.type)} transition-all duration-200 hover:scale-[1.02]`}
-          >
-            <div>
-              <p className="text-sm font-medium">{notification.message}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                {new Date(notification.time).toLocaleTimeString()}
-              </p>
-            </div>
-            <button 
-              onClick={() => removeNotification(index)}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
+      <div className="divide-y max-h-[400px] overflow-y-auto">
+        {loading ? (
+          <div className="p-8 text-center">
+            <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2" />
+            <p className="text-sm text-gray-500">Loading notifications...</p>
           </div>
-        ))}
-        
-        {notifications.length === 0 && (
-          <p className="text-center text-gray-500 dark:text-gray-400 py-4">
+        ) : notifications.length > 0 ? (
+          notifications.map((notification) => (
+            <NotificationItem
+              key={notification.id}
+              notification={notification}
+              onAction={handleNotificationAction}
+            />
+          ))
+        ) : (
+          <div className="p-8 text-center text-gray-500">
             No new notifications
-          </p>
+          </div>
         )}
       </div>
     </Card>

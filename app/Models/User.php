@@ -57,6 +57,13 @@ final class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Restaurant::class);
     }
 
+    public function favoriteRestaurants()
+    {
+        return $this->belongsToMany(Restaurant::class, 'favorite_restaurants')
+            ->withTimestamps()
+            ->withPivot('notes');
+    }
+
     protected $appends = ['avatar'];
 
     public function getAvatarAttribute(): ?File

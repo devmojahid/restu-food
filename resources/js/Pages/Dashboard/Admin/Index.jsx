@@ -8,6 +8,9 @@ import AnalyticsChart from '@/Components/Admin/Dashboard/AnalyticsChart';
 import PerformanceMetrics from '@/Components/Admin/Dashboard/PerformanceMetrics';
 import QuickActions from '@/Components/Admin/Dashboard/QuickActions';
 import LiveNotifications from '@/Components/Admin/Dashboard/LiveNotifications';
+import RealtimeStats from '@/Components/Admin/Dashboard/RealtimeStats';
+import OrdersTable from '@/Components/Admin/Dashboard/OrdersTable';
+import AdvancedAnalytics from '@/Components/Admin/Dashboard/AdvancedAnalytics';
 
 const AdminDashboard = ({ stats, userRole, permissions }) => {
   const [timeRange, setTimeRange] = useState('weekly');
@@ -39,6 +42,18 @@ const AdminDashboard = ({ stats, userRole, permissions }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <RecentOrders orders={stats.recent_orders} />
           <RecentUsers users={stats.recent_users} />
+        </div>
+        
+        <div className="mt-6">
+          <OrdersTable orders={stats.recent_orders} />
+        </div>
+        
+        <div className="mt-6">
+          <AdvancedAnalytics data={stats.analytics_data} />
+        </div>
+        
+        <div className="mt-6">
+          {/* <RealtimeStats /> */}
         </div>
       </div>
     </AdminLayout>

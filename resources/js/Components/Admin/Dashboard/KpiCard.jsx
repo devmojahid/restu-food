@@ -1,20 +1,32 @@
 import React from 'react';
 import { Card } from '@/Components/ui/card';
 import { Progress } from '@/Components/ui/progress';
-import { Sparklines, SparklinesLine, SparklinesSpots } from 'react-sparklines';
+import { ArrowUpRight, TrendingDown } from 'lucide-react';
+import {
+  LineChart,
+  Line,
+  ResponsiveContainer,
+  Tooltip
+} from 'recharts';
 
 const KpiCard = ({ 
   title, 
   value, 
   change, 
   trend, 
-  sparklineData, 
   icon: Icon,
   target,
   progress,
   metric = '',
+  sparklineData,
   className = '' 
 }) => {
+  // Convert sparkline data to chart format
+  const chartData = sparklineData?.map((value, index) => ({
+    value,
+    index
+  })) || [];
+
   return (
     <Card className={`p-6 relative overflow-hidden ${className}`}>
       <div className="flex justify-between items-start mb-4">
@@ -36,16 +48,29 @@ const KpiCard = ({
 
       {sparklineData && (
         <div className="h-[40px] mb-4">
-          <Sparklines data={sparklineData} limit={20}>
-            <SparklinesLine 
-              color={trend === 'up' ? '#10B981' : '#EF4444'} 
-              style={{ fill: 'none' }} 
-            />
-            <SparklinesSpots 
-              size={2}
-              style={{ fill: trend === 'up' ? '#10B981' : '#EF4444' }} 
-            />
-          </Sparklines>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData}>
+              <Line
+                type="monotone"
+                dataKey="value"
+                stroke={trend === 'up' ? '#10B981' : '#EF4444'}
+                strokeWidth={2}
+                dot={false}
+              />
+              <Tooltip
+                content={({ active, payload }) => {
+                  if (active && payload && payload.length) {
+                    return (
+                      <div className="bg-background/95 shadow-lg rounded-lg p-2 text-xs border">
+                        {payload[0].value}
+                      </div>
+                    );
+                  }
+                  return null;
+                }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       )}
 

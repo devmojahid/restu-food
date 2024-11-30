@@ -19,6 +19,8 @@ use App\Http\Controllers\Admin\{
 };
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\RestaurantStatsController;
+use App\Http\Controllers\Admin\RestaurantFavoriteController;
+use App\Http\Controllers\Admin\KitchenOrderController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -62,7 +64,7 @@ Route::middleware(['auth'])->group(function () {
 | Authenticated & Verified Routes
 |--------------------------------------------------------------------------
 */
-Route::prefix('app')->name('app.')->middleware(['auth', 'verified'])->group(function () {
+Route::prefix('app')->name('app.')->middleware(['auth'])->group(function () {
     // Profile Management
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -215,18 +217,11 @@ Route::prefix('app')->name('app.')->middleware(['auth', 'verified'])->group(func
     });
 
     // Reviews Management
-    Route::group(['prefix' => 'reviews', 'as' => 'reviews.'], function () {
+    Route::prefix('reviews')->name('reviews.')->group(function () {
         Route::get('/', [ReviewController::class, 'index'])->name('index');
-        Route::get('/{review}', [ReviewController::class, 'show'])->name('show');
-        Route::put('/{review}/approve', [ReviewController::class, 'approve'])->name('approve');
-        Route::put('/{review}/reject', [ReviewController::class, 'reject'])->name('reject');
+        Route::post('/orders/{order}', [ReviewController::class, 'store'])->name('store');
+        Route::put('/{review}', [ReviewController::class, 'update'])->name('update');
         Route::delete('/{review}', [ReviewController::class, 'destroy'])->name('destroy');
-        Route::post('/bulk-approve', [ReviewController::class, 'bulkApprove'])->name('bulk-approve');
-        Route::post('/bulk-reject', [ReviewController::class, 'bulkReject'])->name('bulk-reject');
-        Route::delete('/bulk-delete', [ReviewController::class, 'bulkDelete'])->name('bulk-delete');
-        Route::post('/{review}/vote', [ReviewController::class, 'vote'])->name('vote');
-        Route::post('/{review}/report', [ReviewController::class, 'report'])->name('report');
-        Route::post('/{review}/reply', [ReviewController::class, 'reply'])->name('reply');
     });
     
 
@@ -392,6 +387,22 @@ Route::prefix('app')->name('app.')->middleware(['auth', 'verified'])->group(func
     });
 
     // Similar route groups for other roles...
+
+    // Favorites Management
+    Route::prefix('favorites')->name('favorites.')->group(function () {
+        Route::get('/', [RestaurantFavoriteController::class, 'index'])->name('index');
+        Route::post('/{restaurant}/toggle', [RestaurantFavoriteController::class, 'toggle'])->name('toggle');
+        Route::post('/{restaurant}/note', [RestaurantFavoriteController::class, 'addNote'])->name('note');
+    });
+
+    // Kitchen Routes
+    Route::prefix('kitchen')->name('kitchen.')->middleware(['role:Kitchen Staff'])->group(function () {
+        Route::put('orders/{order}/status', [KitchenOrderController::class, 'updateStatus'])->name('orders.status');
+        Route::post('orders/{order}/assign', [KitchenOrderController::class, 'assignStaff'])->name('orders.assign');
+        Route::post('orders/{order}/notes', [KitchenOrderController::class, 'addNote'])->name('orders.notes');
+        Route::put('orders/{order}/progress', [KitchenOrderController::class, 'updatePreparationProgress'])->name('orders.progress');
+        Route::get('load', [KitchenOrderController::class, 'getKitchenLoad'])->name('load');
+    });
 });
 
 /*
@@ -399,7 +410,7 @@ Route::prefix('app')->name('app.')->middleware(['auth', 'verified'])->group(func
 | Role-Based Dashboard Access
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'role:Admin|Restaurant|Kitchen Staff|Delivery Personnel|Customer'])->group(function () {
+Route::middleware(['auth', 'role:Admin|Restaurant|Kitchen|Delivery|Customer'])->group(function () {
     Route::get('app/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 });
 

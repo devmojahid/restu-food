@@ -101,14 +101,14 @@ final class RolePermissionSeeder extends Seeder
                 'profile.view',
                 'profile.edit',
             ])->get(),
-            'Kitchen Staff' => Permission::whereIn('name', [
+            'Kitchen' => Permission::whereIn('name', [
                 'dashboard.view',
                 'order.list',
                 'order.status.update',
                 'profile.view',
                 'profile.edit',
             ])->get(),
-            'Delivery Personnel' => Permission::whereIn('name', [
+            'Delivery' => Permission::whereIn('name', [
                 'dashboard.view',
                 'delivery.list',
                 'delivery.status.update',
