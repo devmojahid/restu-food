@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\{
     CurrencyController,
     DashboardController,
     FileController,
+    KitchenStaffApplicationController,
     ProductAttributeController,
     ProductController,
     RestaurantController,
@@ -258,6 +259,20 @@ Route::prefix('app')->name('app.')->middleware(['auth'])->group(function () {
         Route::post('/bulk-approve', [RestaurantApplicationController::class, 'bulkApprove'])->name('bulk-approve');
     });
 
+    
+    // Kitchen Staff Application Routes
+    Route::group([
+        'prefix' => 'kitchen-staff/applications',
+        'as' => 'kitchen-staff.applications.',
+    ], function () {
+        Route::get('/', [KitchenStaffApplicationController::class, 'index'])->name('index');
+        Route::post('/', [KitchenStaffApplicationController::class, 'store'])->name('store');
+        Route::get('/{inquiry}', [KitchenStaffApplicationController::class, 'show'])->name('show');
+        Route::post('/{inquiry}/approve', [KitchenStaffApplicationController::class, 'approve'])->name('approve');
+        Route::post('/{inquiry}/reject', [KitchenStaffApplicationController::class, 'reject'])->name('reject');
+        Route::post('/bulk-approve', [KitchenStaffApplicationController::class, 'bulkApprove'])->name('bulk-approve');
+    });
+
     // Admin-Only Restaurant Management
     Route::group([
         'prefix' => 'restaurants',
@@ -459,3 +474,12 @@ Route::post('/api/orders/update-status', [OrderController::class, 'updateStatus'
     ->middleware(['auth']);
 // Include authentication routes
 require __DIR__ . '/auth.php';
+
+
+// Kitchen Staff Dashboard Routes
+// Route::middleware(['role:Kitchen Staff'])->prefix('kitchen')->name('kitchen.')->group(function () {
+//     Route::get('/dashboard', [KitchenDashboardController::class, 'index'])->name('dashboard');
+//     Route::get('/orders', [KitchenOrderController::class, 'index'])->name('orders.index');
+//     Route::put('/orders/{order}/status', [KitchenOrderController::class, 'updateStatus'])->name('orders.status');
+//     Route::get('/schedule', [KitchenScheduleController::class, 'index'])->name('schedule.index');
+// });

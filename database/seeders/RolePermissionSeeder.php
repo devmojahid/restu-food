@@ -8,7 +8,7 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
-
+use Illuminate\Support\Facades\Hash;
 final class RolePermissionSeeder extends Seeder
 {
     public function run(): void
@@ -132,5 +132,38 @@ final class RolePermissionSeeder extends Seeder
         if ($admin) {
             $admin->assignRole('Admin');
         }
+
+        //create a restaurant user
+        $restaurant = User::create([
+            'name' => 'Restaurant',
+            'email' => 'restaurant@gmail.com',
+            'password' => Hash::make('password'),
+        ]);
+        $restaurant->assignRole('Restaurant');
+
+        //create a kitchen user
+        $kitchen = User::create([
+            'name' => 'Kitchen',
+            'email' => 'kitchen@gmail.com',
+            'password' => Hash::make('password'),
+        ]);
+        $kitchen->assignRole('Kitchen');
+
+        //create a delivery user
+        $delivery = User::create([
+            'name' => 'Delivery',
+            'email' => 'delivery@gmail.com',
+            'password' => Hash::make('password'),
+        ]);
+        $delivery->assignRole('Delivery');
+
+        //create a customer user
+        $customer = User::create([
+            'name' => 'Customer',
+            'email' => 'customer@gmail.com',
+            'password' => Hash::make('password'),
+        ]);
+        $customer->assignRole('Customer');
+
     }
 }

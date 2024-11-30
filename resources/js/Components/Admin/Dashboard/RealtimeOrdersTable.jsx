@@ -30,49 +30,46 @@ const RealtimeOrdersTable = ({ initialOrders = [] }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [soundEnabled, setSoundEnabled] = useState(true);
 
-    useEffect(() => {
-        // Listen for new orders via Laravel Echo
-        const channel = window.Echo.private('orders');
+    // useEffect(() => {
+    //     const channel = window.Echo.private('orders');
         
-        channel.listen('NewOrder', (e) => {
-            setOrders(currentOrders => [e.order, ...currentOrders]);
+    //     channel.listen('NewOrder', (e) => {
+    //         setOrders(currentOrders => [e.order, ...currentOrders]);
             
-            // Play notification sound if enabled
-            if (soundEnabled) {
-                new Audio('/sounds/new-order.mp3').play().catch(e => console.log('Audio play failed:', e));
-            }
+    //         if (soundEnabled) {
+    //             new Audio('/sounds/new-order.mp3').play().catch(e => console.log('Audio play failed:', e));
+    //         }
             
-            // Show toast notification
-            toast.custom((t) => (
-                <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}>
-                    <div className="flex-1 w-0 p-4">
-                        <div className="flex items-start">
-                            <div className="ml-3 flex-1">
-                                <p className="text-sm font-medium text-gray-900">
-                                    New Order Received!
-                                </p>
-                                <p className="mt-1 text-sm text-gray-500">
-                                    Order #{e.order.id} from {e.order.customer.name}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="flex border-l border-gray-200">
-                        <button
-                            onClick={() => toast.dismiss(t.id)}
-                            className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none"
-                        >
-                            Close
-                        </button>
-                    </div>
-                </div>
-            ), { duration: 5000 });
-        });
+    //         toast.custom((t) => (
+    //             <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}>
+    //                 <div className="flex-1 w-0 p-4">
+    //                     <div className="flex items-start">
+    //                         <div className="ml-3 flex-1">
+    //                             <p className="text-sm font-medium text-gray-900">
+    //                                 New Order Received!
+    //                             </p>
+    //                             <p className="mt-1 text-sm text-gray-500">
+    //                                 Order #{e.order.id} from {e.order.customer.name}
+    //                             </p>
+    //                         </div>
+    //                     </div>
+    //                 </div>
+    //                 <div className="flex border-l border-gray-200">
+    //                     <button
+    //                         onClick={() => toast.dismiss(t.id)}
+    //                         className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none"
+    //                     >
+    //                         Close
+    //                     </button>
+    //                 </div>
+    //             </div>
+    //         ), { duration: 5000 });
+    //     });
 
-        return () => {
-            channel.stopListening('NewOrder');
-        };
-    }, [soundEnabled]);
+    //     return () => {
+    //         channel.stopListening('NewOrder');
+    //     };
+    // }, [soundEnabled]);
 
     const handleAction = async (orderId, action) => {
         setIsLoading(true);

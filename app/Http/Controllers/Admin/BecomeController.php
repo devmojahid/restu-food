@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Models\Restaurant;
 class BecomeController extends Controller
 {
     public function restaurant(): Response
@@ -16,7 +17,13 @@ class BecomeController extends Controller
 
     public function kitchen(): Response
     {
-        return Inertia::render('Admin/Become/Kitchen');
+        $restaurants = Restaurant::where('status', 'active')
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+        return Inertia::render('Admin/Become/Kitchen', [
+            'restaurants' => $restaurants,
+        ]);
     }
 
     public function delivery(): Response

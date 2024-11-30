@@ -38,10 +38,12 @@ final class DashboardController extends Controller
             default => app(AdminDashboardService::class)->getData(),
         };
 
+        // dd($role->name, $user->getAllPermissions()->pluck('name'), $dashboardData);
+
         return Inertia::render("Dashboard/{$role->name}/Index", [
             'userRole' => $role->name,
             'permissions' => $user->getAllPermissions()->pluck('name'),
-            'stats' => $dashboardData // Make sure this is passed correctly
+            'dashboardData' => $dashboardData // Make sure this is passed correctly
         ]);
     }
 

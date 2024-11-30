@@ -55,11 +55,11 @@ class ReviewSeeder extends Seeder
                     'helpful_votes' => 0,
                     'unhelpful_votes' => 0,
                     'reported_count' => 0,
-                    'metadata' => [
-                        'browser' => fake()->userAgent(),
-                        'ip' => fake()->ipv4(),
-                        'platform' => ['Windows', 'MacOS', 'iOS', 'Android'][rand(0, 3)],
-                    ],
+                    // 'metadata' => [
+                    //     'browser' => fake()->userAgent(),
+                    //     'ip' => fake()->ipv4(),
+                    //     'platform' => ['Windows', 'MacOS', 'iOS', 'Android'][rand(0, 3)],
+                    // ],
                     'created_at' => now()->subDays(rand(1, 60)),
                 ]);
 

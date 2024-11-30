@@ -20,40 +20,39 @@ import {
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 
-const DeliveryDashboard = ({ stats, userRole, permissions }) => {
+const DeliveryDashboard = ({ dashboardData, userRole, permissions }) => {
+  let stats = dashboardData;
   const [timeRange, setTimeRange] = useState('today');
   const [activeDeliveries, setActiveDeliveries] = useState(stats.active_deliveries);
   const [currentLocation, setCurrentLocation] = useState(null);
 
-  useEffect(() => {
-    // Listen for new delivery assignments
-    const channel = Echo.channel('delivery');
+  // useEffect(() => {
+  //   const channel = Echo.channel('delivery');
     
-    channel.listen('DeliveryAssigned', (e) => {
-      setActiveDeliveries(current => [...current, e.delivery]);
-      toast.success('New delivery assigned!');
-    });
+  //   channel.listen('DeliveryAssigned', (e) => {
+  //     setActiveDeliveries(current => [...current, e.delivery]);
+  //     toast.success('New delivery assigned!');
+  //   });
 
-    // Update location periodically
-    if (navigator.geolocation) {
-      const locationInterval = setInterval(() => {
-        navigator.geolocation.getCurrentPosition(
-          position => {
-            const { latitude, longitude } = position.coords;
-            setCurrentLocation({ latitude, longitude });
-            updateDeliveryLocation(latitude, longitude);
-          },
-          error => console.error('Error getting location:', error),
-          { enableHighAccuracy: true }
-        );
-      }, 30000); // Every 30 seconds
+  //   if (navigator.geolocation) {
+  //     const locationInterval = setInterval(() => {
+  //       navigator.geolocation.getCurrentPosition(
+  //         position => {
+  //           const { latitude, longitude } = position.coords;
+  //           setCurrentLocation({ latitude, longitude });
+  //           updateDeliveryLocation(latitude, longitude);
+  //         },
+  //         error => console.error('Error getting location:', error),
+  //         { enableHighAccuracy: true }
+  //       );
+  //     }, 30000); 
 
-      return () => {
-        channel.stopListening('DeliveryAssigned');
-        clearInterval(locationInterval);
-      };
-    }
-  }, []);
+  //     return () => {
+  //       channel.stopListening('DeliveryAssigned');
+  //       clearInterval(locationInterval);
+  //     };
+  //   }
+  // }, []);
 
   const updateDeliveryLocation = async (latitude, longitude) => {
     try {

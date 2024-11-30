@@ -20,9 +20,36 @@ import {
   RefreshCcw
 } from 'lucide-react';
 
-const AdminDashboard = ({ stats, userRole, permissions }) => {
+const AdminDashboard = ({ dashboardData = {}, userRole, permissions }) => {
   const [timeRange, setTimeRange] = useState('today');
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const stats = dashboardData?.summary_stats || {
+    total_revenue: {
+      value: 0,
+      growth: 0,
+      label: 'Total Revenue',
+      icon: 'dollar-sign'
+    },
+    total_orders: {
+      value: 0,
+      growth: 0,
+      label: 'Total Orders',
+      icon: 'shopping-bag'
+    },
+    active_customers: {
+      value: 0,
+      growth: 0,
+      label: 'Active Customers',
+      icon: 'users'
+    },
+    avg_order_value: {
+      value: 0,
+      growth: 0,
+      label: 'Average Order Value',
+      icon: 'trending-up'
+    }
+  };
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -97,7 +124,32 @@ const AdminDashboard = ({ stats, userRole, permissions }) => {
         </Card>
 
         {/* Stats Overview */}
-        <DashboardStats stats={stats} timeRange={timeRange} />
+        {/* <DashboardStats stats={dashboardData?.summary_stats || {
+          total_revenue: {
+            value: 0,
+            growth: 0,
+            label: 'Total Revenue',
+            icon: 'dollar-sign'
+          },
+          total_orders: {
+            value: 0,
+            growth: 0,
+            label: 'Total Orders',
+            icon: 'shopping-bag'
+          },
+          active_customers: {
+            value: 0,
+            growth: 0,
+            label: 'Active Customers',
+            icon: 'users'
+          },
+          avg_order_value: {
+            value: 0,
+            growth: 0,
+            label: 'Average Order Value',
+            icon: 'trending-up'
+          }
+        }} timeRange={timeRange} /> */}
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

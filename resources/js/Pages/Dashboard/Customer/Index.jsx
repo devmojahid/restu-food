@@ -89,8 +89,10 @@ const RewardsCard = ({ rewards_points, points_this_month }) => {
     );
 };
 
-const CustomerDashboard = ({ stats = {}, userRole, permissions }) => {
+const CustomerDashboard = ({ dashboardData, userRole, permissions }) => {
   const [timeRange, setTimeRange] = useState('weekly');
+
+  let stats = dashboardData;
 
   // Provide default values for stats to prevent undefined errors
   const {

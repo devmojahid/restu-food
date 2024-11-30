@@ -20,7 +20,8 @@ import Echo from 'laravel-echo';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 
-const KitchenDashboard = ({ stats, userRole, permissions }) => {
+const KitchenDashboard = ({ dashboardData, userRole, permissions }) => {
+  let stats = dashboardData;
   const [timeRange, setTimeRange] = useState('today');
   const [orders, setOrders] = useState(stats.pending_orders);
   const [kitchenLoad, setKitchenLoad] = useState(null);

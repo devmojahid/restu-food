@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('customer_id')->nullable()->constrained('users')->onDelete('set null');
             $table->foreignId('restaurant_id')->constrained()->onDelete('cascade');
             $table->foreignId('restaurant_branch_id')->nullable()->constrained()->onDelete('set null');
             $table->string('order_number')->unique();
@@ -20,8 +21,10 @@ return new class extends Migration
             $table->decimal('total', 10, 2);
             $table->enum('status', ['pending', 'processing', 'completed', 'cancelled'])->default('pending');
             $table->enum('payment_status', ['pending', 'paid', 'failed'])->default('pending');
-            $table->string('payment_method');
-            $table->text('delivery_address');
+            $table->string('payment_method')->nullable();
+            $table->boolean('is_takeaway')->default(false);
+            $table->text('notes')->nullable();
+            $table->text('delivery_address')->nullable();
             $table->decimal('delivery_latitude', 10, 8)->nullable();
             $table->decimal('delivery_longitude', 11, 8)->nullable();
             $table->text('special_instructions')->nullable();
