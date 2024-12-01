@@ -151,22 +151,31 @@ export const routes = {
     marketplace: {
         name: "Marketplace",
         icon: "ShoppingBag",
-        role: ["Admin"],
+        role: ["Admin", "Restaurant"],
         submenu: {
             restaurants: {
                 name: "Restaurants",
                 path: "/app/restaurants",
-                icon: "Package"
+                icon: "Package",
+                role: ["Admin"]
             },
             pendingRestaurants: {
                 name: "Restaurants Applications",
                 path: "/app/restaurants/applications",
-                icon: "Package"
+                icon: "Package",
+                role: ["Admin"]
+            },
+            kitchenStaffApplications: {
+                name: "Kitchen Staff Applications",
+                path: "/app/kitchen-staff/applications",
+                icon: "Package",
+                role: ["Restaurant"]
             },
             pendingDeliveryStaff: {
                 name: "Pending Delivery Staff",
                 path: "/app/delivery-staff/pending",
-                icon: "Package"
+                icon: "Package",
+                role: ["Admin"]
             }
         }
     },
