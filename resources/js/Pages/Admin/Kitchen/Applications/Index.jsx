@@ -14,7 +14,7 @@ const KitchenStaffApplications = ({ applications, filters, restaurants, stats })
         <Breadcrumb
           items={[
             { label: "Dashboard", href: "dashboard", icon: Home },
-            { label: "Kitchen Staff", href: "app.kitchen-staff.index", icon: ChefHat },
+            { label: "Kitchen Staff", href: "app.kitchen-staff.applications.index", icon: ChefHat },
             { label: "Applications", icon: FileText },
           ]}
         />
