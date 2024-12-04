@@ -1,33 +1,48 @@
-import * as React from "react";
-import { cn } from "@/lib/utils";
+import React, { useState, useEffect } from "react";
 import { Input } from "@/Components/ui/input";
-import { Label } from "@/Components/ui/label";
-import { Clock } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const TimePicker = React.forwardRef(({ className, label, error, ...props }, ref) => {
+export const TimePicker = ({ value, onChange, disabled, placeholder, className, error }) => {
+  const [timeValue, setTimeValue] = useState(value || "");
+
+  useEffect(() => {
+    setTimeValue(value || "");
+  }, [value]);
+
+  const handleTimeChange = (e) => {
+    const newValue = e.target.value;
+    setTimeValue(newValue);
+    
+    // Validate time format
+    const isValidTime = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(newValue);
+    if (isValidTime) {
+      onChange?.(newValue);
+    }
+  };
+
+  const handleBlur = () => {
+    // Format time on blur if needed
+    if (timeValue) {
+      const [hours, minutes] = timeValue.split(':');
+      const formattedTime = `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+      setTimeValue(formattedTime);
+      onChange?.(formattedTime);
+    }
+  };
+
   return (
-    <div className="relative">
-      {label && <Label htmlFor={props.id}>{label}</Label>}
-      <div className="relative">
-        <Input
-          type="time"
-          className={cn(
-            "pl-10",
-            error && "border-red-500",
-            className
-          )}
-          ref={ref}
-          {...props}
-        />
-        <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
-      </div>
-      {error && (
-        <p className="mt-1 text-sm text-red-500">{error}</p>
+    <Input
+      type="time"
+      value={timeValue}
+      onChange={handleTimeChange}
+      onBlur={handleBlur}
+      disabled={disabled}
+      placeholder={placeholder}
+      className={cn(
+        "w-full",
+        error && "border-red-500",
+        className
       )}
-    </div>
+    />
   );
-});
-
-TimePicker.displayName = "TimePicker";
-
-export { TimePicker }; 
+}; 

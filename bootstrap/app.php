@@ -29,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(function (Throwable $e, $request) {
             if ($e instanceof NotFoundHttpException) {
+                dd($e);
                 return Inertia::render('Admin/Error404/Index') // Your 404 React component
                     ->toResponse($request)
                     ->setStatusCode(404);

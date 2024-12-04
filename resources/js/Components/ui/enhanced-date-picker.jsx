@@ -10,49 +10,46 @@ import {
   PopoverTrigger,
 } from "@/Components/ui/popover";
 
-const EnhancedDatePicker = ({ 
+export function EnhancedDatePicker({ 
   value, 
   onChange, 
-  placeholder = "Pick a date",
+  placeholder = "Select date",
   className,
-  disabled = false,
+  error,
   minDate,
   maxDate,
-  error,
-}) => {
+  disabled
+}) {
   return (
-    <div className="space-y-1">
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            className={cn(
-              "w-full justify-start text-left font-normal",
-              !value && "text-muted-foreground",
-              error && "border-red-500",
-              className
-            )}
-            disabled={disabled}
-          >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {value ? format(new Date(value), "PPP") : placeholder}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
-          <Calendar
-            mode="single"
-            selected={value ? new Date(value) : undefined}
-            onSelect={onChange}
-            disabled={disabled}
-            initialFocus
-            minDate={minDate}
-            maxDate={maxDate}
-          />
-        </PopoverContent>
-      </Popover>
-      {error && <p className="text-sm text-red-500">{error}</p>}
-    </div>
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant={"outline"}
+          disabled={disabled}
+          className={cn(
+            "w-full justify-start text-left font-normal",
+            !value && "text-muted-foreground",
+            error && "border-red-500",
+            className
+          )}
+        >
+          <CalendarIcon className="mr-2 h-4 w-4" />
+          {value ? format(new Date(value), "PPP") : placeholder}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar
+          mode="single"
+          selected={value ? new Date(value) : undefined}
+          onSelect={onChange}
+          disabled={(date) => {
+            if (minDate && date < new Date(minDate)) return true;
+            if (maxDate && date > new Date(maxDate)) return true;
+            return false;
+          }}
+          initialFocus
+        />
+      </PopoverContent>
+    </Popover>
   );
-};
-
-export default EnhancedDatePicker; 
+} 

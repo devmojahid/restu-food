@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Traits\HasFiles;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 final class Category extends Model
 {
@@ -15,6 +16,7 @@ final class Category extends Model
 
     public const COLLECTION_ICON = 'icon';
     public const COLLECTION_THUMBNAIL = 'thumbnail';
+    public const TYPES = ['blog', 'product', 'addon'];
 
     protected $fillable = [
         'name',
@@ -82,6 +84,14 @@ final class Category extends Model
     public function products()
     {
         return $this->morphedByMany(Product::class, 'categorizable');
+    }
+
+    public function addons(): BelongsToMany
+    {
+        return $this->belongsToMany(ProductAddon::class, 'product_addon_category_items', 'category_id', 'addon_id')
+            ->withPivot('sort_order')
+            ->withTimestamps()
+            ->orderByPivot('sort_order');
     }
 
     // Scope for type filtering
@@ -160,5 +170,11 @@ final class Category extends Model
     {
         $this->order = $order;
         $this->save();
+    }
+
+    // Add scope for addon categories
+    public function scopeAddonCategories($query)
+    {
+        return $query->where('type', 'addon');
     }
 }

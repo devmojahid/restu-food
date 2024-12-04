@@ -372,4 +372,20 @@ final class Product extends Model
         $array['formatted_price'] = $this->formatted_price;
         return $array;
     }
+
+    public function addonCategories(): BelongsToMany
+    {
+        return $this->belongsToMany(Category::class, 'product_addon_assignments', 'product_id', 'category_id')
+            ->where('type', 'addon')
+            ->withPivot('sort_order')
+            ->withTimestamps()
+            ->orderByPivot('sort_order');
+    }
+
+    public function addons(): BelongsToMany
+    {
+        return $this->belongsToMany(ProductAddon::class, 'product_addon_items', 'product_id', 'addon_id')
+            ->withPivot(['quantity', 'price'])
+            ->withTimestamps();
+    }
 }

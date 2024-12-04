@@ -93,4 +93,9 @@ final class Restaurant extends Model
 
         return $earthRadius * $c;
     }
+
+    public function kitchenStaffInquiries(): HasMany
+    {
+        return $this->hasMany(KitchenStaffInquiry::class);
+    }
 }

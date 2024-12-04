@@ -109,6 +109,17 @@ export const routes = {
                 name: "Customers",
                 path: "customers",
                 icon: "Users"
+            },
+            addons: {
+                name: "Add-ons",
+                icon: "Plus",
+                role: ["Admin", "Restaurant"],
+                path: "/app/products/addons",
+            },
+            addonsCategories: {
+                name: "Add-on Categories",
+                path: "/app/categories?type=addon",
+                icon: "Folder"
             }
         }
     },
@@ -171,9 +182,9 @@ export const routes = {
                 icon: "Package",
                 role: ["Restaurant"]
             },
-            pendingDeliveryStaff: {
-                name: "Pending Delivery Staff",
-                path: "/app/delivery-staff/pending",
+            deliveryStaffApplications: {
+                name: "Delivery Staff Applications",
+                path: "/app/delivery-staff/applications",
                 icon: "Package",
                 role: ["Admin"]
             }
@@ -198,6 +209,23 @@ export const routes = {
                 name: "Become Delivery Staff",
                 path: route("app.become.delivery"),
                 icon: "Package"
+            }
+        }
+    },
+    addons: {
+        name: "Add-ons",
+        icon: "Plus",
+        role: ["Admin", "Restaurant"],
+        submenu: {
+            list: {
+                name: "All Add-ons",
+                path: "/app/products/addons",
+                icon: "List"
+            },
+            categories: {
+                name: "Add-on Categories",
+                path: "/app/categories?type=addon",
+                icon: "FolderTree"
             }
         }
     }

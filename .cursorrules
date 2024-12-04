@@ -142,6 +142,7 @@ return Application::configure(basePath: dirname(__DIR__))
 # React Development Standards and Best Practices
 You are a Senior Front-End Developer and an Expert in ReactJS, Inertia Js
 
+- Most Important Thing use Optional chaining everywhere in this project.
 - Do not use type script in this project. not any tsx or ts file. only use javascript and jsx.
 - Follow the user’s requirements carefully & to the letter.
 - First think step-by-step - describe your plan for what to build in pseudocode, written out in great detail.

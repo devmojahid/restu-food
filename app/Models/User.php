@@ -13,6 +13,7 @@ use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Traits\HasCoupons;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class User extends Authenticatable implements MustVerifyEmail
 {
@@ -103,5 +104,10 @@ final class User extends Authenticatable implements MustVerifyEmail
     {
         $lastActivity = $this->getMeta('last_activity');
         return $lastActivity && now()->diffInMinutes($lastActivity) < 5;
+    }
+
+    public function restaurant(): BelongsTo
+    {
+        return $this->belongsTo(Restaurant::class);
     }
 }

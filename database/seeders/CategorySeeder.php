@@ -27,6 +27,11 @@ class CategorySeeder extends Seeder
             ['name' => 'Tips', 'slug' => 'tips', 'parent_id' => null, 'type' => 'blog', 'sort_order' => 3, 'is_active' => true],
             ['name' => 'Events', 'slug' => 'events', 'parent_id' => null, 'type' => 'blog', 'sort_order' => 4, 'is_active' => true],
             ['name' => 'Interviews', 'slug' => 'interviews', 'parent_id' => null, 'type' => 'blog', 'sort_order' => 5, 'is_active' => true],
+
+            // Addon categories
+            ['name' => 'Toppings', 'slug' => 'toppings', 'parent_id' => null, 'type' => 'addon', 'sort_order' => 1, 'is_active' => true],
+            ['name' => 'Sauces', 'slug' => 'sauces', 'parent_id' => null, 'type' => 'addon', 'sort_order' => 2, 'is_active' => true],
+            ['name' => 'Extra Ingredients', 'slug' => 'extra-ingredients', 'parent_id' => null, 'type' => 'addon', 'sort_order' => 3, 'is_active' => true],
         ];
 
         foreach ($categories as $category) {

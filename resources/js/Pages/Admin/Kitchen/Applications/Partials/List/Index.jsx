@@ -28,6 +28,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { router } from "@inertiajs/react";
+import { Badge } from "@/components/ui/badge";
 
 const ApplicationList = ({ applications, filters: initialFilters, restaurants }) => {
   const { toast } = useToast();
@@ -161,7 +162,7 @@ const ApplicationList = ({ applications, filters: initialFilters, restaurants })
       cell: (row) => (
         <div className="text-sm">
           <span className="font-medium">{row.years_of_experience} years</span>
-          {row.specializations?.length > 0 && (
+          {/* {row.specializations?.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-1">
               {row.specializations.slice(0, 2).map((spec, index) => (
                 <span
@@ -177,7 +178,7 @@ const ApplicationList = ({ applications, filters: initialFilters, restaurants })
                 </span>
               )}
             </div>
-          )}
+          )} */}
         </div>
       ),
     },
@@ -203,6 +204,39 @@ const ApplicationList = ({ applications, filters: initialFilters, restaurants })
       header: "Applied Date",
       cell: (row) => format(new Date(row.created_at), "PPP"),
       sortable: true,
+    },
+    {
+      id: "specializations",
+      header: "Specializations",
+      cell: ({ row }) => {
+        // Ensure we have an array, even if empty
+        // const specializationsArray = (() => {
+        //   const specs = row.getValue('specializations');
+        //   if (!specs) return [];
+        //   if (Array.isArray(specs)) return specs;
+        //   try {
+        //     return typeof specs === 'string' ? JSON.parse(specs) : [];
+        //   } catch (error) {
+        //     console.error('Error parsing specializations:', error);
+        //     return [];
+        //   }
+        // })();
+
+        return (
+          <div className="flex flex-wrap gap-1">
+            {/* {specializationsArray.slice(0, 3).map((spec, index) => (
+              <Badge key={index} variant="secondary" className="text-xs">
+                {spec}
+              </Badge>
+            ))}
+            {specializationsArray.length > 3 && (
+              <Badge variant="outline" className="text-xs">
+                +{specializationsArray.length - 3}
+              </Badge>
+            )} */}
+          </div>
+        );
+      },
     },
     {
       id: "actions",
