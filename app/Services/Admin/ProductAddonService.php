@@ -24,7 +24,11 @@ final class ProductAddonService
 
             // Handle file uploads if present
             if (!empty($data['thumbnail'])) {
-                $addon->handleFile($data['thumbnail'], ProductAddon::COLLECTION_THUMBNAIL);
+                if (isset($data['thumbnail']['uuid'])) {
+                    $addon->attachFile($data['thumbnail'], ProductAddon::COLLECTION_THUMBNAIL);
+                } else {
+                    $addon->handleFile($data['thumbnail'], ProductAddon::COLLECTION_THUMBNAIL);
+                }
             }
 
             // Assign to categories if specified
@@ -54,7 +58,9 @@ final class ProductAddonService
             if (array_key_exists('thumbnail', $data)) {
                 if (empty($data['thumbnail'])) {
                     $addon->clearFiles(ProductAddon::COLLECTION_THUMBNAIL);
-                } elseif (is_array($data['thumbnail'])) {
+                } elseif (isset($data['thumbnail']['uuid'])) {
+                    $addon->attachFile($data['thumbnail'], ProductAddon::COLLECTION_THUMBNAIL);
+                } else {
                     $addon->handleFile($data['thumbnail'], ProductAddon::COLLECTION_THUMBNAIL);
                 }
             }

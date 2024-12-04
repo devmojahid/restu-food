@@ -213,6 +213,22 @@ const AddonList = ({ addons, categories, onEdit }) => {
     router.put(route("app.products.addons.update", addon.id), {
       ...addon,
       is_active: !addon.is_active,
+      _method: 'PUT'
+    }, {
+      preserveScroll: true,
+      onSuccess: () => {
+        toast({
+          title: "Success",
+          description: `Add-on ${addon.is_active ? 'deactivated' : 'activated'} successfully`,
+        });
+      },
+      onError: () => {
+        toast({
+          title: "Error",
+          description: "Failed to update add-on status",
+          variant: "destructive",
+        });
+      },
     });
   };
 

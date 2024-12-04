@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 final class ProductAddonController extends Controller
 {
@@ -23,16 +24,47 @@ final class ProductAddonController extends Controller
 
     public function index(): Response
     {
-        $query = ProductAddon::with(['restaurant', 'categories'])
+        $query = ProductAddon::query()
+            ->with(['restaurant', 'categories' => function ($query) {
+                $query->where('type', 'addon')
+                      ->select('categories.id', 'categories.name');
+            }])
+            ->select([
+                'product_addons.id',
+                'product_addons.name',
+                'product_addons.price',
+                'product_addons.stock_status',
+                'product_addons.is_active',
+                'product_addons.restaurant_id',
+                'product_addons.created_at'
+            ])
             ->when(!Auth::user()->hasRole('Admin'), function ($query) {
                 $query->where(function($q) {
-                    $q->where('user_id', Auth::id())
-                      ->orWhere('restaurant_id', Auth::user()->restaurant_id);
+                    $q->where('product_addons.user_id', Auth::id())
+                      ->orWhere('product_addons.restaurant_id', Auth::user()->restaurant_id);
                 });
             })
-            ->latest();
+            ->groupBy('product_addons.id')
+            ->latest('product_addons.created_at');
 
-        $addons = $query->paginate(10);
+        $addons = $query->paginate(10)
+            ->through(fn ($addon) => [
+                'id' => $addon->id,
+                'name' => $addon->name,
+                'price' => $addon->price,
+                'stock_status' => $addon->stock_status,
+                'is_active' => $addon->is_active,
+                'restaurant' => $addon->restaurant ? [
+                    'id' => $addon->restaurant->id,
+                    'name' => $addon->restaurant->name,
+                ] : null,
+                'categories' => $addon->categories->map(fn ($cat) => [
+                    'id' => $cat->id,
+                    'name' => $cat->name,
+                ]),
+                'thumbnail' => $addon->thumbnail,
+                'created_at' => $addon->created_at,
+            ]);
 
         return Inertia::render('Admin/Products/Addons/Index', [
             'addons' => $addons,
@@ -57,7 +89,7 @@ final class ProductAddonController extends Controller
     public function store(ProductAddonRequest $request): RedirectResponse
     {
         $data = array_merge($request->validated(), [
-            'user_id' => Auth::id(),
+            'user_id' => Auth::user()->id,
             'restaurant_id' => Auth::user()->restaurant_id,
         ]);
 
@@ -70,19 +102,31 @@ final class ProductAddonController extends Controller
 
     public function update(ProductAddonRequest $request, ProductAddon $addon): RedirectResponse
     {
-        $this->authorize('update', $addon);
+        try {
+            $data = $request->validated();
+            
+            // Handle boolean values properly
+            $data['is_active'] = $request->boolean('is_active');
+            
+            $this->addonService->update($addon, $data);
 
-        $this->addonService->update($addon, $request->validated());
+            return redirect()
+                ->route('app.products.addons.index')
+                ->with('success', 'Add-on updated successfully.');
+        } catch (\Exception $e) {
+            Log::error('Failed to update addon', [
+                'addon_id' => $addon->id,
+                'error' => $e->getMessage()
+            ]);
 
-        return redirect()
-            ->route('app.products.addons.index')
-            ->with('success', 'Add-on updated successfully.');
+            return back()
+                ->withErrors(['error' => 'Failed to update add-on. Please try again.'])
+                ->withInput();
+        }
     }
 
     public function destroy(ProductAddon $addon): RedirectResponse
     {
-        $this->authorize('delete', $addon);
-
         $addon->delete();
 
         return redirect()
@@ -92,19 +136,28 @@ final class ProductAddonController extends Controller
 
     public function bulkAction(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'ids' => ['required', 'array'],
-            'ids.*' => ['exists:product_addons,id'],
-            'action' => ['required', 'string', 'in:delete,activate,deactivate'],
-        ]);
+        try {
+            $validated = $request->validate([
+                'ids' => ['required', 'array'],
+                'ids.*' => ['exists:product_addons,id'],
+                'action' => ['required', 'string', 'in:delete,activate,deactivate'],
+            ]);
 
-        match ($validated['action']) {
-            'delete' => $this->addonService->bulkDelete($validated['ids']),
-            'activate' => $this->addonService->bulkUpdateStatus($validated['ids'], true),
-            'deactivate' => $this->addonService->bulkUpdateStatus($validated['ids'], false),
-        };
+            match ($validated['action']) {
+                'delete' => $this->addonService->bulkDelete($validated['ids']),
+                'activate' => $this->addonService->bulkUpdateStatus($validated['ids'], true),
+                'deactivate' => $this->addonService->bulkUpdateStatus($validated['ids'], false),
+                default => throw new \InvalidArgumentException('Invalid action')
+            };
 
-        return back()->with('success', 'Bulk action completed successfully.');
+            return back()->with('success', 'Bulk action completed successfully.');
+        } catch (\Exception $e) {
+            Log::error('Failed to perform bulk action', [
+                'error' => $e->getMessage()
+            ]);
+
+            return back()->withErrors(['error' => 'Failed to perform bulk action. Please try again.']);
+        }
     }
 
     public function updateOrder(Request $request): RedirectResponse

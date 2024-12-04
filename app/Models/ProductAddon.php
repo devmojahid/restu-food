@@ -20,6 +20,7 @@ final class ProductAddon extends Model
     public const COLLECTION_THUMBNAIL = 'thumbnail';
 
     protected $fillable = [
+        'user_id',
         'restaurant_id',
         'name',
         'slug',
@@ -52,6 +53,8 @@ final class ProductAddon extends Model
     public function categories(): BelongsToMany
     {
         return $this->belongsToMany(Category::class, 'product_addon_category_items', 'addon_id', 'category_id')
+            ->select('categories.*')
+            ->distinct()
             ->where('type', 'addon')
             ->withPivot('sort_order')
             ->withTimestamps()

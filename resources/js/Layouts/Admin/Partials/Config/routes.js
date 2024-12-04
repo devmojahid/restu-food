@@ -211,23 +211,6 @@ export const routes = {
                 icon: "Package"
             }
         }
-    },
-    addons: {
-        name: "Add-ons",
-        icon: "Plus",
-        role: ["Admin", "Restaurant"],
-        submenu: {
-            list: {
-                name: "All Add-ons",
-                path: "/app/products/addons",
-                icon: "List"
-            },
-            categories: {
-                name: "Add-on Categories",
-                path: "/app/categories?type=addon",
-                icon: "FolderTree"
-            }
-        }
     }
 
 

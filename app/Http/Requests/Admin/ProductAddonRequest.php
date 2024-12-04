@@ -23,7 +23,7 @@ final class ProductAddonRequest extends FormRequest
                 'nullable',
                 'string',
                 'max:255',
-                Rule::unique('product_addons')->ignore($this->product_addon)
+                Rule::unique('product_addons', 'slug')->ignore($this->route('addon')),
             ],
             'description' => ['nullable', 'string'],
             'price' => ['required', 'numeric', 'min:0'],
