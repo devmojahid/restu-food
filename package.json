@@ -24,6 +24,7 @@
     },
     "dependencies": {
         "@fontsource/roboto": "^5.1.0",
+        "@googlemaps/js-api-loader": "^1.16.8",
         "@hello-pangea/dnd": "^17.0.0",
         "@radix-ui/react-accordion": "^1.2.1",
         "@radix-ui/react-alert-dialog": "^1.1.2",

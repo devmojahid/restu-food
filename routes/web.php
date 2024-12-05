@@ -19,7 +19,8 @@ use App\Http\Controllers\Admin\{
     OptionsController,
     ProductAddonCategoryController,
     ProductAddonController,
-    RestaurantApplicationController
+    RestaurantApplicationController,
+    ZoneController
 };
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\RestaurantStatsController;
@@ -365,6 +366,19 @@ Route::prefix('app')->name('app.')->middleware(['auth'])->group(function () {
         // Route::post('/localization/update', [SettingsController::class, 'localizationUpdate'])->name('localization.update');
         // Add more routes as needed
         Route::get('/auth', [OptionsController::class, 'auth'])->name('auth');
+
+        // Zone Management Routes
+        Route::group(['prefix' => 'zones', 'as' => 'zones.'], function () {
+            Route::get('/', [ZoneController::class, 'index'])->name('index');
+            Route::post('/', [ZoneController::class, 'store'])->name('store');
+            Route::get('/{zone}', [ZoneController::class, 'show'])->name('show');
+            Route::put('/{zone}', [ZoneController::class, 'update'])->name('update');
+            Route::delete('/{zone}', [ZoneController::class, 'destroy'])->name('destroy');
+            Route::post('/bulk-action', [ZoneController::class, 'bulkAction'])->name('bulk-action');
+            Route::post('/{zone}/status', [ZoneController::class, 'toggleStatus'])->name('toggle-status');
+            Route::get('/search', [ZoneController::class, 'search'])->name('search');
+            Route::post('/validate-coordinates', [ZoneController::class, 'validateCoordinates'])->name('validate-coordinates');
+        });
     });
 
     // Currency Settings
