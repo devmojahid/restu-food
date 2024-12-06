@@ -24,7 +24,7 @@ export const useProfile = (user) => {
     const handleSubmit = useCallback(async (e) => {
         e.preventDefault();
         
-        form.post(route('profile.update'), {
+        form.post(route('app.profile.update'), {
             preserveScroll: true,
             onSuccess: () => {
                 toast({

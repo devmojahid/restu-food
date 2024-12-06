@@ -53,7 +53,7 @@ export default function UpdateProfileInformationForm({ className = "", user_meta
     const handleSubmit = useCallback(async (e) => {
         e.preventDefault();
 
-        patch(route('profile.update'), {
+        patch(route('app.profile.update'), {
             data: {
                 ...data
             },

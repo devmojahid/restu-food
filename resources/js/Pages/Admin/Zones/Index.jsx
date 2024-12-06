@@ -1,252 +1,277 @@
-import React, { useState, useCallback } from "react";
-import { Head } from "@inertiajs/react";
-import AdminLayout from "@/Layouts/Admin/AdminLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
-import { Input } from "@/Components/ui/input";
-import { Label } from "@/Components/ui/label";
-import { Button } from "@/Components/ui/button";
-import { useToast } from "@/Components/ui/use-toast";
-import { MapPin, Save, Plus, Loader2, X } from "lucide-react";
-import { useForm } from "@inertiajs/react";
-import ZoneMap from "./Components/ZoneMap";
-import ZoneList from "./Components/ZoneList";
-import DeliveryChargesForm from "./Components/DeliveryChargesForm";
-import StatsCard from "@/Components/Admin/StatsCard";
+import React, { useState, useCallback } from 'react';
+import { Head } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
+import { Button } from '@/Components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/Components/ui/dialog';
+import { Input } from '@/Components/ui/input';
+import { Label } from '@/Components/ui/label';
+import { useToast } from '@/Components/ui/use-toast';
+import ZoneMap from './Components/ZoneMap';
+import ZoneList from './Components/ZoneList';
+import DeliveryChargesForm from './Components/DeliveryChargesForm';
+import AdminLayout from '@/Layouts/Admin/AdminLayout';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/Components/ui/card';
+import ZoneForm from './Components/ZoneForm';
+import { cn } from '@/lib/utils';
+import ZoneStats from './Components/ZoneStats';
+import LocationPermissionManager from './Components/LocationPermissionManager';
 
-const INITIAL_FORM_STATE = {
-  name: "",
-  display_name: "",
-  coordinates: [],
-  delivery_charges: {
-    min_charge: "",
-    max_charge: "",
-    per_km_charge: "",
-    max_cod_amount: "",
-    increase_percentage: "",
-    increase_message: "",
-  },
-};
+const Index = ({ zones, stats, can }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [selectedZone, setSelectedZone] = useState(null);
+    const { toast } = useToast();
+    const [step, setStep] = useState('draw'); // 'draw' | 'form'
+    const [showForm, setShowForm] = useState(false);
+    const [hasLocationPermission, setHasLocationPermission] = useState(false);
 
-const ZonesIndex = ({ zones = { data: [] }, stats = {} }) => {
-  const { toast } = useToast();
-  const [selectedZone, setSelectedZone] = useState(null);
-  const [mapBounds, setMapBounds] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
-
-  const { data, setData, post, put, processing, errors, reset } = useForm(INITIAL_FORM_STATE);
-
-  const handleMapClick = useCallback((coords) => {
-    setData("coordinates", coords);
-  }, []);
-
-  const handleAddNewZone = () => {
-    setSelectedZone(null);
-    reset(INITIAL_FORM_STATE);
-    setIsEditing(false);
-  };
-
-  const handleZoneSelect = (zone) => {
-    setSelectedZone(zone);
-    setData({
-      name: zone.name,
-      display_name: zone.display_name,
-      coordinates: zone.coordinates,
-      delivery_charges: {
-        min_charge: zone.delivery_charges?.min_charge || "",
-        max_charge: zone.delivery_charges?.max_charge || "",
-        per_km_charge: zone.delivery_charges?.per_km_charge || "",
-        max_cod_amount: zone.delivery_charges?.max_cod_amount || "",
-        increase_percentage: zone.delivery_charges?.increase_percentage || "",
-        increase_message: zone.delivery_charges?.increase_message || "",
-      },
+    const { data, setData, post, put, errors, processing, reset } = useForm({
+        name: '',
+        display_name: '',
+        coordinates: [],
+        is_active: true,
+        delivery_charges: {
+            min_charge: 0,
+            max_charge: 0,
+            per_km_charge: 0,
+            max_cod_amount: 0,
+            increase_percentage: 0,
+            increase_message: '',
+        },
     });
-    setIsEditing(true);
-  };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    if (isEditing && selectedZone) {
-      put(route("app.zones.update", selectedZone.id), {
-        preserveScroll: true,
-        onSuccess: () => {
-          toast({
-            title: "Success",
-            description: "Zone updated successfully",
-          });
-          handleAddNewZone();
-        },
-        onError: () => {
-          toast({
-            title: "Error",
-            description: "Failed to update zone",
-            variant: "destructive",
-          });
-        },
-      });
-    } else {
-      post(route("app.zones.store"), {
-        preserveScroll: true,
-        onSuccess: () => {
-          toast({
-            title: "Success",
-            description: "Zone created successfully",
-          });
-          handleAddNewZone();
-        },
-        onError: () => {
-          toast({
-            title: "Error",
-            description: "Failed to create zone",
-            variant: "destructive",
-          });
-        },
-      });
-    }
-  };
+    const handleSubmit = useCallback((e) => {
+        e.preventDefault();
+        
+        if (selectedZone) {
+            put(route('app.logistics.zones.update', selectedZone.id), {
+                onSuccess: () => {
+                    setIsOpen(false);
+                    reset();
+                    setSelectedZone(null);
+                    toast({
+                        title: 'Success',
+                        description: 'Zone updated successfully',
+                    });
+                },
+            });
+        } else {
+            post(route('app.logistics.zones.store'), {
+                onSuccess: () => {
+                    setIsOpen(false);
+                    reset();
+                    toast({
+                        title: 'Success',
+                        description: 'Zone created successfully',
+                    });
+                },
+            });
+        }
+    }, [selectedZone, data]);
 
-  // Stats configuration
-  const statsConfig = [
-    {
-      title: "Total Zones",
-      value: stats.total || 0,
-      description: "Total number of delivery zones",
-      icon: MapPin,
-      className: "bg-blue-50 dark:bg-blue-900/20",
-    },
-    {
-      title: "Active Zones",
-      value: stats.active || 0,
-      description: "Currently active zones",
-      icon: MapPin,
-      trend: "up",
-      className: "bg-green-50 dark:bg-green-900/20",
-    },
-    {
-      title: "Coverage Area",
-      value: stats.coverage_area || "0 km²",
-      description: "Total area covered by zones",
-      icon: MapPin,
-      className: "bg-purple-50 dark:bg-purple-900/20",
-    },
-  ];
+    const handleZoneSelect = useCallback((zone) => {
+        setSelectedZone(zone);
+        setData({
+            name: zone.name,
+            display_name: zone.display_name,
+            coordinates: zone.coordinates,
+            is_active: zone.is_active,
+            delivery_charges: zone.delivery_charges || {
+                min_charge: 0,
+                max_charge: 0,
+                per_km_charge: 0,
+                max_cod_amount: 0,
+                increase_percentage: 0,
+                increase_message: '',
+            },
+        });
+        setIsOpen(true);
+    }, []);
 
-  return (
-    <AdminLayout>
-      <Head title="Zone Management" />
+    const handlePolygonComplete = (coordinates) => {
+        setData('coordinates', coordinates);
+        setShowForm(true);
+        setStep('form');
+    };
 
-      <div className="container mx-auto py-6 space-y-6">
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-semibold">Zone Management</h1>
-            <p className="text-muted-foreground">Create and manage delivery zones</p>
-          </div>
-          <Button onClick={handleAddNewZone}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add New Zone
-          </Button>
-        </div>
+    const handlePermissionChange = (granted) => {
+        setHasLocationPermission(granted);
+    };
 
-        {/* Stats */}
-        <StatsCard stats={statsConfig} />
-
-        {/* Main Content */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Zone List */}
-              <div className="lg:col-span-1">
-                <ZoneList
-                  zones={zones}
-                  selectedZone={selectedZone}
-                  onSelect={handleZoneSelect}
-                />
-              </div>
-
-              {/* Map and Form */}
-              <div className="lg:col-span-2 space-y-6">
-                <div className="h-[400px] rounded-lg overflow-hidden border">
-                  <ZoneMap
-                    coordinates={data.coordinates}
-                    onClick={handleMapClick}
-                    onBoundsChanged={setMapBounds}
-                    selectedZone={selectedZone}
-                  />
-                </div>
-
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="name">Zone Name</Label>
-                        <Input
-                          id="name"
-                          value={data.name}
-                          onChange={(e) => setData("name", e.target.value)}
-                          placeholder="Enter zone name"
-                        />
-                        {errors.name && (
-                          <p className="text-sm text-destructive">{errors.name}</p>
+    return (
+        <AdminLayout>
+            <Head title="Zone Management" />
+            
+            <LocationPermissionManager onPermissionChange={handlePermissionChange} />
+            
+            <div className="container mx-auto px-4 py-6">
+                <div className="flex flex-col gap-6">
+                    {/* Header Section */}
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <h1 className="text-2xl font-bold">Zone Management</h1>
+                            <p className="text-muted-foreground mt-1">
+                                Create and manage delivery zones with custom boundaries
+                            </p>
+                        </div>
+                        {can.create && (
+                            <Button onClick={() => {
+                                reset();
+                                setSelectedZone(null);
+                                setIsOpen(true);
+                            }}>
+                                Create Zone
+                            </Button>
                         )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="display_name">Display Name</Label>
-                        <Input
-                          id="display_name"
-                          value={data.display_name}
-                          onChange={(e) => setData("display_name", e.target.value)}
-                          placeholder="Enter display name"
-                        />
-                        {errors.display_name && (
-                          <p className="text-sm text-destructive">
-                            {errors.display_name}
-                          </p>
-                        )}
-                      </div>
                     </div>
 
-                    <DeliveryChargesForm
-                      data={data.delivery_charges}
-                      setData={setData}
-                      errors={errors}
-                    />
-                  </div>
+                    {/* Map Section - Full Width */}
+                    <div className="w-full bg-white rounded-lg shadow-sm p-4">
+                        <div className="h-[600px]">
+                            <ZoneMap
+                                coordinates={data.coordinates}
+                                onClick={(coords) => setData('coordinates', coords)}
+                                selectedZone={selectedZone}
+                                onPolygonComplete={handlePolygonComplete}
+                            />
+                        </div>
+                    </div>
 
-                  <div className="flex justify-end space-x-2">
-                    {isEditing && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={handleAddNewZone}
-                      >
-                        <X className="w-4 h-4 mr-2" />
-                        Cancel
-                      </Button>
+                    {/* Zone Form - Appears when drawing is complete */}
+                    {showForm && (
+                        <Card className="w-full">
+                            <CardHeader>
+                                <CardTitle>Zone Details</CardTitle>
+                                <CardDescription>
+                                    Enter the details for your selected zone area
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <ZoneForm
+                                    data={data}
+                                    setData={setData}
+                                    errors={errors}
+                                    onSubmit={handleSubmit}
+                                    isProcessing={processing}
+                                    onCancel={() => setShowForm(false)}
+                                />
+                            </CardContent>
+                        </Card>
                     )}
-                    <Button type="submit" disabled={processing}>
-                      {processing ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          {isEditing ? "Updating..." : "Creating..."}
-                        </>
-                      ) : (
-                        <>
-                          <Save className="w-4 h-4 mr-2" />
-                          {isEditing ? "Update Zone" : "Create Zone"}
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </form>
-              </div>
+
+                    {/* Stats and List Section */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {/* Stats Cards */}
+                        <Card className="md:col-span-3">
+                            <CardHeader>
+                                <CardTitle>Zone Statistics</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                                    <ZoneStats stats={stats} />
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Zone List */}
+                        <div className="md:col-span-3">
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between">
+                                    <div>
+                                        <CardTitle>Zone List</CardTitle>
+                                        <CardDescription>
+                                            Manage your delivery zones
+                                        </CardDescription>
+                                    </div>
+                                    <Input 
+                                        placeholder="Search zones..." 
+                                        className="max-w-xs"
+                                        onChange={(e) => {
+                                            // Add search functionality
+                                        }}
+                                    />
+                                </CardHeader>
+                                <CardContent>
+                                    <ZoneList
+                                        zones={zones}
+                                        selectedZone={selectedZone}
+                                        onSelect={handleZoneSelect}
+                                    />
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Create/Edit Zone Dialog */}
+                <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                    <DialogContent className="sm:max-w-[600px]">
+                        <DialogHeader>
+                            <DialogTitle>
+                                {selectedZone ? 'Edit Zone' : 'Create Zone'}
+                            </DialogTitle>
+                        </DialogHeader>
+                        
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="name">Zone Name</Label>
+                                        <Input
+                                            id="name"
+                                            value={data.name}
+                                            onChange={(e) => setData('name', e.target.value)}
+                                            placeholder="Enter zone name"
+                                        />
+                                        {errors.name && (
+                                            <p className="text-sm text-destructive">{errors.name}</p>
+                                        )}
+                                    </div>
+                                    
+                                    <div className="space-y-2">
+                                        <Label htmlFor="display_name">Display Name</Label>
+                                        <Input
+                                            id="display_name"
+                                            value={data.display_name}
+                                            onChange={(e) => setData('display_name', e.target.value)}
+                                            placeholder="Enter display name"
+                                        />
+                                        {errors.display_name && (
+                                            <p className="text-sm text-destructive">{errors.display_name}</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <DeliveryChargesForm
+                                    data={data.delivery_charges}
+                                    setData={setData}
+                                    errors={errors}
+                                />
+                            </div>
+
+                            <div className="flex justify-end space-x-2">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button type="submit" disabled={processing}>
+                                    {selectedZone ? 'Update' : 'Create'}
+                                </Button>
+                            </div>
+                        </form>
+                    </DialogContent>
+                </Dialog>
             </div>
-          </CardContent>
-        </Card>
-      </div>
-    </AdminLayout>
-  );
+        </AdminLayout>
+    );
 };
 
-export default ZonesIndex; 
+export default Index; 

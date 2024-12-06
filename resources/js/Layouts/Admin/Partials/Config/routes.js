@@ -211,6 +211,18 @@ export const routes = {
                 icon: "Package"
             }
         }
+    },
+    logistics: {
+        name: "Logistics",
+        icon: "Package",
+        role: ["Admin"],
+        submenu: {
+            zones: {
+                name: "Zones",
+                path: "/app/logistics/zones",
+                icon: "Package"
+            }
+        }
     }
 
 

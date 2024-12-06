@@ -1,0 +1,97 @@
+.zone-management {
+    @apply container mx-auto px-4 py-6;
+
+    &__header {
+        @apply flex justify-between items-center mb-6;
+        
+        @screen sm {
+            @apply flex-row;
+        }
+        
+        @screen xs {
+            @apply flex-col gap-4;
+        }
+
+        h1 {
+            @apply text-2xl font-bold text-gray-900 dark:text-gray-100;
+        }
+    }
+
+    &__grid {
+        @apply grid gap-6;
+        
+        @screen lg {
+            @apply grid-cols-3;
+        }
+        
+        @screen md {
+            @apply grid-cols-2;
+        }
+        
+        @screen sm {
+            @apply grid-cols-1;
+        }
+    }
+
+    &__map-container {
+        @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 relative;
+        height: 600px;
+        
+        @screen sm {
+            height: 400px;
+        }
+
+        .search-box {
+            @apply w-full max-w-sm;
+            
+            input {
+                @apply pl-10;
+            }
+        }
+
+        .map-controls {
+            @apply z-[1000] bg-white dark:bg-gray-800 rounded-lg shadow-lg;
+            
+            button {
+                @apply hover:bg-gray-100 dark:hover:bg-gray-700;
+            }
+        }
+    }
+
+    &__list-container {
+        @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm;
+        max-height: 600px;
+        
+        @screen sm {
+            max-height: 400px;
+        }
+
+        .zone-item {
+            @apply p-4 border-b last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors;
+
+            &--active {
+                @apply bg-primary/5;
+            }
+
+            &__header {
+                @apply flex items-center justify-between;
+            }
+
+            &__badges {
+                @apply mt-2 flex flex-wrap gap-2;
+            }
+        }
+    }
+
+    &__form {
+        @apply space-y-6;
+
+        .form-section {
+            @apply space-y-4;
+        }
+
+        .input-group {
+            @apply space-y-2;
+        }
+    }
+} 
