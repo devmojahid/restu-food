@@ -1,3 +1,36 @@
+Today TODO:
+
+## **System Administration** `*Today TODO*`
+
+- [ ]  Server Status (**System Health**)
+- [ ]  Error Logs (**System Health**)
+- [ ]  User Activity Monitoring(**Activity Logs**)
+- [ ]  Clear Cache Button(**Cache Management**)
+- [ ]  Version Management(**System Updates**)
+
+## **Location Management** `*Today TODO*`
+
+- **Geographical Setup**
+- [ ]  Countries
+- [ ]  States/Regions
+- [ ]  Cities
+
+### **7. Real-Time Notifications & Alerts (**`*Today TODO*`**)**
+
+- **WebSocket-based Notifications**:
+    - New order notifications for admins and managers.
+    - Delivery status updates for customers via push notifications.
+- **Custom Notification Settings**:
+    - Upload custom notification sounds.
+    - Configure sound alerts (loop/once).
+- **Email & SMS Alerts**:
+    - Twilio API for SMS notifications.
+    - SendGrid/Mailgun for email notifications.
+
+
+real time delevay tracking
+
+
 
 Ecommerce
 	--Report [dashboard] 4.1 ---
