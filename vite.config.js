@@ -16,7 +16,7 @@ export default defineConfig({
     //         VITE_PUSHER_APP_CLUSTER: JSON.stringify(process.env.VITE_PUSHER_APP_CLUSTER),
     //     }
     },
-	server: {
-		port: 3006,
-	}
+	// server: {
+	// 	port: 3006,
+	// }
 });
