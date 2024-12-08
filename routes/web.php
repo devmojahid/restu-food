@@ -22,12 +22,18 @@ use App\Http\Controllers\Admin\{
     RestaurantApplicationController,
     ZoneController
 };
+
+
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\RestaurantStatsController;
 use App\Http\Controllers\Admin\RestaurantFavoriteController;
 use App\Http\Controllers\Admin\KitchenOrderController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\Restaurant\KitchenStaffController;
+use App\Http\Controllers\Frontend\HomeController;
+use App\Http\Controllers\Frontend\MenuController;
+use App\Http\Controllers\Frontend\OfferController;
+use App\Http\Controllers\Frontend\PageController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -37,14 +43,14 @@ use Inertia\Inertia;
 | Welcome/Landing Page Route
 |--------------------------------------------------------------------------
 */
-Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
-});
+// Route::get('/', function () {
+//     return Inertia::render('Welcome', [
+//         'canLogin' => Route::has('login'),
+//         'canRegister' => Route::has('register'),
+//         'laravelVersion' => Application::VERSION,
+//         'phpVersion' => PHP_VERSION,
+//     ]);
+// });
 
 /*
 |--------------------------------------------------------------------------
@@ -560,4 +566,14 @@ Route::middleware(['auth', 'role:Restaurant'])->group(function () {
 // });
 
 // Add these routes inside your auth middleware group
+
+// Frontend Routes
+Route::name('frontend.')->group(function () {
+    Route::get('/', [HomeController::class, 'index'])->name('home');
+    Route::get('/menu', [MenuController::class, 'index'])->name('menu');
+    Route::get('/restaurants', [RestaurantController::class, 'index'])->name('restaurants');
+    Route::get('/offers', [OfferController::class, 'index'])->name('offers');
+    Route::get('/about', [PageController::class, 'about'])->name('about');
+    Route::get('/contact', [PageController::class, 'contact'])->name('contact');
+});
 

@@ -6,35 +6,20 @@ export function cn(...inputs) {
 }
 
 // Format currency
-export function formatCurrency(amount, currency = "USD", locale = "en-US") {
-  return new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency: currency,
-  }).format(amount);
+export function formatPrice(price) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(price);
 }
 
 // Format date with options
-export function formatDate(date, options = {}) {
-  if (!date) return "";
-
-  const defaultOptions = {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  };
-
-  const mergedOptions = { ...defaultOptions, ...options };
-
-  try {
-    const dateObj = new Date(date);
-    return new Intl.DateTimeFormat("en-US", mergedOptions).format(dateObj);
-  } catch (error) {
-    console.error("Error formatting date:", error);
-    return date;
-  }
+export function formatDate(date) {
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(new Date(date));
 }
 
 // Format relative time (e.g., "2 hours ago")

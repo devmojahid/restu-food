@@ -1,12 +1,15 @@
 import axios from 'axios';
-window.axios = axios;
+import routes from './config/routes';
 
+window.axios = axios;
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
-/**
- * Echo exposes an expressive API for subscribing to channels and listening
- * for events that are broadcast by Laravel. Echo and event broadcasting
- * allow your team to quickly build robust real-time web applications.
- */
+// Initialize routes safely
+window.routes = Object.entries(routes).reduce((acc, [name, path]) => {
+    // Remove any regex special characters from the path
+    const safePath = path.replace(/[[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+    acc[name] = safePath;
+    return acc;
+}, {});
 
 import './echo';
