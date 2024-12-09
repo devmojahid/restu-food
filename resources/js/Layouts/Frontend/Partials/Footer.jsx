@@ -116,15 +116,20 @@ const Footer = () => {
                             Subscribe to our newsletter and get latest updates and offers.
                         </p>
                         <form className="mb-6">
-                            <div className="flex">
+                            <div className="flex flex-col sm:flex-row gap-2 sm:gap-0">
                                 <input
                                     type="email"
                                     placeholder="Your email address"
-                                    className="flex-1 px-4 py-3 bg-gray-800 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                                    className="w-full sm:w-auto flex-1 px-4 py-3 bg-gray-800 
+                                             rounded-lg sm:rounded-l-lg sm:rounded-r-none
+                                             focus:outline-none focus:ring-2 focus:ring-primary
+                                             dark:bg-gray-700 dark:text-white"
                                 />
                                 <button
                                     type="submit"
-                                    className="px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-r-lg transition-colors"
+                                    className="w-full sm:w-auto px-6 py-3 bg-primary hover:bg-primary/90 
+                                             text-white rounded-lg sm:rounded-r-lg sm:rounded-l-none 
+                                             transition-colors flex items-center justify-center"
                                 >
                                     Subscribe
                                 </button>
