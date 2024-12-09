@@ -22,6 +22,7 @@ final class HomeService extends BaseService
                 'featuredRestaurants' => $this->getFeaturedRestaurants(),
                 'popularDishes' => $this->getPopularDishes(),
                 'specialOffers' => $this->getSpecialOffers(),
+                'popularCategories' => $this->getPopularCategories(),
                 'stats' => $this->getStats(),
             ];
         });
@@ -343,6 +344,156 @@ final class HomeService extends BaseService
             'dishes' => 2000,
             'delivery_cities' => 50,
             'happy_customers' => '100K+'
+        ];
+    }
+
+    private function getPopularCategories(): array
+    {
+        return [
+            [
+                'id' => 1,
+                'name' => 'Pizza',
+                'slug' => 'pizza',
+                'restaurants' => 45,
+                'items' => 250,
+                'dailyOrders' => 1200,
+                'avgDeliveryTime' => '30-45',
+                'trending' => true,
+                'rating' => 4.8,
+                'image' => '/images/categories/pizza.jpg'
+            ],
+            [
+                'id' => 2,
+                'name' => 'Burger',
+                'slug' => 'burger',
+                'restaurants' => 38,
+                'items' => 180,
+                'dailyOrders' => 950,
+                'avgDeliveryTime' => '25-35',
+                'trending' => true,
+                'rating' => 4.7,
+                'image' => '/images/categories/burger.jpg'
+            ],
+            [
+                'id' => 3,
+                'name' => 'Sushi',
+                'slug' => 'sushi',
+                'restaurants' => 25,
+                'items' => 120,
+                'dailyOrders' => 450,
+                'avgDeliveryTime' => '40-50',
+                'trending' => false,
+                'rating' => 4.9,
+                'image' => '/images/categories/sushi.jpg'
+            ],
+            [
+                'id' => 4,
+                'name' => 'Desserts',
+                'slug' => 'desserts',
+                'restaurants' => 32,
+                'items' => 150,
+                'dailyOrders' => 800,
+                'avgDeliveryTime' => '25-35',
+                'trending' => false,
+                'rating' => 4.6,
+                'image' => '/images/categories/desserts.jpg'
+            ],
+            [
+                'id' => 5,
+                'name' => 'Coffee',
+                'slug' => 'coffee',
+                'restaurants' => 28,
+                'items' => 90,
+                'dailyOrders' => 1500,
+                'avgDeliveryTime' => '15-25',
+                'trending' => true,
+                'rating' => 4.7,
+                'image' => '/images/categories/coffee.jpg'
+            ],
+            [
+                'id' => 6,
+                'name' => 'Salads',
+                'slug' => 'salads',
+                'restaurants' => 22,
+                'items' => 85,
+                'dailyOrders' => 600,
+                'avgDeliveryTime' => '20-30',
+                'trending' => false,
+                'rating' => 4.5,
+                'image' => '/images/categories/salads.jpg'
+            ],
+            [
+                'id' => 7,
+                'name' => 'Sandwiches',
+                'slug' => 'sandwiches',
+                'restaurants' => 35,
+                'items' => 130,
+                'dailyOrders' => 850,
+                'avgDeliveryTime' => '20-30',
+                'trending' => false,
+                'rating' => 4.6,
+                'image' => '/images/categories/sandwiches.jpg'
+            ],
+            [
+                'id' => 8,
+                'name' => 'Drinks',
+                'slug' => 'drinks',
+                'restaurants' => 40,
+                'items' => 110,
+                'dailyOrders' => 1100,
+                'avgDeliveryTime' => '15-25',
+                'trending' => true,
+                'rating' => 4.5,
+                'image' => '/images/categories/drinks.jpg'
+            ],
+            [
+                'id' => 9,
+                'name' => 'Chinese',
+                'slug' => 'chinese',
+                'restaurants' => 30,
+                'items' => 200,
+                'dailyOrders' => 750,
+                'avgDeliveryTime' => '35-45',
+                'trending' => false,
+                'rating' => 4.7,
+                'image' => '/images/categories/chinese.jpg'
+            ],
+            [
+                'id' => 10,
+                'name' => 'Indian',
+                'slug' => 'indian',
+                'restaurants' => 28,
+                'items' => 180,
+                'dailyOrders' => 700,
+                'avgDeliveryTime' => '35-45',
+                'trending' => true,
+                'rating' => 4.8,
+                'image' => '/images/categories/indian.jpg'
+            ],
+            [
+                'id' => 11,
+                'name' => 'Thai',
+                'slug' => 'thai',
+                'restaurants' => 20,
+                'items' => 150,
+                'dailyOrders' => 500,
+                'avgDeliveryTime' => '30-40',
+                'trending' => false,
+                'rating' => 4.6,
+                'image' => '/images/categories/thai.jpg'
+            ],
+            [
+                'id' => 12,
+                'name' => 'Mexican',
+                'slug' => 'mexican',
+                'restaurants' => 25,
+                'items' => 160,
+                'dailyOrders' => 600,
+                'avgDeliveryTime' => '30-40',
+                'trending' => true,
+                'rating' => 4.7,
+                'image' => '/images/categories/mexican.jpg'
+            ]
         ];
     }
 }

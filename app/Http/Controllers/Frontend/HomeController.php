@@ -21,6 +21,7 @@ final class HomeController extends Controller
             'heroSlides' => $data['heroSlides'],
             'featuredRestaurants' => $data['featuredRestaurants'],
             'popularDishes' => $data['popularDishes'],
+            'popularCategories' => $data['popularCategories'],
             'specialOffers' => $data['specialOffers'],
             'stats' => $data['stats']
         ]);
