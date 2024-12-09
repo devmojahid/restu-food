@@ -8,10 +8,12 @@ import { useDropdown } from '@/hooks/useDropdown';
 import MobileSheet from '@/Components/ui/mobile-sheet';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { cn } from '@/lib/utils';
+import { useScrollLock } from '@/hooks/useScrollLock';
 
 const CartDropdown = () => {
     const { isOpen, handleToggle, handleClose } = useDropdown();
     const isMobile = useMediaQuery('(max-width: 768px)');
+    useScrollLock(isOpen && isMobile);
 
     const cartItems = [
         {
@@ -27,14 +29,75 @@ const CartDropdown = () => {
 
     const cartTotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
 
+    const OrderSummary = () => (
+        <div className="space-y-4">
+            <div className="space-y-2">
+                <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400">
+                    <span>Subtotal</span>
+                    <span>{formatPrice(cartTotal)}</span>
+                </div>
+                <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400">
+                    <span>Delivery Fee</span>
+                    <span>{formatPrice(5.99)}</span>
+                </div>
+                <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400">
+                    <span>Tax</span>
+                    <span>{formatPrice(cartTotal * 0.1)}</span>
+                </div>
+                <div className="pt-2 border-t dark:border-gray-800">
+                    <div className="flex justify-between font-medium text-gray-900 dark:text-white">
+                        <span>Total</span>
+                        <span className="text-primary">
+                            {formatPrice(cartTotal + 5.99 + (cartTotal * 0.1))}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+                <Link
+                    href="/cart"
+                    className={cn(
+                        "inline-flex items-center justify-center rounded-full",
+                        "border border-gray-200 dark:border-gray-700",
+                        "px-4 py-3.5 text-sm font-medium",
+                        "text-gray-700 dark:text-gray-200",
+                        "hover:bg-gray-50 dark:hover:bg-gray-800",
+                        "focus:outline-none focus:ring-2 focus:ring-primary/50",
+                        "transition-colors duration-200"
+                    )}
+                >
+                    View Cart
+                </Link>
+                <Link
+                    href="/checkout"
+                    className={cn(
+                        "inline-flex items-center justify-center rounded-full",
+                        "bg-primary hover:bg-primary/90",
+                        "px-4 py-3.5 text-sm font-medium text-white",
+                        "focus:outline-none focus:ring-2 focus:ring-primary/50",
+                        "transition-colors duration-200"
+                    )}
+                >
+                    <span>Checkout</span>
+                    <ChevronRight className="ml-2 h-4 w-4" />
+                </Link>
+            </div>
+        </div>
+    );
+
     const CartContent = () => (
         <div className="flex flex-col h-full">
             {/* Cart Header - Only for Desktop */}
             {!isMobile && (
-                <div className="px-4 py-3 border-b">
+                <div className="px-4 py-3 border-b dark:border-gray-800">
                     <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-lg text-gray-900">Shopping Cart</h3>
-                        <span className="text-sm text-gray-500">{cartItems.length} items</span>
+                        <h3 className="font-semibold text-lg text-gray-900 dark:text-white">
+                            Shopping Cart
+                        </h3>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                            {cartItems.length} items
+                        </span>
                     </div>
                 </div>
             )}
@@ -170,58 +233,7 @@ const CartDropdown = () => {
                     "w-full",
                     isMobile ? "px-4 pb-4" : "p-4"
                 )}>
-                    {/* Price Breakdown */}
-                    <div className="space-y-2 py-4">
-                        <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400">
-                            <span>Subtotal</span>
-                            <span>{formatPrice(cartTotal)}</span>
-                        </div>
-                        <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400">
-                            <span>Delivery Fee</span>
-                            <span>{formatPrice(5.99)}</span>
-                        </div>
-                        <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400">
-                            <span>Tax</span>
-                            <span>{formatPrice(cartTotal * 0.1)}</span>
-                        </div>
-                        <div className="pt-2 border-t dark:border-gray-800">
-                            <div className="flex justify-between font-medium text-gray-900 dark:text-white">
-                                <span>Total</span>
-                                <span>{formatPrice(cartTotal + 5.99 + (cartTotal * 0.1))}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="grid grid-cols-2 gap-3">
-                        <Link
-                            href="/cart"
-                            className={cn(
-                                "inline-flex items-center justify-center rounded-full",
-                                "border border-gray-200 dark:border-gray-700",
-                                "px-4 py-3 text-sm font-medium",
-                                "text-gray-700 dark:text-gray-200",
-                                "hover:bg-gray-50 dark:hover:bg-gray-800",
-                                "focus:outline-none focus:ring-2 focus:ring-primary/50",
-                                "transition-colors duration-200"
-                            )}
-                        >
-                            View Cart
-                        </Link>
-                        <Link
-                            href="/checkout"
-                            className={cn(
-                                "inline-flex items-center justify-center rounded-full",
-                                "bg-primary hover:bg-primary/90",
-                                "px-4 py-3 text-sm font-medium text-white",
-                                "focus:outline-none focus:ring-2 focus:ring-primary/50",
-                                "transition-colors duration-200"
-                            )}
-                        >
-                            <span>Checkout</span>
-                            <ChevronRight className="ml-2 h-4 w-4" />
-                        </Link>
-                    </div>
+                    <OrderSummary />
                 </div>
             )}
         </div>
@@ -258,76 +270,7 @@ const CartDropdown = () => {
                             fullHeight
                             className="flex flex-col max-w-lg mx-auto"
                         >
-                            <div className="flex flex-col h-full max-w-[100vw]">
-                                {/* Cart Items Section */}
-                                <div className="flex-1 overflow-y-auto">
-                                    <div className="px-4 py-2">
-                                        <CartContent />
-                                    </div>
-                                </div>
-
-                                {/* Fixed Bottom Section */}
-                                {cartItems.length > 0 && (
-                                    <div className="border-t dark:border-gray-800 bg-white dark:bg-gray-900">
-                                        <div className="px-4 py-4 space-y-4">
-                                            {/* Price Summary */}
-                                            <div className="space-y-2">
-                                                <div className="flex justify-between text-sm">
-                                                    <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
-                                                    <span className="font-medium">{formatPrice(cartTotal)}</span>
-                                                </div>
-                                                <div className="flex justify-between text-sm">
-                                                    <span className="text-gray-600 dark:text-gray-400">Delivery Fee</span>
-                                                    <span className="font-medium">{formatPrice(5.99)}</span>
-                                                </div>
-                                                <div className="flex justify-between text-sm">
-                                                    <span className="text-gray-600 dark:text-gray-400">Tax</span>
-                                                    <span className="font-medium">{formatPrice(cartTotal * 0.1)}</span>
-                                                </div>
-                                                <div className="pt-2 border-t dark:border-gray-800">
-                                                    <div className="flex justify-between font-medium">
-                                                        <span>Total</span>
-                                                        <span className="text-primary">
-                                                            {formatPrice(cartTotal + 5.99 + (cartTotal * 0.1))}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Action Buttons */}
-                                            <div className="grid grid-cols-2 gap-3 pb-safe">
-                                                <Link
-                                                    href="/cart"
-                                                    className={cn(
-                                                        "inline-flex items-center justify-center rounded-full",
-                                                        "border border-gray-200 dark:border-gray-700",
-                                                        "px-4 py-3.5 text-sm font-medium",
-                                                        "text-gray-700 dark:text-gray-200",
-                                                        "hover:bg-gray-50 dark:hover:bg-gray-800",
-                                                        "focus:outline-none focus:ring-2 focus:ring-primary/50",
-                                                        "transition-colors duration-200"
-                                                    )}
-                                                >
-                                                    View Cart
-                                                </Link>
-                                                <Link
-                                                    href="/checkout"
-                                                    className={cn(
-                                                        "inline-flex items-center justify-center rounded-full",
-                                                        "bg-primary hover:bg-primary/90",
-                                                        "px-4 py-3.5 text-sm font-medium text-white",
-                                                        "focus:outline-none focus:ring-2 focus:ring-primary/50",
-                                                        "transition-colors duration-200"
-                                                    )}
-                                                >
-                                                    <span>Checkout</span>
-                                                    <ChevronRight className="ml-2 h-4 w-4" />
-                                                </Link>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
+                            <CartContent />
                         </MobileSheet>
                     )}
                 </AnimatePresence>

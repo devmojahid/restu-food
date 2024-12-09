@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { cn } from '@/lib/utils';
+import { useScrollLock } from '@/hooks/useScrollLock';
 
 const MobileSheet = ({ 
     isOpen, 
@@ -13,6 +14,7 @@ const MobileSheet = ({
     fullHeight = false,
     className 
 }) => {
+    useScrollLock(isOpen);
     const [isDragging, setIsDragging] = useState(false);
     const [dragY, setDragY] = useState(0);
     const sheetRef = useRef(null);
