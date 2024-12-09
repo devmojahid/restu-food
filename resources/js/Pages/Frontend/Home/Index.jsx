@@ -6,8 +6,9 @@ import FeaturedRestaurants from './Partials/FeaturedRestaurants';
 import PopularDishes from './Partials/PopularDishes';
 import SpecialOffers from './Partials/SpecialOffers';
 import PopularCategories from './Partials/PopularCategories';
+import LocationBasedSuggestions from './Partials/LocationBasedSuggestions';
 
-const Index = ({ heroSlides, featuredRestaurants, popularDishes, specialOffers, popularCategories }) => {
+const Index = ({ heroSlides, featuredRestaurants, popularDishes, specialOffers, popularCategories, nearbyRestaurants }) => {
     return (
         <Layout>
             <Head title="Home" />
@@ -17,6 +18,7 @@ const Index = ({ heroSlides, featuredRestaurants, popularDishes, specialOffers, 
             <div className="space-y-0">
                 <FeaturedRestaurants restaurants={featuredRestaurants} />
                 <PopularCategories categories={popularCategories} />
+                <LocationBasedSuggestions restaurants={nearbyRestaurants} />
                 <PopularDishes dishes={popularDishes} />
                 <SpecialOffers offers={specialOffers} />
             </div>

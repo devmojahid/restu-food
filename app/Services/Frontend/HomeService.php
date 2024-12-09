@@ -24,6 +24,7 @@ final class HomeService extends BaseService
                 'specialOffers' => $this->getSpecialOffers(),
                 'popularCategories' => $this->getPopularCategories(),
                 'stats' => $this->getStats(),
+                'nearbyRestaurants' => $this->getNearbyRestaurants(),
             ];
         });
     }
@@ -494,6 +495,36 @@ final class HomeService extends BaseService
                 'rating' => 4.7,
                 'image' => '/images/categories/mexican.jpg'
             ]
+        ];
+    }
+
+    private function getNearbyRestaurants(): array
+    {
+        return [
+            [
+                'id' => 1,
+                'name' => 'Pizza Paradise',
+                'slug' => 'pizza-paradise',
+                'cuisine' => 'Italian',
+                'rating' => 4.8,
+                'reviews_count' => 245,
+                'delivery_time' => '30-45',
+                'delivery_fee' => 2.99,
+                'min_order' => 15,
+                'distance' => 1.2,
+                'coordinates' => [
+                    'lat' => 40.7128,
+                    'lng' => -74.0060
+                ],
+                'image' => '/images/restaurants/pizza-paradise.jpg',
+                'popular_dishes' => [
+                    ['name' => 'Margherita Pizza', 'price' => 14.99],
+                    ['name' => 'Pepperoni Pizza', 'price' => 16.99]
+                ],
+                'is_open' => true,
+                'price_range' => '$$'
+            ],
+            // Add more restaurants...
         ];
     }
 }

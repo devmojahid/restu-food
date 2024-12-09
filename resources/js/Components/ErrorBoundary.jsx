@@ -1,7 +1,4 @@
 import React from 'react';
-import { Alert, AlertTitle, AlertDescription } from '@/Components/ui/alert';
-import { Button } from '@/Components/ui/button';
-import { RefreshCw } from 'lucide-react';
 
 class ErrorBoundary extends React.Component {
     constructor(props) {
@@ -19,21 +16,11 @@ class ErrorBoundary extends React.Component {
 
     render() {
         if (this.state.hasError) {
-            return (
-                <Alert variant="destructive">
-                    <AlertTitle>Something went wrong</AlertTitle>
-                    <AlertDescription>
-                        <p className="mb-4">{this.state.error?.message || 'An unexpected error occurred'}</p>
-                        <Button
-                            variant="outline"
-                            onClick={() => window.location.reload()}
-                            className="flex items-center"
-                        >
-                            <RefreshCw className="w-4 h-4 mr-2" />
-                            Reload Page
-                        </Button>
-                    </AlertDescription>
-                </Alert>
+            return this.props.fallback || (
+                <div className="rounded-xl bg-red-50 p-4 text-red-500">
+                    <div className="w-8 h-8 mx-auto mb-2">⚠️</div>
+                    <p className="text-center">Something went wrong</p>
+                </div>
             );
         }
 
