@@ -16,12 +16,13 @@ final class HomeController extends Controller
     public function index()
     {
         $data = $this->homeService->getHomePageData();
-        
+     
         return Inertia::render('Frontend/Home/Index', [
             'heroSlides' => $data['heroSlides'],
             'featuredRestaurants' => $data['featuredRestaurants'],
             'popularDishes' => $data['popularDishes'],
-            'specialOffers' => $data['specialOffers']
+            'specialOffers' => $data['specialOffers'],
+            'stats' => $data['stats']
         ]);
     }
 } 

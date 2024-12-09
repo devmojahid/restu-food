@@ -11,9 +11,9 @@ const Index = ({ heroSlides, featuredRestaurants, popularDishes, specialOffers }
         <Layout>
             <Head title="Home" />
             
-            <HeroSlider slides={heroSlides} />
+            <HeroSlider slides={heroSlides} type="slider" />
             
-            <div className="container mx-auto px-4 py-12 space-y-16">
+            <div className="space-y-0">
                 <FeaturedRestaurants restaurants={featuredRestaurants} />
                 <PopularDishes dishes={popularDishes} />
                 <SpecialOffers offers={specialOffers} />
