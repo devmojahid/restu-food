@@ -13,10 +13,19 @@ class Order extends Model
         'restaurant_id',
         'total',
         'status',
+        'order_number',
         'payment_status',
         'payment_method',
         'is_takeaway',
-        'notes'
+        'subtotal',
+        'tax',
+        'delivery_fee',
+        'notes',
+        'delivery_address',
+        'delivery_latitude',
+        'delivery_longitude',
+        'special_instructions',
+        'estimated_delivery_time',
     ];
 
     protected $casts = [

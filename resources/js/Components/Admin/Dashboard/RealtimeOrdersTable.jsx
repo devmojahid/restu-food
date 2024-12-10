@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
@@ -24,8 +24,18 @@ import { toast } from "react-hot-toast";
 import { router } from '@inertiajs/react';
 import { ScrollArea } from "@/Components/ui/scroll-area";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/Components/ui/sheet";
+import Echo from 'laravel-echo';
+import { Switch } from "@/Components/ui/switch";
+import { Label } from "@/Components/ui/label";
+import { Select, SelectTrigger, SelectValue, SelectItem, SelectContent } from "@/Components/ui/select";
+import { Input } from "@/Components/ui/input";
+import { cn } from "@/lib/utils";
 
-const RealtimeOrdersTable = ({ initialOrders = [] }) => {
+const RealtimeOrdersTable = ({ initialOrders = [], restaurantId }) => {
+    if (!restaurantId) {
+        return null;
+    }
+
     const [orders, setOrders] = useState(initialOrders);
     const [isLoading, setIsLoading] = useState(false);
     const [soundEnabled, setSoundEnabled] = useState(true);
@@ -39,8 +49,8 @@ const RealtimeOrdersTable = ({ initialOrders = [] }) => {
     //         if (soundEnabled) {
     //             new Audio('/sounds/new-order.mp3').play().catch(e => console.log('Audio play failed:', e));
     //         }
-            
-    //         toast.custom((t) => (
+
+        //         toast.custom((t) => (
     //             <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}>
     //                 <div className="flex-1 w-0 p-4">
     //                     <div className="flex items-start">
@@ -70,6 +80,142 @@ const RealtimeOrdersTable = ({ initialOrders = [] }) => {
     //         channel.stopListening('NewOrder');
     //     };
     // }, [soundEnabled]);
+
+
+    const [filters, setFilters] = useState({
+        showTestOrders: false,
+        status: 'all',
+        search: ''
+    });
+
+    const filteredOrders = useMemo(() => {
+        return orders.filter(order => {
+            // Filter test orders
+            if (!filters.showTestOrders && order.is_test_order) {
+                return false;
+            }
+
+            // Filter by status
+            if (filters.status !== 'all' && order.status !== filters.status) {
+                return false;
+            }
+
+            // Filter by search
+            if (filters.search) {
+                const searchTerm = filters.search.toLowerCase();
+                return (
+                    order.order_number.toLowerCase().includes(searchTerm) ||
+                    order.customer?.name.toLowerCase().includes(searchTerm) ||
+                    order.items.some(item => 
+                        item.product?.name.toLowerCase().includes(searchTerm)
+                    )
+                );
+            }
+
+            return true;
+        });
+    }, [orders, filters]);
+
+
+    const renderFilters = () => (
+        <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+                <Switch
+                    checked={filters.showTestOrders}
+                    onCheckedChange={(checked) => 
+                        setFilters(prev => ({ ...prev, showTestOrders: checked }))
+                    }
+                />
+                <Label>Show Test Orders</Label>
+            </div>
+            <Select
+                value={filters.status}
+                onValueChange={(value) => 
+                    setFilters(prev => ({ ...prev, status: value }))
+                }
+            >
+                <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">All Orders</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="processing">Processing</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+            </Select>
+            <Input
+                placeholder="Search orders..."
+                value={filters.search}
+                onChange={(e) => 
+                    setFilters(prev => ({ ...prev, search: e.target.value }))
+                }
+                className="max-w-xs"
+            />
+        </div>
+    );
+
+    const renderOrderCard = (order) => (
+        <div 
+            key={order.id}
+            id={`order-${order.id}`}
+            className={cn(
+                "border rounded-lg p-4",
+                order.is_test_order && "border-dashed border-yellow-500",
+                order.status === 'pending' && "bg-yellow-50"
+            )}
+        >
+            {order.is_test_order && (
+                <Badge variant="warning" className="mb-2">
+                    Test Order
+                </Badge>
+            )}
+            {/* Rest of your order card content */}
+        </div>
+    );
+
+    useEffect(() => {
+        if (!restaurantId) return;
+
+        const channel = window.Echo.private(`restaurant.${restaurantId}.orders`);
+        
+        channel.listen('.App\\Events\\NewOrder', (e) => {
+            console.log('New order received:', e);
+            const newOrder = e.order;
+
+            console.log(newOrder);
+            alert(JSON.stringify(newOrder));
+            
+            setOrders(currentOrders => {
+                const updatedOrders = [newOrder, ...currentOrders];
+                
+                if (soundEnabled) {
+                    new Audio('/sounds/new-order.mp3').play().catch(console.error);
+                }
+                
+                toast({
+                    title: e.notification.title,
+                    description: e.notification.message,
+                    action: (
+                        <Button variant="outline" size="sm" onClick={() => {
+                            document.getElementById(`order-${newOrder.id}`)?.scrollIntoView({
+                                behavior: 'smooth'
+                            });
+                        }}>
+                            View Order
+                        </Button>
+                    ),
+                });
+                
+                return updatedOrders;
+            });
+        });
+
+        return () => {
+            channel.stopListening('.App\\Events\\NewOrder');
+        };
+    }, [restaurantId, soundEnabled]);
 
     const handleAction = async (orderId, action) => {
         setIsLoading(true);

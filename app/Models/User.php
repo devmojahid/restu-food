@@ -106,7 +106,7 @@ final class User extends Authenticatable implements MustVerifyEmail
         return $lastActivity && now()->diffInMinutes($lastActivity) < 5;
     }
 
-    public function restaurant(): BelongsTo
+    public function restaurant()
     {
         return $this->belongsTo(Restaurant::class);
     }

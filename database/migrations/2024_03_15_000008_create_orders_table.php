@@ -10,9 +10,9 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('customer_id')->nullable()->constrained('users')->onDelete('set null');
-            $table->foreignId('restaurant_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('customer_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('restaurant_id')->constrained()->cascadeOnDelete();
             $table->foreignId('restaurant_branch_id')->nullable()->constrained()->onDelete('set null');
             $table->string('order_number')->unique();
             $table->decimal('subtotal', 10, 2);

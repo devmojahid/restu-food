@@ -12,23 +12,27 @@ use App\Models\Restaurant;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\Product;
 
 final class OrderService
 {
     public function createOrder(array $data, User $customer): Order
     {
         try {
+            Log::info('Creating order with data:', ['data' => $data]);
+
             return DB::transaction(function () use ($data, $customer) {
                 // Create the order
                 $order = Order::create([
+                    'user_id' => $data['user_id'] ?? $customer->id,
                     'customer_id' => $customer->id,
                     'restaurant_id' => $data['restaurant_id'],
-                    'order_number' => $this->generateOrderNumber(),
+                    'order_number' => $data['order_number'],
                     'subtotal' => $data['subtotal'],
                     'tax' => $data['tax'],
                     'delivery_fee' => $data['delivery_fee'],
                     'total' => $data['total'],
-                    'status' => 'pending',
+                    'status' => $data['status'] ?? 'pending',
                     'payment_status' => $data['payment_status'] ?? 'pending',
                     'payment_method' => $data['payment_method'],
                     'is_takeaway' => $data['is_takeaway'] ?? false,
@@ -38,14 +42,16 @@ final class OrderService
                     'delivery_longitude' => $data['delivery_longitude'] ?? null,
                     'special_instructions' => $data['special_instructions'] ?? null,
                     'estimated_delivery_time' => $this->calculateEstimatedDeliveryTime(),
+                    'is_test_order' => $data['is_test_order'] ?? false,
                 ]);
+
+                Log::info('Order created:', ['order_id' => $order->id]);
 
                 // Create order items
                 foreach ($data['items'] as $item) {
                     OrderItem::create([
                         'order_id' => $order->id,
                         'product_id' => $item['product_id'],
-                        'product_variant_id' => $item['variant_id'] ?? null,
                         'quantity' => $item['quantity'],
                         'unit_price' => $item['unit_price'],
                         'subtotal' => $item['quantity'] * $item['unit_price'],
@@ -53,13 +59,22 @@ final class OrderService
                     ]);
                 }
 
+                Log::info('Order items created for order:', ['order_id' => $order->id]);
+
+                // Load relationships for broadcasting
+                $order->load(['items.product', 'customer', 'restaurant']);
+
                 // Broadcast new order event
-                broadcast(new NewOrder($order))->toOthers();
+                broadcast(new NewOrder($order));
 
                 return $order;
             });
         } catch (\Exception $e) {
-            Log::error('Order creation failed: ' . $e->getMessage());
+            Log::error('Order creation failed: ' . $e->getMessage(), [
+                'data' => $data,
+                'customer_id' => $customer->id,
+                'trace' => $e->getTraceAsString()
+            ]);
             throw $e;
         }
     }

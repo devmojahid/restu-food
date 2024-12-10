@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Star, 
@@ -138,21 +138,48 @@ const DishCard = ({ dish, index }) => {
         setIsAddingToCart(true);
         
         try {
-            await router.post('/cart/add', {
+            await router.post('/orders/create', {
                 dish_id: dish.id,
-                quantity: 1
-            });
-            
-            toast({
-                title: "Added to Cart",
-                description: `${dish.name} has been added to your cart.`,
-                action: (
-                    <Button variant="outline" size="sm" onClick={() => router.visit('/cart')}>
-                        View Cart
-                    </Button>
-                ),
+                quantity: 1,
+                special_instructions: '',
+                is_test_order: true
+            }, {
+                preserveScroll: true,
+                preserveState: true,
+                onBefore: () => setIsAddingToCart(true),
+                onFinish: () => setIsAddingToCart(false),
+                onSuccess: (page) => {
+                    const flash = page?.props?.flash;
+                    
+                    if (flash?.success) {
+                        toast({
+                            title: "Success",
+                            description: flash.message || `${dish.name} has been added to your cart.`,
+                            action: (
+                                <Button variant="outline" size="sm" onClick={() => router.visit('/cart')}>
+                                    View Cart
+                                </Button>
+                            ),
+                        });
+                    } else if (flash?.error) {
+                        toast({
+                            title: "Error",
+                            description: flash.message || "Failed to add item to cart.",
+                            variant: "destructive",
+                        });
+                    }
+                },
+                onError: (errors) => {
+                    console.error('Order creation failed:', errors);
+                    toast({
+                        title: "Error",
+                        description: "Failed to add item to cart. Please try again.",
+                        variant: "destructive",
+                    });
+                }
             });
         } catch (error) {
+            console.error('Order creation failed:', error);
             toast({
                 title: "Error",
                 description: "Failed to add item to cart. Please try again.",

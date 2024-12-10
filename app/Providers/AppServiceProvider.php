@@ -8,6 +8,8 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\URL;
 use App\Models\Currency;
 use App\Observers\CurrencyObserver;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -49,5 +51,18 @@ class AppServiceProvider extends ServiceProvider
         ]);
 
         Currency::observe(CurrencyObserver::class);
+
+        // Add this to enable query logging in development
+        if (config('app.debug')) {
+            DB::listen(function($query) {
+                Log::info(
+                    $query->sql,
+                    [
+                        'bindings' => $query->bindings,
+                        'time' => $query->time
+                    ]
+                );
+            });
+        }
     }
 }

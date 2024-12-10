@@ -17,9 +17,10 @@ Broadcast::channel('user.{id}', function (User $user, int $id) {
 });
 
 // Private channel for restaurants
-Broadcast::channel('restaurant.{id}', function (User $user, int $id) {
-    return $user->restaurants()->where('id', $id)->exists() || 
-           $user->hasRole(['Admin', 'Restaurant']);
+Broadcast::channel('restaurant.{restaurantId}.orders', function ($user, $restaurantId) {
+    return $user->restaurant_id == $restaurantId || 
+           $user->hasRole(['Admin', 'Restaurant']) ||
+           $user->hasPermission('view-restaurant-orders');
 });
 
 // Private channel for specific orders
@@ -45,4 +46,16 @@ Broadcast::channel('delivery', function (User $user) {
 // Private channel for notifications
 Broadcast::channel('notifications', function (User $user) {
     return ['id' => $user->id, 'name' => $user->name];
+});
+
+// Private channel for orders
+Broadcast::channel('orders', function ($user) {
+    return $user && in_array($user->role, ['admin', 'restaurant_owner', 'staff']);
+});
+
+// Private channel for restaurant notifications
+Broadcast::channel('restaurant.{restaurantId}.notifications', function ($user, $restaurantId) {
+    return $user->restaurants()->where('id', $restaurantId)->exists() || 
+           $user->hasRole(['Admin', 'Restaurant']) ||
+           $user->hasPermission('view-restaurant-notifications');
 });

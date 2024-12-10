@@ -70,6 +70,9 @@ Route::middleware(['auth'])->group(function () {
     // Currency Switching
     Route::post('currency/switch', [\App\Http\Controllers\CurrencyController::class, 'switch'])
         ->name('currency.switch');
+
+    // Orders
+    Route::post('/orders/create', [OrderController::class, 'create'])->name('orders.create');
 });
 
 /*
@@ -584,4 +587,9 @@ Route::middleware(['auth', 'role:Kitchen Staff'])->group(function () {
         Route::put('/orders/{order}/status', [KitchenController::class, 'updateStatus'])->name('orders.status');
     });
 });
+
+// Add this route for debugging
+// Route::post('/orders/create', [OrderController::class, 'create'])
+//     ->name('orders.create')
+//     ->middleware('web');
 

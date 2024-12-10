@@ -7,7 +7,6 @@ namespace App\Events;
 use App\Models\Order;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -18,28 +17,31 @@ final class NewOrder implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public function __construct(
-        public readonly Order $order
+        public Order $order
     ) {}
+
+    public function broadcastAs()
+    {
+        return 'NewOrder';
+    }
 
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('notifications'),
-            new PrivateChannel("restaurant.{$this->order->restaurant_id}"),
+            new PrivateChannel("restaurant.{$this->order->restaurant_id}.orders")
         ];
     }
 
     public function broadcastWith(): array
     {
         return [
-            'order' => [
-                'id' => $this->order->id,
-                'total' => $this->order->total,
-                'status' => $this->order->status,
-                'customer' => [
-                    'name' => $this->order->user->name,
-                ],
-            ],
+            'order' => $this->order->load(['items.product', 'customer', 'restaurant']),
+            'notification' => [
+                'title' => 'New Order Received',
+                'message' => "Order #{$this->order->order_number} received from {$this->order->customer->name}",
+                'type' => 'new_order',
+                'created_at' => now()->toISOString()
+            ]
         ];
     }
 } 

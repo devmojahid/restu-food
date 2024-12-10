@@ -5,17 +5,15 @@ import RestaurantStats from '@/Components/Admin/Dashboard/RestaurantStats';
 import OrdersOverview from '@/Components/Admin/Dashboard/OrdersOverview';
 import MenuPerformance from '@/Components/Admin/Dashboard/MenuPerformance';
 import CustomerInsights from '@/Components/Admin/Dashboard/CustomerInsights';
-import { Card } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { 
     Store, 
     RefreshCcw,
-    Download,
-    Filter
+    Download
 } from 'lucide-react';
+import RealtimeOrdersTable from '@/Components/Admin/Dashboard/RealtimeOrdersTable';
 
-const RestaurantDashboard = ({ dashboardData, userRole, permissions }) => {
-    const [timeRange, setTimeRange] = useState('today');
+const RestaurantDashboard = ({ dashboardData, auth }) => {
     const [isRefreshing, setIsRefreshing] = useState(false);
 
     // Provide default data structure if dashboardData is undefined
@@ -33,7 +31,8 @@ const RestaurantDashboard = ({ dashboardData, userRole, permissions }) => {
         },
         recent_orders: [],
         revenue_stats: {},
-        staff_performance: []
+        staff_performance: [],
+        restaurant: null
     };
 
     const handleRefresh = async () => {
@@ -78,8 +77,14 @@ const RestaurantDashboard = ({ dashboardData, userRole, permissions }) => {
                     </div>
                 </div>
 
-                {/* Rest of your components with proper data handling */}
+                {/* Stats and Overview */}
                 <RestaurantStats stats={data.summary_stats} />
+                
+                {/* Realtime Orders Table - Move it before the grid */}
+                <RealtimeOrdersTable 
+                    initialOrders={data.recent_orders ?? []} 
+                    restaurantId={auth?.user?.restaurant_id}
+                />
                 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-2">
@@ -93,8 +98,6 @@ const RestaurantDashboard = ({ dashboardData, userRole, permissions }) => {
                         <CustomerInsights data={data.customer_insights} />
                     </div>
                 </div>
-
-                {/* Add more sections as needed */}
             </div>
         </AdminLayout>
     );
