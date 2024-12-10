@@ -20,6 +20,7 @@ final class HomeController extends Controller
         return Inertia::render('Frontend/Home/Index', [
             'heroSlides' => $data['heroSlides'],
             'featuredRestaurants' => $data['featuredRestaurants'],
+            'featuredDishes' => $data['featuredDishes'],
             'popularDishes' => $data['popularDishes'],
             'popularCategories' => $data['popularCategories'],
             'specialOffers' => $data['specialOffers'],

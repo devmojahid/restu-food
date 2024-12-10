@@ -25,6 +25,7 @@ export default defineConfig({
         watch: {
             usePolling: true,
         },
+        port: 3006,
     },
     resolve: {
         alias: {

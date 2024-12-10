@@ -3,12 +3,13 @@ import { Head } from '@inertiajs/react';
 import Layout from '@/Layouts/Frontend/Layout';
 import HeroSlider from './Partials/HeroSlider';
 import FeaturedRestaurants from './Partials/FeaturedRestaurants';
+import FeaturedDishes from './Partials/FeaturedDishes';
 import PopularDishes from './Partials/PopularDishes';
 import SpecialOffers from './Partials/SpecialOffers';
 import PopularCategories from './Partials/PopularCategories';
 import LocationBasedSuggestions from './Partials/LocationBasedSuggestions';
 
-const Index = ({ heroSlides, featuredRestaurants, popularDishes, specialOffers, popularCategories, nearbyRestaurants }) => {
+const Index = ({ heroSlides, featuredRestaurants, featuredDishes, popularDishes, specialOffers, popularCategories, nearbyRestaurants }) => {
     return (
         <Layout>
             <Head title="Home" />
@@ -17,6 +18,7 @@ const Index = ({ heroSlides, featuredRestaurants, popularDishes, specialOffers, 
             
             <div className="space-y-0">
                 <FeaturedRestaurants restaurants={featuredRestaurants} />
+                <FeaturedDishes dishes={featuredDishes} />
                 <PopularCategories categories={popularCategories} />
                 <LocationBasedSuggestions restaurants={nearbyRestaurants} />
                 <PopularDishes dishes={popularDishes} />

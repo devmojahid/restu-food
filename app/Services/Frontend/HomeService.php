@@ -16,17 +16,18 @@ final class HomeService extends BaseService
     public function getHomePageData(): array
     {
         // Use caching for better performance
-        return Cache::remember('home_page_data', 3600, function () {
+        // return Cache::remember('home_page_data', 3600, function () {
             return [
                 'heroSlides' => $this->getHeroSlides(),
                 'featuredRestaurants' => $this->getFeaturedRestaurants(),
+                'featuredDishes' => $this->getFeaturedDishes(),
                 'popularDishes' => $this->getPopularDishes(),
                 'specialOffers' => $this->getSpecialOffers(),
                 'popularCategories' => $this->getPopularCategories(),
                 'stats' => $this->getStats(),
                 'nearbyRestaurants' => $this->getNearbyRestaurants(),
             ];
-        });
+        // });
     }
 
     private function getFeaturedRestaurants(): array
@@ -525,6 +526,82 @@ final class HomeService extends BaseService
                 'price_range' => '$$'
             ],
             // Add more restaurants...
+        ];
+    }
+
+    private function getFeaturedDishes(): array
+    {
+        return [
+            [
+                'id' => 1,
+                'name' => 'Margherita Pizza',
+                'slug' => 'margherita-pizza',
+                'description' => 'Fresh tomatoes, mozzarella, basil, and our signature sauce on a crispy crust',
+                'price' => 14.99,
+                'image' => '/images/dishes/pizza.jpg',
+                'restaurant' => [
+                    'name' => 'Pizza Paradise',
+                    'slug' => 'pizza-paradise'
+                ],
+                'rating' => 4.8,
+                'preparation_time' => '20-25 mins',
+                'calories' => '800',
+                'discount' => 20,
+                'isNew' => true,
+                'isPopular' => true,
+                'trending' => true,
+                'vegetarian' => true,
+                'spicy' => false,
+                'orders' => 1250,
+                'created_at' => '2024-02-20T10:00:00'
+            ],
+            [
+                'id' => 2,
+                'name' => 'Spicy Chicken Burger',
+                'slug' => 'spicy-chicken-burger',
+                'description' => 'Crispy chicken fillet with spicy sauce, fresh lettuce, and special mayo',
+                'price' => 12.99,
+                'image' => '/images/dishes/burger.jpg',
+                'restaurant' => [
+                    'name' => 'Burger House',
+                    'slug' => 'burger-house'
+                ],
+                'rating' => 4.6,
+                'preparation_time' => '15-20 mins',
+                'calories' => '650',
+                'discount' => null,
+                'isNew' => false,
+                'isPopular' => true,
+                'trending' => true,
+                'vegetarian' => false,
+                'spicy' => true,
+                'orders' => 980,
+                'created_at' => '2024-02-19T15:30:00'
+            ],
+            [
+                'id' => 3,
+                'name' => 'Vegetable Sushi Roll',
+                'slug' => 'vegetable-sushi-roll',
+                'description' => 'Fresh vegetables wrapped in sushi rice and nori seaweed',
+                'price' => 16.99,
+                'image' => '/images/dishes/sushi.jpg',
+                'restaurant' => [
+                    'name' => 'Sushi Master',
+                    'slug' => 'sushi-master'
+                ],
+                'rating' => 4.7,
+                'preparation_time' => '25-30 mins',
+                'calories' => '400',
+                'discount' => 15,
+                'isNew' => true,
+                'isPopular' => false,
+                'trending' => false,
+                'vegetarian' => true,
+                'spicy' => false,
+                'orders' => 750,
+                'created_at' => '2024-02-21T09:15:00'
+            ],
+            // Add more dishes as needed
         ];
     }
 }

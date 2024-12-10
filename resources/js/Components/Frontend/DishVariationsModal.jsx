@@ -20,6 +20,19 @@ import { Checkbox } from '@/Components/ui/checkbox';
 import { Badge } from '@/Components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/Components/ui/tabs';
+import { 
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from "@/Components/ui/accordion";
+import { Input } from "@/Components/ui/input";
+import { Label } from "@/Components/ui/label";
+import { Separator } from "@/Components/ui/separator";
+import { ScrollArea } from "@/Components/ui/scroll-area";
+import { useToast } from "@/Components/ui/use-toast";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 
 // Add this new component for better tab design
 const CustomTab = ({ active, icon: Icon, label, onClick }) => (
@@ -50,9 +63,10 @@ const DishVariationsModal = ({ isOpen, onClose, dish }) => {
     const [selectedSize, setSelectedSize] = useState(null);
     const [selectedAddons, setSelectedAddons] = useState([]);
     const [quantity, setQuantity] = useState(1);
-    const [totalPrice, setTotalPrice] = useState(dish?.price || 0);
     const [specialInstructions, setSpecialInstructions] = useState('');
-    const [activeTab, setActiveTab] = useState('customize');
+    const [isLoading, setIsLoading] = useState(false);
+    const { toast } = useToast();
+    const router = useRouter();
 
     // Store scroll position
     const scrollPosition = useRef(0);
@@ -64,103 +78,129 @@ const DishVariationsModal = ({ isOpen, onClose, dish }) => {
             setSelectedAddons([]);
             setQuantity(1);
             setSpecialInstructions('');
-            setActiveTab('customize');
         }
     }, [isOpen]);
 
-    // Example data structure for backend integration
+    // Example variations data - in real app, this would come from the backend
     const variations = [
-        { 
-            id: 1, 
-            name: 'Small', 
+        {
+            id: 1,
+            name: 'Regular',
             price: dish?.price || 0,
-            description: 'Perfect for 1 person',
+            description: 'Standard size portion',
             calories: '600-800',
-            preparationTime: '15-20'
+            preparationTime: '15-20 mins'
         },
-        { 
-            id: 2, 
-            name: 'Medium', 
-            price: (dish?.price || 0) + 2,
-            description: 'Good for 2 people',
+        {
+            id: 2,
+            name: 'Large',
+            price: (dish?.price || 0) * 1.5,
+            description: 'Perfect for sharing',
             calories: '900-1100',
-            preparationTime: '20-25'
+            preparationTime: '20-25 mins'
         },
-        { 
-            id: 3, 
-            name: 'Large', 
-            price: (dish?.price || 0) + 4,
-            description: 'Ideal for 3-4 people',
-            calories: '1200-1400',
-            preparationTime: '25-30'
+        {
+            id: 3,
+            name: 'Family',
+            price: (dish?.price || 0) * 2.5,
+            description: 'Great for 3-4 people',
+            calories: '1500-1800',
+            preparationTime: '25-30 mins'
         }
     ];
 
     const addonCategories = [
         {
             id: 1,
-            name: 'Toppings',
+            name: 'Extra Toppings',
+            required: false,
+            multiple: true,
             items: [
                 { id: 1, name: 'Extra Cheese', price: 1.5, calories: 120 },
                 { id: 2, name: 'Mushrooms', price: 1, calories: 50 },
-                { id: 3, name: 'Pepperoni', price: 2, calories: 150 },
+                { id: 3, name: 'Pepperoni', price: 2, calories: 150 }
             ]
         },
         {
             id: 2,
-            name: 'Extras',
+            name: 'Spice Level',
+            required: true,
+            multiple: false,
             items: [
-                { id: 4, name: 'Garlic Bread', price: 2.5, calories: 200 },
-                { id: 5, name: 'Dipping Sauce', price: 0.75, calories: 80 },
+                { id: 4, name: 'Mild', price: 0 },
+                { id: 5, name: 'Medium', price: 0 },
+                { id: 6, name: 'Hot', price: 0 }
             ]
         }
     ];
 
     const calculateTotal = useCallback(() => {
-        let total = selectedSize ? selectedSize.price : dish?.price || 0;
+        let total = selectedSize?.price || dish?.price || 0;
         selectedAddons.forEach(addon => {
             total += addon.price;
         });
-        total *= quantity;
-        setTotalPrice(total);
+        return total * quantity;
     }, [selectedSize, selectedAddons, quantity, dish?.price]);
 
-    useEffect(() => {
-        calculateTotal();
-    }, [calculateTotal]);
+    const handleAddToCart = async () => {
+        if (!selectedSize) {
+            toast({
+                title: "Please select a size",
+                variant: "destructive",
+            });
+            return;
+        }
 
-    const handleAddonToggle = (addon) => {
-        setSelectedAddons(prev => {
-            const exists = prev.find(a => a.id === addon.id);
-            if (exists) {
-                return prev.filter(a => a.id !== addon.id);
-            }
-            return [...prev, addon];
-        });
-    };
+        // Check for required addon categories
+        const missingRequired = addonCategories
+            .filter(cat => cat.required)
+            .find(cat => !selectedAddons.some(addon => 
+                cat.items.find(item => item.id === addon.id)
+            ));
 
-    const handleAddToCart = () => {
-        // Structure for backend API
-        const cartItem = {
-            dish_id: dish?.id,
-            variation_id: selectedSize?.id,
-            quantity,
-            addons: selectedAddons.map(addon => addon.id),
-            special_instructions: specialInstructions,
-            total_price: totalPrice,
-            meta: {
-                dish_name: dish?.name,
-                variation_name: selectedSize?.name,
-                addon_names: selectedAddons.map(addon => addon.name),
-                unit_price: selectedSize?.price,
-                addons_total: selectedAddons.reduce((sum, addon) => sum + addon.price, 0)
-            }
-        };
+        if (missingRequired) {
+            toast({
+                title: `Please select a ${missingRequired.name}`,
+                variant: "destructive",
+            });
+            return;
+        }
 
-        // Example API call structure
-        // await axios.post('/api/cart/add', cartItem);
-        console.log('Adding to cart:', cartItem);
-        onClose();
+        setIsLoading(true);
+        try {
+            await router.post('/cart/add', {
+                dish_id: dish?.id,
+                variation_id: selectedSize.id,
+                quantity,
+                addons: selectedAddons.map(addon => addon.id),
+                special_instructions: specialInstructions,
+                total_price: calculateTotal()
+            });
+
+            toast({
+                title: "Added to Cart",
+                description: `${dish?.name} has been added to your cart.`,
+                action: (
+                    <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => router.visit('/cart')}
+                    >
+                        View Cart
+                    </Button>
+                ),
+            });
+
+            onClose();
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: "Failed to add item to cart. Please try again.",
+                variant: "destructive",
+            });
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     // Enhanced scroll lock with position memory
@@ -287,16 +327,16 @@ const DishVariationsModal = ({ isOpen, onClose, dish }) => {
                                 <div className="border-b dark:border-gray-800">
                                     <div className="flex items-center px-2">
                                         <CustomTab
-                                            active={activeTab === 'customize'}
+                                            active={true}
                                             icon={Utensils}
                                             label="Customize Order"
-                                            onClick={() => setActiveTab('customize')}
+                                            onClick={() => {}}
                                         />
                                         <CustomTab
-                                            active={activeTab === 'details'}
+                                            active={false}
                                             icon={Info}
                                             label="Dish Details"
-                                            onClick={() => setActiveTab('details')}
+                                            onClick={() => {}}
                                         />
                                     </div>
                                 </div>
@@ -304,7 +344,7 @@ const DishVariationsModal = ({ isOpen, onClose, dish }) => {
                                 {/* Enhanced Tab Content with better scrolling */}
                                 <AnimatePresence mode="wait">
                                     <motion.div
-                                        key={activeTab}
+                                        key="customize"
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: -10 }}
@@ -320,139 +360,181 @@ const DishVariationsModal = ({ isOpen, onClose, dish }) => {
                                         }}
                                     >
                                         <div className="p-6">
-                                            {activeTab === 'customize' ? (
-                                                <div className="space-y-6">
-                                                    {/* Size Selection */}
-                                                    <div className="mb-6">
-                                                        <h4 className="text-lg font-semibold mb-4">Choose Size</h4>
-                                                        <RadioGroup
-                                                            value={selectedSize?.id}
-                                                            onValueChange={(value) => {
-                                                                setSelectedSize(variations.find(v => v.id === parseInt(value)));
-                                                            }}
-                                                            className="space-y-3"
+                                            {/* Size Selection */}
+                                            <div>
+                                                <Label className="text-base font-semibold">
+                                                    Choose Size
+                                                    <span className="text-red-500 ml-1">*</span>
+                                                </Label>
+                                                <RadioGroup
+                                                    value={selectedSize?.id}
+                                                    onValueChange={(value) => {
+                                                        setSelectedSize(variations.find(v => v.id === parseInt(value)));
+                                                    }}
+                                                    className="mt-3 space-y-3"
+                                                >
+                                                    {variations.map((variation) => (
+                                                        <Label
+                                                            key={variation.id}
+                                                            className={cn(
+                                                                "flex items-center justify-between p-4 rounded-xl border",
+                                                                "cursor-pointer transition-colors",
+                                                                selectedSize?.id === variation.id
+                                                                    ? "border-primary bg-primary/5"
+                                                                    : "border-gray-200 dark:border-gray-800 hover:border-primary/50"
+                                                            )}
                                                         >
-                                                            {variations.map((variation) => (
-                                                                <label
-                                                                    key={variation.id}
-                                                                    className={cn(
-                                                                        "flex items-center justify-between p-4 rounded-xl border",
-                                                                        "cursor-pointer transition-colors",
-                                                                        selectedSize?.id === variation.id
-                                                                            ? "border-primary bg-primary/5"
-                                                                            : "border-gray-200 dark:border-gray-800 hover:border-primary/50"
-                                                                    )}
-                                                                >
-                                                                    <div className="flex items-center space-x-3">
-                                                                        <RadioGroupItem value={variation.id} id={`size-${variation.id}`} />
-                                                                        <div>
-                                                                            <div className="flex items-center space-x-2">
-                                                                                <span className="font-medium">{variation.name}</span>
-                                                                                <Badge variant="secondary" className="text-xs">
-                                                                                    {variation.calories} cal
-                                                                                </Badge>
-                                                                            </div>
-                                                                            <p className="text-sm text-gray-500">
-                                                                                {variation.description}
-                                                                            </p>
-                                                                        </div>
+                                                            <div className="flex items-center space-x-3">
+                                                                <RadioGroupItem 
+                                                                    value={variation.id} 
+                                                                    id={`size-${variation.id}`} 
+                                                                />
+                                                                <div>
+                                                                    <div className="font-medium">{variation.name}</div>
+                                                                    <div className="text-sm text-gray-500">
+                                                                        {variation.description}
                                                                     </div>
-                                                                    <span className="font-semibold">
-                                                                        ${variation.price.toFixed(2)}
-                                                                    </span>
-                                                                </label>
-                                                            ))}
-                                                        </RadioGroup>
-                                                    </div>
-
-                                                    {/* Add-ons Categories */}
-                                                    {addonCategories.map(category => (
-                                                        <div key={category.id} className="mb-6">
-                                                            <div className="flex items-center justify-between mb-4">
-                                                                <h4 className="text-lg font-semibold">{category.name}</h4>
-                                                                <span className="text-sm text-gray-500">Optional</span>
+                                                                    <div className="flex items-center space-x-2 mt-1">
+                                                                        <Badge variant="secondary">
+                                                                            {variation.calories} cal
+                                                                        </Badge>
+                                                                        <Badge variant="secondary">
+                                                                            {variation.preparationTime}
+                                                                        </Badge>
+                                                                    </div>
+                                                                </div>
                                                             </div>
-                                                            <div className="space-y-3">
-                                                                {category.items.map((addon) => (
-                                                                    <label
-                                                                        key={addon.id}
+                                                            <span className="font-semibold">
+                                                                ${variation.price.toFixed(2)}
+                                                            </span>
+                                                        </Label>
+                                                    ))}
+                                                </RadioGroup>
+                                            </div>
+
+                                            <Separator />
+
+                                            {/* Addons */}
+                                            <Accordion type="single" collapsible className="w-full">
+                                                {addonCategories.map((category) => (
+                                                    <AccordionItem key={category.id} value={`category-${category.id}`}>
+                                                        <AccordionTrigger className="text-base font-semibold">
+                                                            {category.name}
+                                                            {category.required && (
+                                                                <span className="text-red-500 ml-1">*</span>
+                                                            )}
+                                                        </AccordionTrigger>
+                                                        <AccordionContent>
+                                                            <div className="space-y-3 pt-2">
+                                                                {category.items.map((item) => (
+                                                                    <Label
+                                                                        key={item.id}
                                                                         className={cn(
-                                                                            "flex items-center justify-between p-4 rounded-xl border",
+                                                                            "flex items-center justify-between p-3 rounded-lg border",
                                                                             "cursor-pointer transition-colors",
-                                                                            selectedAddons.find(a => a.id === addon.id)
+                                                                            selectedAddons.find(a => a.id === item.id)
                                                                                 ? "border-primary bg-primary/5"
                                                                                 : "border-gray-200 dark:border-gray-800 hover:border-primary/50"
                                                                         )}
                                                                     >
                                                                         <div className="flex items-center space-x-3">
-                                                                            <Checkbox
-                                                                                checked={selectedAddons.some(a => a.id === addon.id)}
-                                                                                onCheckedChange={() => handleAddonToggle(addon)}
-                                                                            />
+                                                                            {category.multiple ? (
+                                                                                <Checkbox
+                                                                                    checked={selectedAddons.some(a => a.id === item.id)}
+                                                                                    onCheckedChange={(checked) => {
+                                                                                        if (checked) {
+                                                                                            setSelectedAddons([...selectedAddons, item]);
+                                                                                        } else {
+                                                                                            setSelectedAddons(selectedAddons.filter(a => a.id !== item.id));
+                                                                                        }
+                                                                                    }}
+                                                                                />
+                                                                            ) : (
+                                                                                <RadioGroupItem
+                                                                                    value={item.id}
+                                                                                    checked={selectedAddons.some(a => a.id === item.id)}
+                                                                                    onChange={() => {
+                                                                                        const otherAddons = selectedAddons.filter(a => 
+                                                                                            !category.items.find(i => i.id === a.id)
+                                                                                        );
+                                                                                        setSelectedAddons([...otherAddons, item]);
+                                                                                    }}
+                                                                                />
+                                                                            )}
                                                                             <div>
-                                                                                <span className="font-medium">{addon.name}</span>
-                                                                                <span className="text-sm text-gray-500 ml-2">
-                                                                                    ({addon.calories} cal)
-                                                                                </span>
+                                                                                <div className="font-medium">{item.name}</div>
+                                                                                {item.calories && (
+                                                                                    <div className="text-sm text-gray-500">
+                                                                                        {item.calories} cal
+                                                                                    </div>
+                                                                                )}
                                                                             </div>
                                                                         </div>
-                                                                        <span className="font-semibold">+${addon.price.toFixed(2)}</span>
-                                                                    </label>
+                                                                        {item.price > 0 && (
+                                                                            <span className="font-semibold">
+                                                                                +${item.price.toFixed(2)}
+                                                                            </span>
+                                                                        )}
+                                                                    </Label>
                                                                 ))}
                                                             </div>
-                                                        </div>
-                                                    ))}
+                                                        </AccordionContent>
+                                                    </AccordionItem>
+                                                ))}
+                                            </Accordion>
 
-                                                    {/* Special Instructions */}
-                                                    <div className="mb-6">
-                                                        <h4 className="text-lg font-semibold mb-4">Special Instructions</h4>
-                                                        <textarea
-                                                            value={specialInstructions}
-                                                            onChange={(e) => setSpecialInstructions(e.target.value)}
-                                                            placeholder="Any special requests?"
-                                                            className="w-full p-3 border rounded-xl resize-none h-24
-                                                                   focus:outline-none focus:ring-2 focus:ring-primary
-                                                                   dark:bg-gray-800 dark:border-gray-700"
-                                                        />
+                                            <Separator />
+
+                                            {/* Special Instructions */}
+                                            <div>
+                                                <Label className="text-base font-semibold">
+                                                    Special Instructions
+                                                </Label>
+                                                <Input
+                                                    value={specialInstructions}
+                                                    onChange={(e) => setSpecialInstructions(e.target.value)}
+                                                    placeholder="Any special requests?"
+                                                    className="mt-2"
+                                                />
+                                            </div>
+
+                                            <Separator />
+
+                                            {/* Quantity and Total */}
+                                            <div className="space-y-4">
+                                                <div className="flex items-center justify-between">
+                                                    <Label className="text-base font-semibold">Quantity</Label>
+                                                    <div className="flex items-center space-x-3">
+                                                        <Button
+                                                            variant="outline"
+                                                            size="icon"
+                                                            className="h-8 w-8 rounded-full"
+                                                            onClick={() => quantity > 1 && setQuantity(q => q - 1)}
+                                                            disabled={quantity <= 1}
+                                                        >
+                                                            <Minus className="h-4 w-4" />
+                                                        </Button>
+                                                        <span className="text-xl font-semibold w-8 text-center">
+                                                            {quantity}
+                                                        </span>
+                                                        <Button
+                                                            variant="outline"
+                                                            size="icon"
+                                                            className="h-8 w-8 rounded-full"
+                                                            onClick={() => setQuantity(q => q + 1)}
+                                                        >
+                                                            <Plus className="h-4 w-4" />
+                                                        </Button>
                                                     </div>
                                                 </div>
-                                            ) : (
-                                                <div className="space-y-6">
-                                                    <div>
-                                                        <h4 className="text-lg font-semibold mb-3">Description</h4>
-                                                        <p className="text-gray-600 dark:text-gray-400">
-                                                            {dish?.description}
-                                                        </p>
-                                                    </div>
-                                                    
-                                                    <div>
-                                                        <h4 className="text-lg font-semibold mb-3">Nutritional Info</h4>
-                                                        <div className="grid grid-cols-2 gap-4">
-                                                            <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800">
-                                                                <span className="text-sm text-gray-500">Calories</span>
-                                                                <p className="text-lg font-semibold">
-                                                                    {selectedSize?.calories || '600-800'} cal
-                                                                </p>
-                                                            </div>
-                                                            <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800">
-                                                                <span className="text-sm text-gray-500">Preparation Time</span>
-                                                                <p className="text-lg font-semibold">
-                                                                    {selectedSize?.preparationTime || '15-20'} mins
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
 
-                                                    {/* Allergen Info */}
-                                                    <div>
-                                                        <h4 className="text-lg font-semibold mb-3">Allergen Information</h4>
-                                                        <div className="flex items-center space-x-2 text-yellow-500">
-                                                            <AlertCircle className="w-5 h-5" />
-                                                            <span>Contains: Gluten, Dairy, Eggs</span>
-                                                        </div>
-                                                    </div>
+                                                <div className="flex items-center justify-between font-semibold">
+                                                    <span>Total Amount</span>
+                                                    <span className="text-xl text-primary">
+                                                        ${calculateTotal().toFixed(2)}
+                                                    </span>
                                                 </div>
-                                            )}
+                                            </div>
                                         </div>
                                     </motion.div>
                                 </AnimatePresence>
@@ -505,9 +587,9 @@ const DishVariationsModal = ({ isOpen, onClose, dish }) => {
                                                 size="lg"
                                                 className="rounded-full space-x-2"
                                                 onClick={handleAddToCart}
-                                                disabled={!selectedSize}
+                                                disabled={!selectedSize || isLoading}
                                             >
-                                                <span>${totalPrice.toFixed(2)}</span>
+                                                <span>${calculateTotal().toFixed(2)}</span>
                                                 <div className="w-px h-4 bg-white/20" />
                                                 <span>Add to Cart</span>
                                                 <ShoppingBag className="w-4 h-4" />
