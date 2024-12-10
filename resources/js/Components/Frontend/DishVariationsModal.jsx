@@ -31,7 +31,7 @@ import { Label } from "@/Components/ui/label";
 import { Separator } from "@/Components/ui/separator";
 import { ScrollArea } from "@/Components/ui/scroll-area";
 import { useToast } from "@/Components/ui/use-toast";
-import { useRouter } from "next/navigation";
+import { router } from '@inertiajs/react';
 import { Loader2 } from "lucide-react";
 
 // Add this new component for better tab design
@@ -66,7 +66,6 @@ const DishVariationsModal = ({ isOpen, onClose, dish }) => {
     const [specialInstructions, setSpecialInstructions] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
-    const router = useRouter();
 
     // Store scroll position
     const scrollPosition = useRef(0);

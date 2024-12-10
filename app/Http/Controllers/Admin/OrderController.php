@@ -1,122 +1,83 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
-use App\Events\OrderStatusUpdated;
+use App\Services\Admin\OrderService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use League\Csv\Writer;
-use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
+use Inertia\Response;
 
-class OrderController extends Controller
+final class OrderController extends Controller
 {
-    public function export(Request $request)
+    public function __construct(
+        private readonly OrderService $orderService
+    ) {}
+
+    public function index(): Response
     {
-        try {
-            $filters = $request->input('filters', []);
-            
-            $query = Order::query()
-                ->with(['customer', 'items', 'restaurant']);
+        $orders = Order::with(['customer', 'restaurant', 'items'])
+            ->latest()
+            ->paginate(10);
 
-            // Apply filters
-            if (!empty($filters['dateRange']['from'])) {
-                $query->whereDate('created_at', '>=', $filters['dateRange']['from']);
-            }
-            if (!empty($filters['dateRange']['to'])) {
-                $query->whereDate('created_at', '<=', $filters['dateRange']['to']);
-            }
-            if (!empty($filters['status'])) {
-                $query->where('status', $filters['status']);
-            }
-            if (!empty($filters['search'])) {
-                $query->where(function($q) use ($filters) {
-                    $q->where('id', 'like', "%{$filters['search']}%")
-                      ->orWhereHas('customer', function($q) use ($filters) {
-                          $q->where('name', 'like', "%{$filters['search']}%");
-                      });
-                });
-            }
-
-            // Apply sorting
-            switch ($filters['orderBy'] ?? 'latest') {
-                case 'oldest':
-                    $query->oldest();
-                    break;
-                case 'highest':
-                    $query->orderByDesc('total');
-                    break;
-                case 'lowest':
-                    $query->orderBy('total');
-                    break;
-                default:
-                    $query->latest();
-            }
-
-            $orders = $query->get();
-
-            // Create CSV in memory
-            $csv = Writer::createFromString('');
-            
-            // Add headers
-            $csv->insertOne([
-                'Order ID',
-                'Customer',
-                'Items',
-                'Total',
-                'Status',
-                'Created At'
-            ]);
-
-            // Add data rows
-            foreach ($orders as $order) {
-                $csv->insertOne([
-                    $order->id,
-                    $order->customer->name,
-                    $order->items->count(),
-                    $order->total,
-                    $order->status,
-                    $order->created_at
-                ]);
-            }
-
-            // Generate unique filename
-            $filename = 'orders-' . now()->format('Y-m-d-His') . '.csv';
-
-            return response($csv->getContent())
-                ->header('Content-Type', 'text/csv')
-                ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
-        } catch (\Exception $e) {
-            Log::error('Order export failed: ' . $e->getMessage());
-            return response()->json(['error' => 'Export failed'], 500);
-        }
+        return Inertia::render('Admin/Orders/Index', [
+            'orders' => $orders
+        ]);
     }
 
-    public function updateStatus(Request $request)
+    public function updateStatus(Request $request, Order $order)
     {
         try {
-            $request->validate([
-                'orderId' => 'required|exists:orders,id',
-                'status' => 'required|in:approved,rejected,preparing,completed'
+            $validated = $request->validate([
+                'status' => 'required|in:approved,rejected,preparing,completed,cancelled',
+                'reason' => 'nullable|string|max:500'
             ]);
 
-            $order = Order::findOrFail($request->orderId);
-            $order->status = $request->status;
-            $order->save();
-
-            // Broadcast the update
-            broadcast(new OrderStatusUpdated($order))->toOthers();
+            $order = $this->orderService->updateOrderStatus(
+                $order,
+                $validated['status'],
+                $validated['reason'] ?? null
+            );
 
             return response()->json([
                 'success' => true,
-                'message' => 'Order status updated successfully'
+                'message' => 'Order status updated successfully',
+                'order' => $order
             ]);
         } catch (\Exception $e) {
             Log::error('Order status update failed: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update order status'
+            ], 500);
+        }
+    }
+
+    public function assignDelivery(Request $request, Order $order)
+    {
+        try {
+            $validated = $request->validate([
+                'delivery_person_id' => 'required|exists:users,id'
+            ]);
+
+            $deliveryPerson = User::findOrFail($validated['delivery_person_id']);
+            
+            $order = $this->orderService->assignDeliveryPerson($order, $deliveryPerson);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Delivery person assigned successfully',
+                'order' => $order
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Delivery assignment failed: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to assign delivery person'
             ], 500);
         }
     }

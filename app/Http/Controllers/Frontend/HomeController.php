@@ -24,7 +24,8 @@ final class HomeController extends Controller
             'popularDishes' => $data['popularDishes'],
             'popularCategories' => $data['popularCategories'],
             'specialOffers' => $data['specialOffers'],
-            'stats' => $data['stats']
+            'stats' => $data['stats'],
+            'testimonials' => $data['testimonials']
         ]);
     }
 } 

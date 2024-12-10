@@ -26,6 +26,7 @@ final class HomeService extends BaseService
                 'popularCategories' => $this->getPopularCategories(),
                 'stats' => $this->getStats(),
                 'nearbyRestaurants' => $this->getNearbyRestaurants(),
+                'testimonials' => $this->getTestimonials(),
             ];
         // });
     }
@@ -602,6 +603,97 @@ final class HomeService extends BaseService
                 'created_at' => '2024-02-21T09:15:00'
             ],
             // Add more dishes as needed
+        ];
+    }
+
+    private function getTestimonials(): array
+    {
+        // In real application, this would come from database
+        return [
+            [
+                'id' => 1,
+                'name' => 'Sarah Johnson',
+                'role' => 'Food Enthusiast',
+                'image' => '/images/testimonials/user1.jpg',
+                'rating' => 5,
+                'text' => "The food delivery service is exceptional! I love how I can track my order in real-time, and the food always arrives hot and fresh. The app is so user-friendly!",
+                'date' => '2024-02-15',
+                'helpful_count' => 128,
+                'tags' => ['Fast Delivery', 'Great App'],
+                'verified_purchase' => true,
+                'restaurant' => 'Pizza Paradise',
+                'order_type' => 'delivery'
+            ],
+            [
+                'id' => 2,
+                'name' => 'Michael Chen',
+                'role' => 'Regular Customer',
+                'image' => '/images/testimonials/user2.jpg',
+                'rating' => 5,
+                'text' => "I've been using this service for months now, and I'm consistently impressed. The variety of restaurants is amazing, and the delivery drivers are always professional.",
+                'date' => '2024-02-18',
+                'helpful_count' => 95,
+                'tags' => ['Professional Service', 'Wide Selection'],
+                'verified_purchase' => true,
+                'restaurant' => 'Sushi Master',
+                'order_type' => 'delivery'
+            ],
+            [
+                'id' => 3,
+                'name' => 'Emily Rodriguez',
+                'role' => 'Food Blogger',
+                'image' => '/images/testimonials/user3.jpg',
+                'rating' => 4,
+                'text' => "Great selection of restaurants and prompt delivery service. The only reason for 4 stars is that I wish they had more vegan options. Otherwise, perfect!",
+                'date' => '2024-02-20',
+                'helpful_count' => 76,
+                'tags' => ['Quick Delivery', 'Good Value'],
+                'verified_purchase' => true,
+                'restaurant' => 'Veggie Delight',
+                'order_type' => 'pickup'
+            ],
+            [
+                'id' => 4,
+                'name' => 'David Wilson',
+                'role' => 'Business Professional',
+                'image' => '/images/testimonials/user4.jpg',
+                'rating' => 5,
+                'text' => "Perfect for office lunch orders! The group ordering feature is a game-changer. Customer service is also top-notch when you need them.",
+                'date' => '2024-02-22',
+                'helpful_count' => 112,
+                'tags' => ['Group Orders', 'Excellent Support'],
+                'verified_purchase' => true,
+                'restaurant' => 'Burger House',
+                'order_type' => 'delivery'
+            ],
+            [
+                'id' => 5,
+                'name' => 'Lisa Thompson',
+                'role' => 'Home Chef',
+                'image' => '/images/testimonials/user5.jpg',
+                'rating' => 5,
+                'text' => "As someone who loves to cook, I'm picky about takeout. This service consistently delivers restaurant-quality food that meets my high standards.",
+                'date' => '2024-02-23',
+                'helpful_count' => 89,
+                'tags' => ['Quality Food', 'Reliable Service'],
+                'verified_purchase' => true,
+                'restaurant' => 'Thai Spice',
+                'order_type' => 'delivery'
+            ],
+            [
+                'id' => 6,
+                'name' => 'James Parker',
+                'role' => 'Tech Professional',
+                'image' => '/images/testimonials/user6.jpg',
+                'rating' => 5,
+                'text' => "The app is intuitive and the real-time tracking is spot on. Love how I can schedule orders in advance. Makes meal planning so much easier!",
+                'date' => '2024-02-24',
+                'helpful_count' => 67,
+                'tags' => ['User Friendly', 'Advanced Features'],
+                'verified_purchase' => true,
+                'restaurant' => 'Indian Curry House',
+                'order_type' => 'scheduled'
+            ]
         ];
     }
 }

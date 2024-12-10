@@ -577,3 +577,11 @@ Route::name('frontend.')->group(function () {
     Route::get('/contact', [PageController::class, 'contact'])->name('contact');
 });
 
+// Add these routes inside your auth middleware group
+Route::middleware(['auth', 'role:Kitchen Staff'])->group(function () {
+    Route::prefix('app/kitchen')->name('kitchen.')->group(function () {
+        Route::get('/', [KitchenController::class, 'index'])->name('index');
+        Route::put('/orders/{order}/status', [KitchenController::class, 'updateStatus'])->name('orders.status');
+    });
+});
+

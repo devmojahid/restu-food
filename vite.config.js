@@ -1,44 +1,22 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import react from '@vitejs/plugin-react';
+import path from 'path';
 
 export default defineConfig({
     plugins: [
         laravel({
-            input: 'resources/js/app.jsx',
+            input: ['resources/js/app.jsx'],
             refresh: true,
         }),
         react(),
     ],
-    optimizeDeps: {
-        include: ['@react-google-maps/api', 'react-error-boundary'],
-    },
-    build: {
-        commonjsOptions: {
-            include: [/@react-google-maps\/api/, /node_modules/, /react-error-boundary/],
-        },
-    },
-    server: {
-        hmr: {
-            overlay: false,
-        },
-        watch: {
-            usePolling: true,
-        },
-        port: 3006,
-    },
     resolve: {
         alias: {
-            '@': '/resources/js',
+            '@': path.resolve(__dirname, './resources/js'),
         },
     },
-    // define: {
-    //    'process.env': {
-    //         VITE_PUSHER_APP_KEY: JSON.stringify(process.env.VITE_PUSHER_APP_KEY),
-    //         VITE_PUSHER_APP_CLUSTER: JSON.stringify(process.env.VITE_PUSHER_APP_CLUSTER),
-    //     }
-    // },
-	// server: {
-	// 	port: 3006,
-	// }
+    optimizeDeps: {
+        include: ['react', 'react-dom', 'framer-motion', '@inertiajs/react'],
+    },
 });
