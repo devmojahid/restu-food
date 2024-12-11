@@ -40,48 +40,6 @@ const RealtimeOrdersTable = ({ initialOrders = [], restaurantId }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [soundEnabled, setSoundEnabled] = useState(true);
 
-    // useEffect(() => {
-    //     const channel = window.Echo.private('orders');
-        
-    //     channel.listen('NewOrder', (e) => {
-    //         setOrders(currentOrders => [e.order, ...currentOrders]);
-            
-    //         if (soundEnabled) {
-    //             new Audio('/sounds/new-order.mp3').play().catch(e => console.log('Audio play failed:', e));
-    //         }
-
-        //         toast.custom((t) => (
-    //             <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}>
-    //                 <div className="flex-1 w-0 p-4">
-    //                     <div className="flex items-start">
-    //                         <div className="ml-3 flex-1">
-    //                             <p className="text-sm font-medium text-gray-900">
-    //                                 New Order Received!
-    //                             </p>
-    //                             <p className="mt-1 text-sm text-gray-500">
-    //                                 Order #{e.order.id} from {e.order.customer.name}
-    //                             </p>
-    //                         </div>
-    //                     </div>
-    //                 </div>
-    //                 <div className="flex border-l border-gray-200">
-    //                     <button
-    //                         onClick={() => toast.dismiss(t.id)}
-    //                         className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none"
-    //                     >
-    //                         Close
-    //                     </button>
-    //                 </div>
-    //             </div>
-    //         ), { duration: 5000 });
-    //     });
-
-    //     return () => {
-    //         channel.stopListening('NewOrder');
-    //     };
-    // }, [soundEnabled]);
-
-
     const [filters, setFilters] = useState({
         showTestOrders: false,
         status: 'all',
@@ -176,30 +134,43 @@ const RealtimeOrdersTable = ({ initialOrders = [], restaurantId }) => {
     );
 
     useEffect(() => {
-        if (!restaurantId) return;
+        if (!restaurantId) {
+            console.warn('No restaurantId provided to RealtimeOrdersTable');
+            return;
+        }
+
+        console.log('Subscribing to channel:', `restaurant.${restaurantId}.orders`);
 
         const channel = window.Echo.private(`restaurant.${restaurantId}.orders`);
         
         channel.listen('.App\\Events\\NewOrder', (e) => {
             console.log('New order received:', e);
-            const newOrder = e.order;
-
-            console.log(newOrder);
-            alert(JSON.stringify(newOrder));
             
+            if (!e.order) {
+                console.error('Invalid order data received');
+                return;
+            }
+
             setOrders(currentOrders => {
-                const updatedOrders = [newOrder, ...currentOrders];
+                // Check if order already exists
+                if (currentOrders.some(order => order.id === e.order.id)) {
+                    return currentOrders;
+                }
+
+                const updatedOrders = [e.order, ...currentOrders];
                 
+                // Play notification sound
                 if (soundEnabled) {
                     new Audio('/sounds/new-order.mp3').play().catch(console.error);
                 }
                 
+                // Show toast notification
                 toast({
                     title: e.notification.title,
                     description: e.notification.message,
                     action: (
                         <Button variant="outline" size="sm" onClick={() => {
-                            document.getElementById(`order-${newOrder.id}`)?.scrollIntoView({
+                            document.getElementById(`order-${e.order.id}`)?.scrollIntoView({
                                 behavior: 'smooth'
                             });
                         }}>
@@ -212,7 +183,13 @@ const RealtimeOrdersTable = ({ initialOrders = [], restaurantId }) => {
             });
         });
 
+        // Debug logging
+        channel.error((error) => {
+            console.error('Echo connection error:', error);
+        });
+
         return () => {
+            console.log('Unsubscribing from channel:', `restaurant.${restaurantId}.orders`);
             channel.stopListening('.App\\Events\\NewOrder');
         };
     }, [restaurantId, soundEnabled]);

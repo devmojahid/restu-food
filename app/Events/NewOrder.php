@@ -11,6 +11,7 @@ use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 final class NewOrder implements ShouldBroadcast
 {
@@ -18,22 +19,35 @@ final class NewOrder implements ShouldBroadcast
 
     public function __construct(
         public Order $order
-    ) {}
-
-    public function broadcastAs()
-    {
-        return 'NewOrder';
+    ) {
+        Log::info('NewOrder event constructed', [
+            'order_id' => $this->order->id,
+            'restaurant_id' => $this->order->restaurant_id
+        ]);
     }
 
     public function broadcastOn(): array
     {
+        Log::info('Broadcasting NewOrder event', [
+            'channel' => "restaurant.{$this->order->restaurant_id}.orders",
+            'order_id' => $this->order->id,
+            'restaurant_id' => $this->order->restaurant_id
+        ]);
+
         return [
             new PrivateChannel("restaurant.{$this->order->restaurant_id}.orders")
         ];
     }
 
+    public function broadcastAs(): string
+    {
+        return 'NewOrder';
+
+    }
+
     public function broadcastWith(): array
     {
+
         return [
             'order' => $this->order->load(['items.product', 'customer', 'restaurant']),
             'notification' => [

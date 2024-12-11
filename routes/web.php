@@ -606,3 +606,7 @@ Route::middleware(['auth', 'role:Kitchen Staff'])->group(function () {
 //     ->name('orders.create')
 //     ->middleware('web');
 
+
+Route::get('/test', function () {
+   return event(new App\Events\PackageSent('delivered', 'Fedex'));
+});

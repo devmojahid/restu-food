@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Broadcast;
 | Broadcast Channels
 |--------------------------------------------------------------------------
 */
-
 // Private channel for authenticated users
 Broadcast::channel('user.{id}', function (User $user, int $id) {
     return $user->id === $id;
@@ -18,9 +17,11 @@ Broadcast::channel('user.{id}', function (User $user, int $id) {
 
 // Private channel for restaurants
 Broadcast::channel('restaurant.{restaurantId}.orders', function ($user, $restaurantId) {
-    return $user->restaurant_id == $restaurantId || 
-           $user->hasRole(['Admin', 'Restaurant']) ||
-           $user->hasPermission('view-restaurant-orders');
+    // return $user->restaurant_id == $restaurantId || 
+    //        $user->hasRole(['Admin', 'Restaurant']) ||
+    //        $user->hasPermission('view-restaurant-orders');
+    // return (int) $user->restaurant->id === (int) $restaurantId;
+    return true;
 });
 
 // Private channel for specific orders
