@@ -19,4 +19,7 @@ export default defineConfig({
     optimizeDeps: {
         include: ['react', 'react-dom', 'framer-motion', '@inertiajs/react'],
     },
+	server: {
+		port: 3006,
+	}
 });

@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\{
     ProductAddonCategoryController,
     ProductAddonController,
     RestaurantApplicationController,
+    SystemController,
     ZoneController
 };
 
@@ -30,10 +31,13 @@ use App\Http\Controllers\Admin\RestaurantFavoriteController;
 use App\Http\Controllers\Admin\KitchenOrderController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\Restaurant\KitchenStaffController;
-use App\Http\Controllers\Frontend\HomeController;
-use App\Http\Controllers\Frontend\MenuController;
-use App\Http\Controllers\Frontend\OfferController;
-use App\Http\Controllers\Frontend\PageController;
+use App\Http\Controllers\Frontend\{
+    HomeController,
+    MenuController,
+    OfferController,
+    PageController
+};
+use App\Http\Controllers\Admin\KitchenController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -376,7 +380,16 @@ Route::prefix('app')->name('app.')->middleware(['auth'])->group(function () {
         // Add more routes as needed
         Route::get('/auth', [OptionsController::class, 'auth'])->name('auth');
 
-       
+        // System Administration Routes
+        Route::get('/system', function () {
+            return Inertia::render('Admin/Settings/System/Index');
+        })->name('system');
+        
+        Route::get('/system/health', [SystemController::class, 'health'])->name('system.health');
+        Route::get('/system/logs', [SystemController::class, 'logs'])->name('system.logs');
+        Route::get('/system/activity', [SystemController::class, 'activity'])->name('system.activity');
+        Route::post('/system/cache/clear', [SystemController::class, 'clearCache'])->name('system.cache.clear');
+        Route::get('/system/updates', [SystemController::class, 'updates'])->name('system.updates');
     });
 
     // Currency Settings
