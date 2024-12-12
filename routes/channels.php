@@ -21,7 +21,8 @@ Broadcast::channel('restaurant.{restaurantId}.orders', function ($user, $restaur
     //        $user->hasRole(['Admin', 'Restaurant']) ||
     //        $user->hasPermission('view-restaurant-orders');
     // return (int) $user->restaurant->id === (int) $restaurantId;
-    return true;
+    // return true;
+    return $user->restaurants()->where('id', $restaurantId)->exists() || $user->hasRole('Admin');
 });
 
 // Private channel for specific orders
