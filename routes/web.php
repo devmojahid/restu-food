@@ -41,6 +41,8 @@ use App\Http\Controllers\Admin\KitchenController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\Admin\DeliveryLocationController;
+use App\Http\Controllers\DeliveryTrackingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -502,6 +504,10 @@ Route::prefix('app')->name('app.')->middleware(['auth'])->group(function () {
             ->name('values.update');
     });
 
+    // Add this inside your auth middleware group
+    Route::get('/delivery/track/{orderId}', [DeliveryTrackingController::class, 'show'])
+        ->name('delivery.track');
+
 });
 
 /*
@@ -601,12 +607,15 @@ Route::middleware(['auth', 'role:Kitchen Staff'])->group(function () {
     });
 });
 
-// Add this route for debugging
-// Route::post('/orders/create', [OrderController::class, 'create'])
-//     ->name('orders.create')
-//     ->middleware('web');
-
-
-Route::get('/test', function () {
-   return event(new App\Events\PackageSent('delivered', 'Fedex'));
+Route::middleware(['auth'])->group(function () {
+    Route::prefix('app/delivery')->name('delivery.')->group(function () {
+        Route::post('location/update', [DeliveryLocationController::class, 'update'])
+            ->name('location.update');
+        Route::get('location/history/{deliveryId}', [DeliveryLocationController::class, 'history'])
+            ->name('location.history');
+        Route::get('stats/{deliveryId}', [DeliveryLocationController::class, 'stats'])
+            ->name('stats');
+        Route::put('{deliveryId}/status', [DeliveryLocationController::class, 'updateStatus'])
+            ->name('status.update');
+    });
 });

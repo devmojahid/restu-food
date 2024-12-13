@@ -61,3 +61,18 @@ Broadcast::channel('restaurant.{restaurantId}.notifications', function ($user, $
            $user->hasRole(['Admin', 'Restaurant']) ||
            $user->hasPermission('view-restaurant-notifications');
 });
+
+// Private channel for specific deliveries
+Broadcast::channel('delivery.{deliveryId}', function (User $user, int $deliveryId) {
+    return $user->id === Delivery::findOrFail($deliveryId)->delivery_person_id || 
+           $user->hasRole('Admin');
+});
+
+// Private channel for delivery tracking
+Broadcast::channel('delivery.tracking.{orderId}', function (User $user, int $orderId) {
+    $order = Order::findOrFail($orderId);
+    return $user->id === $order->customer_id || 
+           $user->id === $order->delivery_person_id ||
+           $user->restaurants()->where('id', $order->restaurant_id)->exists() ||
+           $user->hasRole('Admin');
+});

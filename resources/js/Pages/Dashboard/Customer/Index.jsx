@@ -23,6 +23,8 @@ import {
 } from 'lucide-react';
 import { Skeleton } from '@/Components/ui/skeleton';
 import ErrorBoundary from '@/Components/ErrorBoundary';
+import ActiveOrderTracking from './Components/ActiveOrderTracking';
+import { Link } from '@inertiajs/react';
 
 const RewardsCard = ({ rewards_points, points_this_month }) => {
     const {
@@ -111,7 +113,8 @@ const CustomerDashboard = ({ dashboardData, userRole, permissions }) => {
     recent_orders = [],
     favorite_restaurants = [],
     recent_activity = [],
-    summary_stats = {}
+    summary_stats = {},
+    activeOrders = []
   } = stats;
 
   // Add loading state
@@ -258,6 +261,29 @@ const CustomerDashboard = ({ dashboardData, userRole, permissions }) => {
             </div>
           )}
         </Card>
+
+        {activeOrders?.length > 0 && (
+            <div className="mt-6">
+                <h2 className="text-lg font-semibold mb-4">Active Orders</h2>
+                <div className="space-y-6">
+                    {activeOrders.map(order => (
+                        <div key={order.id} className="space-y-4">
+                            <ActiveOrderTracking order={order} />
+                            {order.delivery && (
+                                <div className="flex justify-end">
+                                    <Link
+                                        href={route('delivery.track', order.id)}
+                                        className="text-primary hover:text-primary/80"
+                                    >
+                                        View Full Tracking
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            </div>
+        )}
       </div>
     </AdminLayout>
   );

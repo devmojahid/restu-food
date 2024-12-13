@@ -8,11 +8,8 @@
 
         <!-- Google Maps Configuration -->
         <script>
-            window.googleMapsConfig = @json($googleMapsConfig);
+            window.googleMapsConfig = @json($googleMapsConfig ?? []);
             window.googleMapsApiKey = '{{ config('services.google.maps_api_key') }}';
-        </script>
-
-        <script async src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google.maps_api_key', '') }}&libraries=places,drawing,geometry">
         </script>
 
         <!-- Fonts -->

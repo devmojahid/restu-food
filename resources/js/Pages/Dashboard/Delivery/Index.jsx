@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
+import DeliveryTracker from './Components/DeliveryTracker';
 
 const DeliveryDashboard = ({ dashboardData, userRole, permissions }) => {
   let stats = dashboardData;
@@ -187,6 +188,20 @@ const DeliveryDashboard = ({ dashboardData, userRole, permissions }) => {
         
         {/* Delivery Timeline */}
         <DeliveryTimeline deliveries={stats.completed_deliveries} />
+
+        {activeDeliveries.map(delivery => (
+            <DeliveryTracker
+                key={delivery.id}
+                orderId={delivery.order_id}
+                deliveryId={delivery.id}
+                initialLocation={delivery.current_location}
+                restaurantLocation={delivery.restaurant_location}
+                destinationLocation={delivery.destination_location}
+                onLocationUpdate={(location) => {
+                    handleDeliveryLocationUpdate(delivery.id, location);
+                }}
+            />
+        ))}
       </div>
     </AdminLayout>
   );

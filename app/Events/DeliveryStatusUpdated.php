@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Events;
 
 use Illuminate\Broadcasting\Channel;
@@ -8,14 +10,14 @@ use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Queue\SerializesModels;
 
-class DeliveryLocationUpdated implements ShouldBroadcast
+final class DeliveryStatusUpdated implements ShouldBroadcast
 {
     use InteractsWithSockets, SerializesModels;
 
     public function __construct(
-        public array $location,
         public int $deliveryId,
         public int $orderId,
+        public string $status,
         public array $metadata = []
     ) {}
 
@@ -29,15 +31,15 @@ class DeliveryLocationUpdated implements ShouldBroadcast
 
     public function broadcastAs(): string
     {
-        return 'location.updated';
+        return 'status.updated';
     }
 
     public function broadcastWith(): array
     {
         return [
-            'location' => $this->location,
             'delivery_id' => $this->deliveryId,
             'order_id' => $this->orderId,
+            'status' => $this->status,
             'metadata' => $this->metadata,
             'timestamp' => now()->timestamp
         ];
