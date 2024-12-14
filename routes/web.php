@@ -604,10 +604,10 @@ Route::middleware(['auth', 'role:Restaurant'])->group(function () {
 // Frontend Routes
 Route::name('frontend.')->group(function () {
     Route::get('/', [HomeController::class, 'index'])->name('home');
+    Route::get('/about', [PageController::class, 'about'])->name('about');
     Route::get('/menu', [MenuController::class, 'index'])->name('menu');
     Route::get('/restaurants', [RestaurantController::class, 'index'])->name('restaurants');
     Route::get('/offers', [OfferController::class, 'index'])->name('offers');
-    Route::get('/about', [PageController::class, 'about'])->name('about');
     Route::get('/contact', [PageController::class, 'contact'])->name('contact');
 });
 
