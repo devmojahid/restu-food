@@ -5,62 +5,122 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Services\Admin\SystemService;
+use App\Services\Admin\SystemUpdateService;
 use Illuminate\Http\Request;
 use Inertia\Response;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Storage;
 
 final class SystemController extends Controller
 {
     public function __construct(
-        private readonly SystemService $systemService
+        private readonly SystemUpdateService $systemUpdateService
     ) {}
 
-    public function health(): Response
+    public function updates(Request $request): Response
     {
-        $healthData = $this->systemService->getSystemHealth();
-        
-        return Inertia::render('Admin/Settings/System/Health', [
-            'healthData' => $healthData
+        $updateInfo = $this->systemUpdateService->checkForUpdates($request->boolean('force', false));
+        $requirements = $this->systemUpdateService->getSystemRequirements();
+
+        return Inertia::render('Admin/Settings/System/Updates', [
+            'currentVersion' => config('app.version', '1.0.0'),
+            'latestVersion' => $updateInfo['latest_version'],
+            'changelog' => $updateInfo['changelog'],
+            'updateInfo' => [
+                'installed_date' => config('app.installed_at', now()->subDays(30))->format('Y-m-d H:i:s'),
+                'last_checked' => now()->format('Y-m-d H:i:s'),
+                'latest_release_date' => $updateInfo['release_date'],
+                'requirements' => $requirements,
+                'compatibility' => [
+                    'php' => $requirements['php']['compatible'],
+                    'mysql' => $requirements['mysql']['compatible'],
+                ],
+                'current_php_version' => $requirements['php']['current'],
+                'current_mysql_version' => $requirements['mysql']['current'],
+            ]
         ]);
     }
 
-    public function logs(): Response
+    public function performUpdate(Request $request)
     {
-        $logs = $this->systemService->getErrorLogs();
-        
-        return Inertia::render('Admin/Settings/System/Logs', [
-            'logs' => $logs
+        $request->validate([
+            'version' => 'required|string'
+        ]);
+
+        return $this->systemUpdateService->performUpdate($request->version);
+    }
+
+    public function uploadUpdate(Request $request)
+    {
+        $request->validate([
+            'update_file' => 'required|file|mimes:zip|max:51200' // 50MB max
+        ]);
+
+        $file = $request->file('update_file');
+        $path = $file->storeAs('updates/manual', 'update.zip');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Update package uploaded successfully',
+            'path' => $path
         ]);
     }
 
-    public function activity(): Response
+    public function runUpdateStep(Request $request)
     {
-        $activities = $this->systemService->getActivityLogs();
-        
-        return Inertia::render('Admin/Settings/System/Activity', [
-            'activities' => $activities
+        $request->validate([
+            'step' => 'required|string|in:download,verify,backup,extract,files,database,assets,cleanup'
         ]);
-    }
 
-    public function clearCache(Request $request)
-    {
         try {
-            $this->systemService->clearCache();
-            return back()->with('success', 'Cache cleared successfully');
+            $result = match ($request->step) {
+                'download' => $this->systemUpdateService->downloadLatestUpdate(),
+                'verify' => $this->systemUpdateService->verifyUpdatePackage(),
+                'backup' => $this->systemUpdateService->createBackup(),
+                'extract' => $this->systemUpdateService->extractUpdate(),
+                'files' => $this->systemUpdateService->updateFiles(),
+                'database' => $this->systemUpdateService->updateDatabase(),
+                'assets' => $this->systemUpdateService->publishAssets(),
+                'cleanup' => $this->systemUpdateService->cleanup(),
+            };
+
+            return response()->json([
+                'success' => true,
+                'message' => "Step '{$request->step}' completed successfully",
+                'data' => $result
+            ]);
         } catch (\Exception $e) {
-            return back()->with('error', 'Failed to clear cache');
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 
-    public function updates(): Response
+    public function checkRequirements()
     {
-        $updateInfo = $this->systemService->getUpdateInfo();
-        
-        return Inertia::render('Admin/Settings/System/Updates', [
-            'updateInfo' => $updateInfo
+        return response()->json([
+            'requirements' => $this->systemUpdateService->getSystemRequirements()
         ]);
+    }
+
+    public function downloadBackup(Request $request)
+    {
+        $request->validate([
+            'type' => 'required|string|in:database,files'
+        ]);
+
+        $backupPath = storage_path('app/updates/backup');
+        $filename = match ($request->type) {
+            'database' => 'backup-' . now()->format('Y-m-d-His') . '.sql',
+            'files' => 'backup-' . now()->format('Y-m-d-His') . '.zip',
+        };
+
+        if (!file_exists($backupPath . '/' . $filename)) {
+            abort(404, 'Backup file not found');
+        }
+
+        return response()->download($backupPath . '/' . $filename);
     }
 } 

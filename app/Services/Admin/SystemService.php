@@ -81,32 +81,87 @@ final class SystemService
 
     public function getErrorLogs(int $lines = 100): array
     {
-        $logFile = storage_path('logs/laravel.log');
-        if (!File::exists($logFile)) {
+        try {
+            $logFile = storage_path('logs/laravel.log');
+            if (!file_exists($logFile)) {
+                return [];
+            }
+
+            $logs = [];
+            $pattern = '/^\[(?<date>.*)\]\s(?<env>\w+)\.(?<type>\w+):(?<message>.*)/m';
+            
+            $file = new \SplFileObject($logFile, 'r');
+            $file->seek(PHP_INT_MAX);
+            $lastLine = $file->key();
+            
+            $offset = max(0, $lastLine - $lines);
+            $content = '';
+            
+            $file->seek($offset);
+            while (!$file->eof()) {
+                $content .= $file->fgets();
+            }
+            
+            preg_match_all($pattern, $content, $matches, PREG_SET_ORDER);
+
+            $formattedLogs = [];
+            foreach ($matches as $match) {
+                $formattedLogs[] = [
+                    'date' => $match['date'],
+                    'environment' => $match['env'],
+                    'type' => $match['type'],
+                    'message' => trim($match['message']),
+                    'level' => $this->getLogLevel($match['type']),
+                    'context' => $this->parseLogContext($match['message']),
+                    'timestamp' => strtotime($match['date']),
+                ];
+            }
+
+            usort($formattedLogs, fn($a, $b) => $b['timestamp'] - $a['timestamp']);
+            
+            return $formattedLogs;
+        } catch (\Exception $e) {
+            Log::error('Failed to read error logs: ' . $e->getMessage());
+            return [[
+                'date' => now()->toDateTimeString(),
+                'environment' => 'system',
+                'type' => 'error',
+                'message' => 'Failed to read log file: ' . $e->getMessage(),
+                'level' => 'error',
+                'context' => [],
+                'timestamp' => time()
+            ]];
+        }
+    }
+
+    private function getLogLevel(string $type): string 
+    {
+        return match (strtolower($type)) {
+            'error', 'critical', 'alert', 'emergency' => 'error',
+            'warning' => 'warning',
+            'notice', 'info' => 'info',
+            'debug' => 'debug',
+            default => 'info'
+        };
+    }
+
+    private function parseLogContext(string $message): array
+    {
+        try {
+            if (preg_match('/\{.*\}/', $message, $matches)) {
+                $jsonStr = $matches[0];
+                $context = json_decode($jsonStr, true);
+                return is_array($context) ? $context : [];
+            }
+            return [];
+        } catch (\Exception $e) {
             return [];
         }
-
-        $logs = [];
-        $pattern = '/^\[(?<date>.*)\]\s(?<env>\w+)\.(?<type>\w+):(?<message>.*)/m';
-        
-        $content = File::tail($logFile, $lines);
-        preg_match_all($pattern, $content, $matches, PREG_SET_ORDER);
-
-        foreach ($matches as $match) {
-            $logs[] = [
-                'date' => $match['date'],
-                'environment' => $match['env'],
-                'type' => $match['type'],
-                'message' => trim($match['message']),
-            ];
-        }
-
-        return array_reverse($logs);
     }
 
     public function getActivityLogs(int $limit = 50): array
     {
-        return DB::table('activity_log')
+        return DB::table('activity_logs')
             ->select('description', 'causer_type', 'causer_id', 'created_at', 'properties')
             ->orderByDesc('created_at')
             ->limit($limit)

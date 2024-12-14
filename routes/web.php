@@ -619,3 +619,13 @@ Route::middleware(['auth'])->group(function () {
             ->name('status.update');
     });
 });
+
+
+Route::prefix('app/settings/system')->name('app.settings.system.')->group(function () {
+    Route::get('/updates', [SystemController::class, 'updates'])->name('updates');
+    Route::post('/updates/perform', [SystemController::class, 'performUpdate'])->name('updates.perform');
+    Route::post('/updates/upload', [SystemController::class, 'uploadUpdate'])->name('updates.upload');
+    Route::post('/updates/step', [SystemController::class, 'runUpdateStep'])->name('updates.step');
+    Route::get('/updates/requirements', [SystemController::class, 'checkRequirements'])->name('updates.requirements');
+    Route::get('/updates/backup/{type}', [SystemController::class, 'downloadBackup'])->name('updates.backup');
+});

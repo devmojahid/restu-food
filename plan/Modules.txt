@@ -17,22 +17,6 @@ Today TODO:
 
 
 
-## **System Administration** `*Today TODO*`
-
-- [ ]  Server Status (**System Health**)
-- [ ]  Error Logs (**System Health**)
-- [ ]  User Activity Monitoring(**Activity Logs**)
-- [ ]  Clear Cache Button(**Cache Management**)
-- [ ]  Version Management(**System Updates**)
-
-## **Location Management** `*Today TODO*`
-
-- **Geographical Setup**
-- [ ]  Countries
-- [ ]  States/Regions
-- [ ]  Cities
-
-
 
 
 Ecommerce
@@ -131,6 +115,25 @@ Delivery Management
 
 ZIP Code-Based Zones: List of ZIP codes where delivery is available.
 Radius-Based Zones: Delivery available within a certain radius from the branch location.
+
+
+
+## **System Administration** `*Today TODO*`  done
+
+- [ ]  Server Status (**System Health**)
+- [ ]  Error Logs (**System Health**)
+- [ ]  User Activity Monitoring(**Activity Logs**)
+- [ ]  Clear Cache Button(**Cache Management**)
+- [ ]  Version Management(**System Updates**)
+
+
+## **Location Management** `*Today TODO*`
+
+- **Geographical Setup**
+- [ ]  Countries
+- [ ]  States/Regions
+- [ ]  Cities
+
 
 Delivery Time Slot Management
 
