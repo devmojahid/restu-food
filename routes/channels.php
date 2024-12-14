@@ -4,12 +4,16 @@ use App\Models\Order;
 use App\Models\Restaurant;
 use App\Models\User;
 use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\Cache;
 
 /*
 |--------------------------------------------------------------------------
 | Broadcast Channels
 |--------------------------------------------------------------------------
 */
+
+
+Broadcast::routes(['middleware' => ['web']]);
 // Private channel for authenticated users
 Broadcast::channel('user.{id}', function (User $user, int $id) {
     return $user->id === $id;
@@ -63,11 +67,20 @@ Broadcast::channel('restaurant.{restaurantId}.notifications', function ($user, $
 });
 
 // Private channel for specific deliveries
-Broadcast::channel('delivery.{deliveryId}', function (User $user, int $deliveryId) {
-    return $user->id === Delivery::findOrFail($deliveryId)->delivery_person_id || 
-           $user->hasRole('Admin');
+Broadcast::channel('delivery.{deliveryId}', function ($user, $deliveryId) {
+    $delivery = App\Models\Delivery::find($deliveryId);
+    return $user && (
+        $user->id === $delivery?->driver_id ||
+        $user->id === $delivery?->order?->customer_id ||
+        $user->hasRole('Admin')
+    );
 });
 
+/**
+ * Broadcast::channel('delivery.{deliveryId}', function (User $user, int $deliveryId) {
+    return $user->id === Delivery::findOrFail($deliveryId)->delivery_person_id || 
+           $user->hasRole('Admin');
+ */
 // Private channel for delivery tracking
 Broadcast::channel('delivery.tracking.{orderId}', function (User $user, int $orderId) {
     $order = Order::findOrFail($orderId);
@@ -75,4 +88,30 @@ Broadcast::channel('delivery.tracking.{orderId}', function (User $user, int $ord
            $user->id === $order->delivery_person_id ||
            $user->restaurants()->where('id', $order->restaurant_id)->exists() ||
            $user->hasRole('Admin');
+});
+
+// Private channel for device-specific updates
+// Broadcast::channel('delivery.{deliveryId}.device.{deviceId}', function ($user, $deliveryId, $deviceId) {
+//     $delivery = App\Models\Delivery::find($deliveryId);
+//     $devices = Cache::get("delivery_devices:{$deliveryId}", []);
+    
+//     return $user && (
+//         isset($devices[$deviceId]) && 
+//         ($user->id === $delivery?->driver_id ||
+//          $user->id === $delivery?->order?->customer_id ||
+//          $user->hasRole('Admin'))
+//     );
+// });
+
+Broadcast::channel('delivery.{deliveryId}.device.{deviceId}', function ($user, $deliveryId, $deviceId) {
+    $delivery = App\Models\Delivery::find($deliveryId);
+    $devices = Cache::get("delivery_devices:{$deliveryId}", []);
+    
+    // return $user && (
+    //     isset($devices[$deviceId]) && 
+    //     ($user->id === $delivery?->driver_id ||
+    //      $user->id === $delivery?->order?->customer_id ||
+    //      $user->hasRole('Admin'))
+    // );
+    return true;
 });

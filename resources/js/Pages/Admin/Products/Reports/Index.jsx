@@ -76,7 +76,6 @@ const EcommerceReport = ({ stats: initialStats, userRole, permissions }) => {
 
   const handleExport = () => {
     // Implement export functionality
-    console.log('Exporting data...');
   };
 
   return (

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { GoogleMap, LoadScript, Marker, DirectionsRenderer, useLoadScript } from '@react-google-maps/api';
 import { Card } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
@@ -6,17 +6,30 @@ import { Button } from '@/Components/ui/button';
 import { Loader2, Navigation, MapPin, Clock, Phone, MessageSquare } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
 
 const LiveDeliveryTracking = ({ order, deliveryData, isLoading: parentIsLoading }) => {
+    const isMobile = useMediaQuery('(max-width: 768px)');
     const [currentLocation, setCurrentLocation] = useState(order?.delivery?.current_location);
     const [directions, setDirections] = useState(null);
     const [eta, setEta] = useState(order?.estimated_delivery_time);
     const [deliveryStatus, setDeliveryStatus] = useState(order?.status);
     const [mapLoading, setMapLoading] = useState(true);
 
+    // Generate unique device ID using timestamp and random string
+    const generateDeviceId = useCallback(() => {
+        const timestamp = Date.now().toString(36);
+        const randomStr = Math.random().toString(36).substring(2, 8);
+        return `${timestamp}-${randomStr}`;
+    }, []);
+
+    const deviceId = useRef(generateDeviceId());
+
     const mapContainerStyle = {
         width: '100%',
-        height: '400px'
+        height: isMobile ? '300px' : '400px'
     };
 
     const defaultCenter = {
@@ -103,6 +116,119 @@ const LiveDeliveryTracking = ({ order, deliveryData, isLoading: parentIsLoading 
         toast.success('Opening chat...');
     }, []);
 
+    // Add smooth marker animation
+    const DriverMarker = ({ position }) => (
+        <motion.div
+            initial={false}
+            animate={{ x: position.lng, y: position.lat }}
+            transition={{ type: "spring", damping: 15 }}
+        >
+            <Marker
+                position={position}
+                icon={{
+                    path: window.google.maps.SymbolPath.CIRCLE,
+                    scale: isMobile ? 6 : 8,
+                    fillColor: "#4f46e5",
+                    fillOpacity: 1,
+                    strokeWeight: 2,
+                    strokeColor: "#ffffff",
+                }}
+            />
+        </motion.div>
+    );
+
+    // Add mobile-optimized controls
+    const MapControls = () => (
+        <div className={cn(
+            "absolute bottom-4 left-4 right-4 bg-white/95 dark:bg-gray-800/95",
+            "backdrop-blur-sm rounded-lg shadow-lg p-4 space-y-2",
+            "md:w-auto md:left-4 md:right-auto"
+        )}>
+            {/* ... controls content ... */}
+        </div>
+    );
+
+    // Update device pairing effect
+    // useEffect(() => {
+    //     if (!order?.delivery?.id) return;
+
+    //     const pairDevice = async () => {
+    //         try {
+    //             await axios.post('/app/delivery/device/pair', {
+    //                 delivery_id: order.delivery.id,
+    //                 device_id: deviceId.current,
+    //                 role: 'customer'
+    //             });
+
+    //             const deviceChannel = window.Echo.private(
+    //                 `delivery.${order.delivery.id}.device.${deviceId.current}`
+    //             );
+                
+    //             deviceChannel.listen('.device.update', (event) => {
+    //                 if (event.data?.location) {
+    //                     setCurrentLocation(event.data.location);
+    //                     updateRoute(event.data.location);
+    //                 }
+    //             });
+
+    //             return () => {
+    //                 deviceChannel.stopListening('.device.update');
+    //                 axios.post('/app/delivery/device/unpair', {
+    //                     delivery_id: order.delivery.id,
+    //                     device_id: deviceId.current
+    //                 }).catch(console.error);
+    //             };
+    //         } catch (error) {
+    //             console.error('Device pairing failed:', error);
+    //             toast.error('Failed to connect to delivery tracking');
+    //         }
+    //     };
+
+    //     pairDevice();
+    // }, [order?.delivery?.id, updateRoute]);
+
+    useEffect(() => {
+        if (!order?.delivery?.id) return;
+    
+        const pairDevice = async () => {
+            try {
+                // First ensure the device is paired
+                await axios.post('/app/delivery/device/pair', {
+                    delivery_id: order.delivery.id,
+                    device_id: deviceId.current,
+                    role: 'customer'
+                });
+    
+                // Use the correct channel format for Reverb
+                const deviceChannel = window.Echo
+                    .private(`delivery.${order.delivery.id}.device.${deviceId.current}`)
+                    .listen('.device.update', (event) => {
+                        if (event.data?.location) {
+                            setCurrentLocation(event.data.location);
+                            updateRoute(event.data.location);
+                        }
+                    })
+                    .error((error) => {
+                        console.error('Channel subscription error:', error);
+                        toast.error('Connection to delivery tracking lost');
+                    });
+    
+                return () => {
+                    deviceChannel.stopListening('.device.update');
+                    axios.post('/app/delivery/device/unpair', {
+                        delivery_id: order.delivery.id,
+                        device_id: deviceId.current
+                    }).catch(console.error);
+                };
+            } catch (error) {
+                console.error('Device pairing failed:', error);
+                toast.error('Failed to connect to delivery tracking');
+            }
+        };
+    
+        pairDevice();
+    }, [order?.delivery?.id, updateRoute]);
+
     if (!order?.delivery) {
         return (
             <Card className="p-4">
@@ -132,78 +258,80 @@ const LiveDeliveryTracking = ({ order, deliveryData, isLoading: parentIsLoading 
                     </Badge>
                 </div>
 
-                {!isLoaded || mapLoading || parentIsLoading ? (
-                    <div className="flex items-center justify-center h-[400px]">
-                        <Loader2 className="h-8 w-8 animate-spin" />
-                    </div>
-                ) : (
-                    <div className="relative h-[400px] rounded-lg overflow-hidden">
-                        <GoogleMap
-                            mapContainerStyle={mapContainerStyle}
-                            center={defaultCenter}
-                            zoom={13}
-                            options={{
-                                zoomControl: true,
-                                streetViewControl: false,
-                                mapTypeControl: false,
-                                fullscreenControl: false,
-                            }}
-                        >
-                            {currentLocation && (
+                <div className="relative">
+                    {!isLoaded || mapLoading || parentIsLoading ? (
+                        <div className="flex items-center justify-center h-[300px] md:h-[400px]">
+                            <Loader2 className="h-8 w-8 animate-spin" />
+                        </div>
+                    ) : (
+                        <div className="relative rounded-lg overflow-hidden">
+                            <GoogleMap
+                                mapContainerStyle={mapContainerStyle}
+                                center={defaultCenter}
+                                zoom={13}
+                                options={{
+                                    zoomControl: !isMobile,
+                                    streetViewControl: false,
+                                    mapTypeControl: false,
+                                    fullscreenControl: !isMobile,
+                                    gestureHandling: 'greedy',
+                                    styles: [
+                                        {
+                                            featureType: "poi",
+                                            elementType: "labels",
+                                            stylers: [{ visibility: "off" }]
+                                        }
+                                    ]
+                                }}
+                            >
+                                {currentLocation && (
+                                    <DriverMarker position={currentLocation} />
+                                )}
+
                                 <Marker
-                                    position={currentLocation}
+                                    position={order.restaurant.location}
                                     icon={{
-                                        path: window.google.maps.SymbolPath.CIRCLE,
-                                        scale: 8,
-                                        fillColor: "#4f46e5",
+                                        path: window.google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+                                        scale: 6,
+                                        fillColor: "#22c55e",
                                         fillOpacity: 1,
                                         strokeWeight: 2,
                                         strokeColor: "#ffffff",
                                     }}
                                 />
-                            )}
 
-                            <Marker
-                                position={order.restaurant.location}
-                                icon={{
-                                    path: window.google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
-                                    scale: 6,
-                                    fillColor: "#22c55e",
-                                    fillOpacity: 1,
-                                    strokeWeight: 2,
-                                    strokeColor: "#ffffff",
-                                }}
-                            />
-
-                            <Marker
-                                position={order.delivery_location}
-                                icon={{
-                                    path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-                                    scale: 6,
-                                    fillColor: "#ef4444",
-                                    fillOpacity: 1,
-                                    strokeWeight: 2,
-                                    strokeColor: "#ffffff",
-                                }}
-                            />
-
-                            {directions && (
-                                <DirectionsRenderer
-                                    directions={directions}
-                                    options={{
-                                        suppressMarkers: true,
-                                        polylineOptions: {
-                                            strokeColor: '#4f46e5',
-                                            strokeWeight: 4
-                                        }
+                                <Marker
+                                    position={order.delivery_location}
+                                    icon={{
+                                        path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                                        scale: 6,
+                                        fillColor: "#ef4444",
+                                        fillOpacity: 1,
+                                        strokeWeight: 2,
+                                        strokeColor: "#ffffff",
                                     }}
                                 />
-                            )}
-                        </GoogleMap>
-                    </div>
-                )}
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                                {directions && (
+                                    <DirectionsRenderer
+                                        directions={directions}
+                                        options={{
+                                            suppressMarkers: true,
+                                            polylineOptions: {
+                                                strokeColor: '#4f46e5',
+                                                strokeWeight: 4
+                                            }
+                                        }}
+                                    />
+                                )}
+                            </GoogleMap>
+                            
+                            <MapControls />
+                        </div>
+                    )}
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-4">
                     {eta && (
                         <div className="flex items-center space-x-2 bg-secondary/20 p-3 rounded-lg">
                             <Clock className="w-5 h-5 text-muted-foreground" />

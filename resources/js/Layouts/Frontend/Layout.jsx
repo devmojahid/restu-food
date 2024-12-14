@@ -18,21 +18,6 @@ const Layout = ({ children }) => {
     const [notifications, setNotifications] = useState([]);
 
     useEffect(() => {
-        // Ensure Echo is initialized
-        if (typeof window.Echo === 'undefined') {
-            console.error('Echo is not initialized');
-            return;
-        }
-
-        // Connection status monitoring
-        window.Echo.connector.pusher.connection.bind('connected', () => {
-            console.log('Successfully connected to Reverb server');
-        });
-
-        window.Echo.connector.pusher.connection.bind('error', (error) => {
-            console.error('Reverb connection error:', error);
-        });
-
         // Subscribe to the channel
         const channel = window.Echo.private(`restaurant.1.orders`);
         
@@ -42,7 +27,7 @@ const Layout = ({ children }) => {
 
         // Listen for new orders
         channel.listen('.NewOrder', (event) => {
-            console.log('New order received:', event);
+            // console.log('New order received:', event);
             alert('New order received!');
             // Add new notification
             setNotifications(prev => [...prev, event]);

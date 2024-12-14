@@ -4,14 +4,18 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Route;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__ . '/../routes/web.php',
-        commands: __DIR__ . '/../routes/console.php',
-        channels: __DIR__ . '/../routes/channels.php',
+        // channels: __DIR__ . '/../routes/channels.php',
         health: '/up',
+        then: function(){
+            Route::middleware(['web', 'auth'])
+            ->group(base_path('routes/channels.php'));
+        }
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->web(append: [
@@ -25,7 +29,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'currency' => \App\Http\Middleware\ShareCurrencyData::class,
         ]);
 
-        //
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(function (Throwable $e, $request) {

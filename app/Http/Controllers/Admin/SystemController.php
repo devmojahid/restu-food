@@ -11,12 +11,51 @@ use Inertia\Response;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
+use App\Services\Admin\SystemService;
 
 final class SystemController extends Controller
 {
     public function __construct(
-        private readonly SystemUpdateService $systemUpdateService
+        private readonly SystemUpdateService $systemUpdateService,
+        private readonly SystemService $systemService
     ) {}
+
+    public function health(): Response
+    {
+        $healthData = $this->systemService->getSystemHealth();
+        
+        return Inertia::render('Admin/Settings/System/Health', [
+            'healthData' => $healthData
+        ]);
+    }
+
+    public function logs(): Response
+    {
+        $logs = $this->systemService->getErrorLogs();
+        
+        return Inertia::render('Admin/Settings/System/Logs', [
+            'logs' => $logs
+        ]);
+    }
+
+    public function activity(): Response
+    {
+        $activities = $this->systemService->getActivityLogs();
+        
+        return Inertia::render('Admin/Settings/System/Activity', [
+            'activities' => $activities
+        ]);
+    }
+
+    public function clearCache(Request $request)
+    {
+        try {
+            $this->systemService->clearCache();
+            return back()->with('success', 'Cache cleared successfully');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to clear cache');
+        }
+    }
 
     public function updates(Request $request): Response
     {

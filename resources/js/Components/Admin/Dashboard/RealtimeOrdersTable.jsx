@@ -139,12 +139,12 @@ const RealtimeOrdersTable = ({ initialOrders = [], restaurantId }) => {
             return;
         }
 
-        console.log('Subscribing to channel:', `restaurant.${restaurantId}.orders`);
+        // console.log('Subscribing to channel:', `restaurant.${restaurantId}.orders`);
 
         const channel = window.Echo.private(`restaurant.${restaurantId}.orders`);
         
         channel.listen('.App\\Events\\NewOrder', (e) => {
-            console.log('New order received:', e);
+            // console.log('New order received:', e);
             
             if (!e.order) {
                 console.error('Invalid order data received');
@@ -189,7 +189,7 @@ const RealtimeOrdersTable = ({ initialOrders = [], restaurantId }) => {
         });
 
         return () => {
-            console.log('Unsubscribing from channel:', `restaurant.${restaurantId}.orders`);
+            // console.log('Unsubscribing from channel:', `restaurant.${restaurantId}.orders`);
             channel.stopListening('.App\\Events\\NewOrder');
         };
     }, [restaurantId, soundEnabled]);

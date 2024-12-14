@@ -135,14 +135,14 @@ const Header = ({ toggleSidebar, sidebarOpen, isMobile, theme, toggleTheme }) =>
           >
             <Menu className="h-5 w-5 text-gray-500 dark:text-gray-400" />
           </button>
-          <Link
+          <a
             href="/"
             target="_blank"
             className="hidden lg:inline-flex items-center px-4 py-2 border-2 border-blue-500 dark:border-blue-400 text-blue-500 dark:text-blue-400 font-medium rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
           >
             <Globe className="w-4 h-4 mr-2" />
             View Website
-          </Link>
+          </a>
         </div>
 
         {/* Center section - Search */}

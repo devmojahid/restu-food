@@ -9,8 +9,6 @@ use App\Services\Admin\DeliveryTrackingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Http\Requests\Admin\Delivery\UpdateLocationRequest;
-use App\Http\Resources\DeliveryLocationResource;
-use App\Http\Resources\DeliveryStatsResource;
 
 final class DeliveryLocationController extends Controller
 {
@@ -32,6 +30,7 @@ final class DeliveryLocationController extends Controller
                 'location' => $request->validated('location')
             ]);
         } catch (\Exception $e) {
+            \Log::error('Location update failed: ' . $e->getMessage());
             return response()->json([
                 'message' => 'Failed to update location',
                 'error' => $e->getMessage()
@@ -43,11 +42,9 @@ final class DeliveryLocationController extends Controller
     {
         try {
             $history = $this->trackingService->getLocationHistory($deliveryId);
-            
-            return response()->json([
-                'history' => DeliveryLocationResource::collection($history)
-            ]);
+            return response()->json(['history' => $history]);
         } catch (\Exception $e) {
+            \Log::error('Failed to fetch location history: ' . $e->getMessage());
             return response()->json([
                 'message' => 'Failed to fetch location history',
                 'error' => $e->getMessage()
@@ -59,11 +56,9 @@ final class DeliveryLocationController extends Controller
     {
         try {
             $stats = $this->trackingService->getDeliveryStats($deliveryId);
-            
-            return response()->json([
-                'stats' => new DeliveryStatsResource($stats)
-            ]);
+            return response()->json(['stats' => $stats]);
         } catch (\Exception $e) {
+            \Log::error('Failed to fetch delivery stats: ' . $e->getMessage());
             return response()->json([
                 'message' => 'Failed to fetch delivery stats',
                 'error' => $e->getMessage()
@@ -73,22 +68,89 @@ final class DeliveryLocationController extends Controller
 
     public function updateStatus(Request $request, int $deliveryId): JsonResponse
     {
-        $validated = $request->validate([
-            'status' => 'required|string|in:assigned,picked_up,in_transit,delivered,cancelled'
-        ]);
-
         try {
+            $validated = $request->validate([
+                'status' => 'required|string|in:assigned,picked_up,in_transit,delivered,cancelled'
+            ]);
+
             $this->trackingService->updateDeliveryStatus(
                 deliveryId: $deliveryId,
                 status: $validated['status']
             );
 
+            return response()->json(['message' => 'Status updated successfully']);
+        } catch (\Exception $e) {
+            \Log::error('Failed to update delivery status: ' . $e->getMessage());
             return response()->json([
-                'message' => 'Delivery status updated successfully'
+                'message' => 'Failed to update status',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function pairDevice(Request $request): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'delivery_id' => 'required|integer',
+                'device_id' => 'required|string',
+                'role' => 'required|in:customer,driver'
+            ]);
+
+            $this->trackingService->pairDevice(
+                deliveryId: $validated['delivery_id'],
+                deviceId: $validated['device_id'],
+                role: $validated['role']
+            );
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Device paired successfully'
             ]);
         } catch (\Exception $e) {
+            \Log::error('Device pairing failed: ' . $e->getMessage());
             return response()->json([
-                'message' => 'Failed to update delivery status',
+                'status' => 'error',
+                'message' => 'Failed to pair device'
+            ], 500);
+        }
+    }
+
+    public function unpairDevice(Request $request): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'delivery_id' => 'required|integer',
+                'device_id' => 'required|string'
+            ]);
+
+            $this->trackingService->unpairDevice(
+                deliveryId: $validated['delivery_id'],
+                deviceId: $validated['device_id']
+            );
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Device unpaired successfully'
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Device unpairing failed: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to unpair device'
+            ], 500);
+        }
+    }
+
+    public function getActiveDevices(int $deliveryId): JsonResponse
+    {
+        try {
+            $devices = $this->trackingService->getActiveDevices($deliveryId);
+            return response()->json(['devices' => $devices]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to fetch active devices: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Failed to fetch active devices',
                 'error' => $e->getMessage()
             ], 500);
         }

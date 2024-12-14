@@ -119,7 +119,6 @@ export default function CreateProductForm({ restaurants, categories, globalAttri
 
   const { data, setData, post, processing, errors } = useForm(INITIAL_FORM_STATE);
 
-console.log(data);
   // Auto-generate slug from name
   useEffect(() => {
     if (data.name && autoUpdateSlug) {
@@ -134,7 +133,6 @@ console.log(data);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Submitting data:', data);
     setIsSubmitting(true);
     post(route("app.products.store"));
   };

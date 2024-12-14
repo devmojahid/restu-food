@@ -508,6 +508,18 @@ Route::prefix('app')->name('app.')->middleware(['auth'])->group(function () {
     Route::get('/delivery/track/{orderId}', [DeliveryTrackingController::class, 'show'])
         ->name('delivery.track');
 
+    // Add these routes inside your auth middleware group
+    Route::middleware(['auth'])->group(function () {
+        Route::prefix('delivery/device')->name('delivery.device.')->group(function () {
+            Route::post('pair', [DeliveryTrackingController::class, 'pairDevice'])
+                ->name('pair');
+            Route::post('unpair', [DeliveryTrackingController::class, 'unpairDevice'])
+                ->name('unpair');
+            Route::get('active/{deliveryId}', [DeliveryTrackingController::class, 'getActiveDevices'])
+                ->name('active');
+        });
+    });
+
 });
 
 /*
@@ -617,6 +629,14 @@ Route::middleware(['auth'])->group(function () {
             ->name('stats');
         Route::put('{deliveryId}/status', [DeliveryLocationController::class, 'updateStatus'])
             ->name('status.update');
+        
+        // Add device pairing routes
+        Route::post('device/pair', [DeliveryLocationController::class, 'pairDevice'])
+            ->name('device.pair');
+        Route::post('device/unpair', [DeliveryLocationController::class, 'unpairDevice'])
+            ->name('device.unpair');
+        Route::get('device/active/{deliveryId}', [DeliveryLocationController::class, 'getActiveDevices'])
+            ->name('device.active');
     });
 });
 
@@ -629,3 +649,7 @@ Route::prefix('app/settings/system')->name('app.settings.system.')->group(functi
     Route::get('/updates/requirements', [SystemController::class, 'checkRequirements'])->name('updates.requirements');
     Route::get('/updates/backup/{type}', [SystemController::class, 'downloadBackup'])->name('updates.backup');
 });
+
+// Route Redirects
+Route::redirect('/admin', '/app/dashboard');
+Route::redirect('/admin/dashboard', '/app/dashboard');

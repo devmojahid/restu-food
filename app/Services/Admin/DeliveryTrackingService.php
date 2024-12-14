@@ -12,6 +12,8 @@ use App\Events\DeliveryStatusUpdated;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use App\Services\Admin\DeliveryService;
+use Illuminate\Support\Facades\Log;
 
 final class DeliveryTrackingService
 {
@@ -124,7 +126,7 @@ final class DeliveryTrackingService
                        $data['rows'][0]['elements'][0]['duration']['text'] ?? null;
             }
         } catch (\Exception $e) {
-            \Log::error('Failed to calculate ETA: ' . $e->getMessage());
+            Log::error('Failed to calculate ETA: ' . $e->getMessage());
         }
 
         return null;
@@ -279,93 +281,199 @@ final class DeliveryTrackingService
         return $order;
     }
 
+    private function generateDummyRoute(): array
+    {
+        $baseLocation = [
+            'lat' => 23.8103,
+            'lng' => 90.4125
+        ];
+
+        $points = [];
+        for ($i = 0; $i < 10; $i++) {
+            $points[] = [
+                'id' => $i + 1,
+                'latitude' => $baseLocation['lat'] + (rand(-10, 10) / 1000),
+                'longitude' => $baseLocation['lng'] + (rand(-10, 10) / 1000),
+                'recorded_at' => now()->subMinutes(30 - $i * 3),
+                'metadata' => [
+                    'speed' => rand(20, 40) . ' km/h',
+                    'heading' => ['North', 'South', 'East', 'West'][rand(0, 3)],
+                    'accuracy' => rand(3, 8) . 'm',
+                    'battery_level' => rand(20, 100) . '%',
+                    'network_status' => ['4G', '5G'][rand(0, 1)],
+                    'vehicle_status' => 'Moving'
+                ]
+            ];
+        }
+
+        return $points;
+    }
+
     public function getDummyLocationHistory(int $deliveryId): Collection
     {
-        return collect([
-            [
-                'id' => 1,
-                'delivery_id' => $deliveryId,
-                'latitude' => 23.8203,
-                'longitude' => 90.4225,
-                'recorded_at' => now()->subMinutes(30),
-                'created_at' => now()->subMinutes(30),
-                'updated_at' => now()->subMinutes(30),
-                'metadata' => [
-                    'speed' => '30 km/h',
-                    'heading' => 'North',
-                    'accuracy' => '5m'
-                ]
-            ],
-            [
-                'id' => 2,
-                'delivery_id' => $deliveryId,
-                'latitude' => 23.8153,
-                'longitude' => 90.4175,
-                'recorded_at' => now()->subMinutes(20),
-                'created_at' => now()->subMinutes(20),
-                'updated_at' => now()->subMinutes(20),
-                'metadata' => [
-                    'speed' => '25 km/h',
-                    'heading' => 'Northeast',
-                    'accuracy' => '4m'
-                ]
-            ],
-            [
-                'id' => 3,
-                'delivery_id' => $deliveryId,
-                'latitude' => 23.8103,
-                'longitude' => 90.4125,
-                'recorded_at' => now()->subMinutes(10),
-                'created_at' => now()->subMinutes(10),
-                'updated_at' => now()->subMinutes(10),
-                'metadata' => [
-                    'speed' => '35 km/h',
-                    'heading' => 'East',
-                    'accuracy' => '3m'
-                ]
-            ]
-        ]);
+        return collect($this->generateDummyRoute())
+            ->map(function ($point) use ($deliveryId) {
+                return array_merge($point, [
+                    'delivery_id' => $deliveryId,
+                    'created_at' => $point['recorded_at'],
+                    'updated_at' => $point['recorded_at']
+                ]);
+            });
     }
 
     public function getDummyDeliveryStats(int $deliveryId): array
     {
         return [
-            'total_distance' => 5.2,
-            'total_time' => 45,
-            'average_speed' => 25.5,
+            'total_distance' => rand(30, 80) / 10, // 3.0 - 8.0 km
+            'total_time' => rand(15, 45), // 15-45 minutes
+            'average_speed' => rand(200, 350) / 10, // 20-35 km/h
             'stops_made' => collect([
                 [
                     'latitude' => 23.8153,
                     'longitude' => 90.4175,
-                    'duration' => '5 minutes',
-                    'reason' => 'Traffic Signal',
-                    'timestamp' => now()->subMinutes(20)->toIso8601String(),
+                    'duration' => rand(3, 8) . ' minutes',
+                    'reason' => ['Traffic Signal', 'Customer Call', 'Route Check'][rand(0, 2)],
+                    'timestamp' => now()->subMinutes(rand(5, 25))->toIso8601String(),
                 ]
             ]),
             'status_history' => collect([
                 [
                     'status' => 'assigned',
                     'timestamp' => now()->subMinutes(45)->toIso8601String(),
-                    'note' => 'Driver assigned to order'
+                    'note' => 'Driver assigned to order',
+                    'location' => [
+                        'lat' => 23.8203,
+                        'lng' => 90.4225
+                    ]
                 ],
                 [
                     'status' => 'picked_up',
                     'timestamp' => now()->subMinutes(30)->toIso8601String(),
-                    'note' => 'Order picked up from restaurant'
+                    'note' => 'Order picked up from restaurant',
+                    'location' => [
+                        'lat' => 23.8153,
+                        'lng' => 90.4175
+                    ]
                 ],
                 [
                     'status' => 'in_transit',
                     'timestamp' => now()->subMinutes(25)->toIso8601String(),
-                    'note' => 'On the way to delivery location'
+                    'note' => 'On the way to delivery location',
+                    'location' => [
+                        'lat' => 23.8103,
+                        'lng' => 90.4125
+                    ]
                 ]
             ]),
             'delivery_metrics' => [
-                'estimated_time_remaining' => '15 minutes',
-                'distance_to_destination' => '2.3 km',
-                'current_speed' => '30 km/h',
-                'traffic_conditions' => 'Moderate',
-                'weather_conditions' => 'Clear'
+                'estimated_time_remaining' => rand(10, 30) . ' minutes',
+                'distance_to_destination' => rand(15, 35) / 10 . ' km',
+                'current_speed' => rand(20, 40) . ' km/h',
+                'traffic_conditions' => ['Light', 'Moderate', 'Heavy'][rand(0, 2)],
+                'weather_conditions' => ['Clear', 'Cloudy', 'Light Rain'][rand(0, 2)],
+                'battery_level' => rand(20, 100) . '%',
+                'network_status' => ['4G', '5G'][rand(0, 1)],
+                'vehicle_status' => ['Moving', 'Stopped', 'Parked'][rand(0, 2)]
             ]
         ];
+    }
+
+    public function generateDeliveryRoute(array $start, array $end): array
+    {
+        $points = [];
+        $steps = 20;
+
+        for ($i = 0; $i <= $steps; $i++) {
+            $progress = $i / $steps;
+            
+            // Add some randomness to make it look more realistic
+            $jitter = (rand(-10, 10) / 1000);
+            
+            $points[] = [
+                'lat' => $start['lat'] + ($end['lat'] - $start['lat']) * $progress + $jitter,
+                'lng' => $start['lng'] + ($end['lng'] - $start['lng']) * $progress + $jitter
+            ];
+        }
+
+        return $points;
+    }
+
+    public function pairDevice(int $deliveryId, string $deviceId, string $role): void
+    {
+        $cacheKey = "delivery_devices:{$deliveryId}";
+        
+        $devices = Cache::get($cacheKey, []);
+        $devices[$deviceId] = [
+            'role' => $role,
+            'last_seen' => now(),
+            'is_active' => true,
+            'paired_at' => now()->toIso8601String(),
+            'metadata' => [
+                'device_type' => $role,
+                'connection_status' => 'active'
+            ]
+        ];
+        
+        Cache::put($cacheKey, $devices, now()->addDay());
+
+        // Log device pairing
+        Log::info('Device paired', [
+            'delivery_id' => $deliveryId,
+            'device_id' => $deviceId,
+            'role' => $role
+        ]);
+    }
+
+    public function unpairDevice(int $deliveryId, string $deviceId): void
+    {
+        $cacheKey = "delivery_devices:{$deliveryId}";
+        
+        $devices = Cache::get($cacheKey, []);
+        
+        if (isset($devices[$deviceId])) {
+            // Log before removing
+            Log::info('Device unpaired', [
+                'delivery_id' => $deliveryId,
+                'device_id' => $deviceId,
+                'role' => $devices[$deviceId]['role'] ?? 'unknown'
+            ]);
+            
+            unset($devices[$deviceId]);
+            Cache::put($cacheKey, $devices, now()->addDay());
+        }
+    }
+
+    public function getActiveDevices(int $deliveryId): array
+    {
+        $cacheKey = "delivery_devices:{$deliveryId}";
+        $devices = Cache::get($cacheKey, []);
+        
+        // Filter out inactive devices and update last seen
+        $activeDevices = array_filter($devices, function ($device) {
+            return $device['is_active'] && 
+                   now()->diffInMinutes($device['last_seen']) < 5;
+        });
+        
+        // Update cache with cleaned data
+        if (count($activeDevices) !== count($devices)) {
+            Cache::put($cacheKey, $activeDevices, now()->addDay());
+        }
+        
+        return $activeDevices;
+    }
+
+    private function updateDeviceStatus(int $deliveryId, string $deviceId, array $data): void
+    {
+        $cacheKey = "delivery_devices:{$deliveryId}";
+        $devices = Cache::get($cacheKey, []);
+        
+        if (isset($devices[$deviceId])) {
+            $devices[$deviceId] = array_merge($devices[$deviceId], $data, [
+                'last_seen' => now(),
+                'updated_at' => now()->toIso8601String()
+            ]);
+            
+            Cache::put($cacheKey, $devices, now()->addDay());
+        }
     }
 } 
