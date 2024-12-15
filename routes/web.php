@@ -520,6 +520,9 @@ Route::prefix('app')->name('app.')->middleware(['auth'])->group(function () {
         });
     });
 
+    // Add this inside your auth middleware group
+    Route::post('/contact/submit', [PageController::class, 'submitContact'])->name('contact.submit');
+
 });
 
 /*
@@ -606,7 +609,7 @@ Route::name('frontend.')->group(function () {
     Route::get('/', [HomeController::class, 'index'])->name('home');
     Route::get('/about', [PageController::class, 'about'])->name('about');
     Route::get('/menu', [MenuController::class, 'index'])->name('menu');
-    Route::get('/restaurants', [RestaurantController::class, 'index'])->name('restaurants');
+    Route::get('/restaurants', [PageController::class, 'restaurants'])->name('restaurants');
     Route::get('/offers', [OfferController::class, 'index'])->name('offers');
     Route::get('/contact', [PageController::class, 'contact'])->name('contact');
 });

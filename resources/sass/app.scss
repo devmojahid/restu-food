@@ -32,6 +32,30 @@
 
     --radius: 0.5rem;
   }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+  }
 }
 
 @layer components {
@@ -102,4 +126,115 @@
 
 .animate-fade-in {
   animation: fadeIn 0.3s ease-out;
+}
+
+// Add these responsive utilities
+.container {
+    @apply px-4 mx-auto;
+    max-width: 100%;
+    
+    @screen sm {
+        max-width: 640px;
+    }
+    
+    @screen md {
+        max-width: 768px;
+    }
+    
+    @screen lg {
+        max-width: 1024px;
+    }
+    
+    @screen xl {
+        max-width: 1280px;
+    }
+}
+
+// Fix overflow issues
+html, body {
+    @apply overflow-x-hidden;
+}
+
+// Better spacing for mobile
+.section-padding {
+    @apply py-12 md:py-16 lg:py-24;
+}
+
+// Responsive text adjustments
+.responsive-text {
+    @apply text-base md:text-lg lg:text-xl;
+}
+
+// Better form controls on mobile
+.form-control {
+    @apply w-full max-w-full;
+}
+
+// Improved mobile navigation spacing
+.nav-spacing {
+    @apply mt-16 md:mt-20 lg:mt-24;
+}
+
+// Add these dark mode enhancements
+.dark {
+  .glass-effect {
+    @apply bg-gray-900/60 backdrop-blur-lg border-gray-700/50;
+  }
+
+  .card-hover {
+    @apply hover:bg-gray-800/50 hover:border-primary/50;
+  }
+
+  .gradient-dark {
+    background: linear-gradient(to right, rgba(17, 24, 39, 0.9), rgba(17, 24, 39, 0.7), rgba(17, 24, 39, 0.4));
+  }
+}
+
+// Add these styles for the featured restaurants swiper
+.featured-restaurants-swiper {
+    padding: 20px 0 40px;
+    
+    .swiper-button-next,
+    .swiper-button-prev {
+        color: theme('colors.primary.DEFAULT');
+        background: theme('colors.white');
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        
+        &:after {
+            font-size: 18px;
+        }
+        
+        &:hover {
+            background: theme('colors.primary.DEFAULT');
+            color: theme('colors.white');
+        }
+    }
+    
+    .swiper-pagination-bullet {
+        background: theme('colors.primary.DEFAULT');
+        opacity: 0.5;
+        
+        &-active {
+            opacity: 1;
+            transform: scale(1.2);
+        }
+    }
+}
+
+// Dark mode styles
+.dark {
+    .featured-restaurants-swiper {
+        .swiper-button-next,
+        .swiper-button-prev {
+            background: theme('colors.gray.800');
+            color: theme('colors.white');
+            
+            &:hover {
+                background: theme('colors.primary.DEFAULT');
+            }
+        }
+    }
 }
