@@ -202,7 +202,9 @@ final class AboutService extends BaseService
                     'address' => '123 Broadway St, NY 10013',
                     'phone' => '+1 (212) 555-0123',
                     'email' => 'ny@example.com',
-                    'coordinates' => [40.7128, -74.0060]
+                    'coordinates' => [40.7128, -74.0060],
+                    'image' => '/images/locations/new-york.jpg',
+                    'type' => 'Headquarters'
                 ],
                 // Add more locations...
             ]
