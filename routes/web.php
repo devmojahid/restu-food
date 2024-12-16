@@ -43,6 +43,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Admin\DeliveryLocationController;
 use App\Http\Controllers\DeliveryTrackingController;
+use App\Http\Controllers\Frontend\RestaurantController as FrontendRestaurantController;
 
 /*
 |--------------------------------------------------------------------------
@@ -613,9 +614,15 @@ Route::name('frontend.')->group(function () {
     Route::get('/restaurants', [PageController::class, 'restaurants'])->name('restaurants');
     Route::get('/offers', [OfferController::class, 'index'])->name('offers');
     Route::get('/contact', [PageController::class, 'contact'])->name('contact');
-    Route::get('/restaurant/{restaurant}', [PageController::class, 'restaurantSingle'])->name('restaurant.single');
+    Route::get('/restaurant/{restaurant}', [FrontendRestaurantController::class, 'show'])->name('restaurant.single');
     Route::get('/blogs', [PageController::class, 'blogs'])->name('blogs');
     Route::get('/blog/{blog}', [PageController::class, 'blogSingle'])->name('blog.single');
+    // Menu Routes
+    Route::prefix('menu')->name('menu.')->group(function () {
+        Route::get('/', [MenuController::class, 'index'])->name('index');
+        Route::get('/category/{slug}', [MenuController::class, 'category'])->name('category');
+        Route::get('/{slug}', [MenuController::class, 'show'])->name('show');
+    });
 });
 
 // Add these routes inside your auth middleware group
@@ -660,3 +667,10 @@ Route::prefix('app/settings/system')->name('app.settings.system.')->group(functi
 // Route Redirects
 Route::redirect('/admin', '/app/dashboard');
 Route::redirect('/admin/dashboard', '/app/dashboard');
+
+Route::prefix('restaurants')->name('restaurants.')->group(function () {
+    // ... existing restaurant routes ...
+    
+    Route::get('/{restaurant:slug}', [RestaurantController::class, 'show'])
+        ->name('show');
+});

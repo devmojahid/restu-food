@@ -4,6 +4,7 @@ import Navbar from './Partials/Navbar';
 import Footer from './Partials/Footer';
 import TopBar from './Partials/TopBar';
 import toast from 'react-hot-toast';
+import { Toaster } from 'react-hot-toast';
 
 const Layout = ({ children }) => {
     // const [notifications, setNotifications] = useState([])
@@ -52,6 +53,7 @@ const Layout = ({ children }) => {
                 {children}
             </main>
             <Footer />
+            <Toaster position="top-right" />
         </div>
     );
 };
