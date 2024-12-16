@@ -147,4 +147,4 @@ final class RestaurantService extends BaseService
             'happy_customers' => '100K+'
         ];
     }
-} 
+}
