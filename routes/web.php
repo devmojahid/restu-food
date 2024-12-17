@@ -616,7 +616,7 @@ Route::name('frontend.')->group(function () {
     Route::get('/contact', [PageController::class, 'contact'])->name('contact');
     Route::get('/restaurant/{restaurant}', [FrontendRestaurantController::class, 'show'])->name('restaurant.single');
     Route::get('/blogs', [PageController::class, 'blogs'])->name('blogs');
-    Route::get('/blog/{blog}', [PageController::class, 'blogSingle'])->name('blog.single');
+    Route::get('/blog/{slug}', [PageController::class, 'blogSingle'])->name('blog.single');
     // Menu Routes
     Route::prefix('menu')->name('menu.')->group(function () {
         Route::get('/', [MenuController::class, 'index'])->name('index');

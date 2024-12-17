@@ -10,6 +10,7 @@ use Inertia\Inertia;
 use App\Services\Frontend\AboutService;
 use App\Services\Frontend\ContactService;
 use App\Services\Frontend\RestaurantService;
+use App\Services\Frontend\BlogService;
 use Illuminate\Http\Request;
 use App\Http\Requests\ContactFormRequest;
 use Illuminate\Support\Facades\Mail;
@@ -20,7 +21,8 @@ final class PageController extends Controller
     public function __construct(
         private readonly AboutService $aboutService,
         private readonly ContactService $contactService,
-        private readonly RestaurantService $restaurantService
+        private readonly RestaurantService $restaurantService,
+        private readonly BlogService $blogService
     ) {}
 
     public function about(): Response
@@ -80,5 +82,27 @@ final class PageController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', 'Sorry, there was an error sending your message. Please try again later.');
         }
+    }
+
+    public function blogs(): Response
+    {
+        $data = $this->blogService->getBlogPageData();
+        
+        return Inertia::render('Frontend/Blog/Index', [
+            'posts' => $data['posts'],
+            'featured' => $data['featured'],
+            'categories' => $data['categories'],
+            'tags' => $data['tags'],
+            'stats' => $data['stats'],
+            'popularPosts' => $data['popularPosts'],
+            'recentPosts' => $data['recentPosts']
+        ]);
+    }
+
+    public function blogSingle(string $slug)
+    {
+        $data = $this->blogService->getBlogPostData($slug);
+
+        return Inertia::render('Frontend/Blog/Show', $data);
     }
 } 
