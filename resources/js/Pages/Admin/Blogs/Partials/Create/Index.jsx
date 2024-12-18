@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Head, useForm } from "@inertiajs/react";
+import { useForm } from "@inertiajs/react";
 import { Button } from "@/Components/ui/button";
 import { Input } from "@/Components/ui/input";
 import { Textarea } from "@/Components/ui/textarea";
@@ -13,28 +13,31 @@ import {
 import { Switch } from "@/Components/ui/switch";
 import { Label } from "@/Components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
-import { Badge } from "@/Components/ui/badge";
 import { cn } from "@/lib/utils";
 import {
-  X,
   Save,
   ArrowLeft,
   AlertCircle,
-  Calendar,
+  FolderTree,
 } from "lucide-react";
 import FileUploader from "@/Components/Admin/Filesystem/FileUploader";
 import { Alert, AlertDescription, AlertTitle } from "@/Components/ui/alert";
-import { format } from "date-fns";
-import toast from "react-hot-toast";
+import MultiSelect from "@/Components/ui/multi-select";
 
-// File collection constants
 const FILE_COLLECTIONS = {
   THUMBNAIL: {
     name: "thumbnail",
     maxFiles: 1,
     fileType: "image",
-    title: "Thumbnail",
-    description: "Upload a thumbnail image (recommended size: 1200x630px)",
+    title: "Blog Thumbnail",
+    description: "Upload a blog thumbnail (recommended size: 800x600px)",
+  },
+  FEATURED: {
+    name: "featured",
+    maxFiles: 1,
+    fileType: "image",
+    title: "Featured Image",
+    description: "Upload a featured image (recommended size: 1200x800px)",
   }
 };
 
@@ -47,10 +50,12 @@ const INITIAL_FORM_STATE = {
   meta_description: "",
   is_published: false,
   is_featured: false,
-  published_at: new Date().toISOString(),
-  category_id: "",
-  tags: [],
-  thumbnail: null,
+  published_at: null,
+  categories: [],
+  files: {
+    thumbnail: null,
+    featured: null,
+  }
 };
 
 const ErrorAlert = ({ errors }) => {
@@ -76,81 +81,39 @@ const ErrorAlert = ({ errors }) => {
   );
 };
 
-export default function CreateBlog({ categories = [] }) {
+export default function CreateBlogForm({ categories }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [autoUpdateSlug, setAutoUpdateSlug] = useState(true);
 
   const { data, setData, post, processing, errors } = useForm(INITIAL_FORM_STATE);
 
   // Auto-generate slug from title
   useEffect(() => {
-    if (data.title) {
+    if (data.title && autoUpdateSlug) {
       const slug = data.title
         .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "");
-      
-      setData("slug", slug);
+        .trim()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      setData('slug', slug);
     }
   }, [data.title]);
-
-  // Auto-generate meta title and description if empty
-  useEffect(() => {
-    if (data.title && !data.meta_title) {
-      setData("meta_title", data.title);
-    }
-    if (data.excerpt && !data.meta_description) {
-      setData("meta_description", data.excerpt);
-    }
-  }, [data.title, data.excerpt]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-
-    post(route("app.blogs.store"), {
-      preserveState: true,
-      preserveScroll: true,
-      onSuccess: () => {
-        setIsSubmitting(false);
-      },
-      onError: () => {
-        setIsSubmitting(false);
-      },
-    });
-  };
-
-  const handleTagInput = (e) => {
-    if (e.key === "Enter" && e.target.value) {
-      e.preventDefault();
-      const newTag = e.target.value.trim();
-      if (newTag && !data.tags.includes(newTag)) {
-        setData("tags", [...data.tags, newTag]);
-        e.target.value = "";
-      }
-    }
-  };
-
-  const removeTag = (tagToRemove) => {
-    setData("tags", data.tags.filter((tag) => tag !== tagToRemove));
+    post(route("app.blogs.store"));
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
-      <ErrorAlert errors={errors} />
-
-      {/* Form Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-            Create New Blog Post
-          </h1>
-        </div>
-        <div className="flex space-x-3">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Create New Blog Post</h1>
+        <div className="flex items-center gap-4">
           <Button
             type="button"
             variant="outline"
             onClick={() => window.history.back()}
-            className="flex items-center"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
@@ -158,112 +121,114 @@ export default function CreateBlog({ categories = [] }) {
           <Button
             type="submit"
             disabled={processing || isSubmitting}
-            className="flex items-center"
+            className={cn(
+              "gap-2",
+              (processing || isSubmitting) && "opacity-50 cursor-not-allowed"
+            )}
           >
-            <Save className="w-4 h-4 mr-2" />
-            {processing || isSubmitting ? "Saving..." : "Save Post"}
+            <Save className="w-4 h-4" />
+            Save Blog
           </Button>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column - Main Content */}
-        <div className="lg:col-span-2 space-y-8">
+      <ErrorAlert errors={errors} />
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Content */}
+        <div className="lg:col-span-2 space-y-6">
           <Card>
-            <CardContent className="p-6 space-y-6">
-              {/* Title */}
+            <CardHeader>
+              <CardTitle>Blog Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="title" className="flex items-center space-x-1">
-                  <span>Title</span>
-                  <span className="text-red-500">*</span>
-                </Label>
+                <Label htmlFor="title" error={errors.title}>Title</Label>
                 <Input
                   id="title"
                   value={data.title}
                   onChange={(e) => setData("title", e.target.value)}
-                  className={cn(errors.title && "border-red-500")}
                   placeholder="Enter blog title"
+                  error={errors.title}
                 />
-                {errors.title && (
-                  <p className="text-sm text-red-500">{errors.title}</p>
-                )}
               </div>
 
-              {/* Slug */}
               <div className="space-y-2">
-                <Label htmlFor="slug">Slug</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="slug" error={errors.slug}>Slug</Label>
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="autoUpdateSlug">Auto Update</Label>
+                    <Switch
+                      id="autoUpdateSlug"
+                      checked={autoUpdateSlug}
+                      onCheckedChange={setAutoUpdateSlug}
+                    />
+                  </div>
+                </div>
                 <Input
                   id="slug"
                   value={data.slug}
                   onChange={(e) => setData("slug", e.target.value)}
-                  placeholder="url-friendly-slug"
+                  placeholder="blog-post-slug"
+                  error={errors.slug}
+                  disabled={autoUpdateSlug}
                 />
-                {errors.slug && (
-                  <p className="text-sm text-red-500">{errors.slug}</p>
-                )}
               </div>
 
-              {/* Content */}
               <div className="space-y-2">
-                <Label htmlFor="content">Content</Label>
+                <Label htmlFor="content" error={errors.content}>Content</Label>
                 <Textarea
                   id="content"
                   value={data.content}
                   onChange={(e) => setData("content", e.target.value)}
-                  className="min-h-[400px]"
                   placeholder="Write your blog content here..."
+                  className="min-h-[200px]"
+                  error={errors.content}
                 />
-                {errors.content && (
-                  <p className="text-sm text-red-500">{errors.content}</p>
-                )}
               </div>
 
-              {/* Excerpt */}
               <div className="space-y-2">
-                <Label htmlFor="excerpt">Excerpt</Label>
+                <Label htmlFor="excerpt" error={errors.excerpt}>Excerpt</Label>
                 <Textarea
                   id="excerpt"
                   value={data.excerpt}
                   onChange={(e) => setData("excerpt", e.target.value)}
-                  className="h-24"
                   placeholder="Brief summary of the blog post"
+                  className="h-24"
+                  error={errors.excerpt}
                 />
               </div>
             </CardContent>
           </Card>
 
-          {/* SEO Settings */}
           <Card>
             <CardHeader>
-              <CardTitle>SEO Settings</CardTitle>
+              <CardTitle>SEO Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="meta_title">Meta Title</Label>
+                <Label htmlFor="meta_title" error={errors.meta_title}>Meta Title</Label>
                 <Input
                   id="meta_title"
                   value={data.meta_title}
                   onChange={(e) => setData("meta_title", e.target.value)}
-                  placeholder="SEO optimized title"
+                  placeholder="SEO title"
+                  error={errors.meta_title}
                 />
-                <p className="text-sm text-muted-foreground">
-                  {data.meta_title.length}/60 characters
-                </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="meta_description">Meta Description</Label>
+                <Label htmlFor="meta_description" error={errors.meta_description}>
+                  Meta Description
+                </Label>
                 <Textarea
                   id="meta_description"
                   value={data.meta_description}
                   onChange={(e) => setData("meta_description", e.target.value)}
+                  placeholder="SEO description"
                   className="h-24"
-                  placeholder="Brief description for search engines"
+                  error={errors.meta_description}
                 />
-                <p className="text-sm text-muted-foreground">
-                  {data.meta_description.length}/160 characters
-                </p>
               </div>
             </CardContent>
           </Card>
@@ -271,118 +236,95 @@ export default function CreateBlog({ categories = [] }) {
 
         {/* Right Column - Sidebar */}
         <div className="space-y-6">
-          {/* Publishing Options */}
+          {/* Status Card */}
           <Card>
             <CardHeader>
-              <CardTitle>Publishing</CardTitle>
+              <CardTitle>Status & Visibility</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="is_published">Publish</Label>
+              <div className="flex items-center space-x-2">
                 <Switch
                   id="is_published"
                   checked={data.is_published}
                   onCheckedChange={(checked) => setData("is_published", checked)}
                 />
+                <Label htmlFor="is_published">Publish immediately</Label>
               </div>
 
-              <div className="flex items-center justify-between">
-                <Label htmlFor="is_featured">Featured</Label>
+              <div className="flex items-center space-x-2">
                 <Switch
                   id="is_featured"
                   checked={data.is_featured}
                   onCheckedChange={(checked) => setData("is_featured", checked)}
                 />
+                <Label htmlFor="is_featured">Featured post</Label>
               </div>
-
-              {!data.is_published && (
-                <div className="space-y-2">
-                  <Label htmlFor="published_at">Schedule Publication</Label>
-                  <Input
-                    type="datetime-local"
-                    id="published_at"
-                    value={format(
-                      new Date(data.published_at),
-                      "yyyy-MM-dd'T'HH:mm"
-                    )}
-                    onChange={(e) => setData("published_at", e.target.value)}
-                  />
-                </div>
-              )}
             </CardContent>
           </Card>
 
-          {/* Category Selection */}
+          {/* Categories Card */}
           <Card>
             <CardHeader>
-              <CardTitle>Category</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <FolderTree className="h-4 w-4" />
+                Categories
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <Select
-                value={data.category_id}
-                onValueChange={(value) => setData("category_id", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </CardContent>
-          </Card>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="categories">
+                  Select Categories
+                  <span className="text-xs text-muted-foreground ml-2">
+                    (You can select multiple)
+                  </span>
+                </Label>
+                
+                <MultiSelect
+                  options={categories.map(category => ({
+                    value: category.id.toString(),
+                    label: category.name,
+                    ...(category.parent && {
+                      parent: category.parent
+                    })
+                  }))}
+                  selected={data.categories}
+                  onChange={(values) => setData("categories", values)}
+                  placeholder="Select categories"
+                  error={errors.categories}
+                />
 
-          {/* Tags */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Tags</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Input
-                placeholder="Add tags and press Enter"
-                onKeyDown={handleTagInput}
-              />
-              <div className="flex flex-wrap gap-2 mt-2">
-                {data.tags.map((tag, index) => (
-                  <Badge key={index} variant="secondary">
-                    {tag}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="ml-1 p-0 h-auto"
-                      onClick={() => removeTag(tag)}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </Badge>
-                ))}
+                {errors.categories && (
+                  <p className="text-sm text-destructive mt-1">
+                    {errors.categories}
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>
 
           {/* File Uploaders */}
-          {Object.values(FILE_COLLECTIONS).map((collection) => (
-            <Card key={collection.name}>
-              <CardHeader>
-                <CardTitle>{collection.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <FileUploader
-                  maxFiles={collection.maxFiles}
-                  fileType={collection.fileType}
-                  collection={collection.name}
-                  value={data[collection.name]}
-                  onUpload={(files) => setData(collection.name, files)}
-                  description={collection.description}
-                  error={errors[collection.name]}
-                />
-              </CardContent>
-            </Card>
-          ))}
+          <div className="space-y-6">
+            {Object.values(FILE_COLLECTIONS).map((collection) => (
+              <Card key={collection.name}>
+                <CardHeader>
+                  <CardTitle>{collection.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <FileUploader
+                    maxFiles={collection.maxFiles}
+                    fileType={collection.fileType}
+                    value={data.files[collection.name]}
+                    onUpload={(file) => setData('files', {
+                      ...data.files,
+                      [collection.name]: file
+                    })}
+                    description={collection.description}
+                    error={errors[`files.${collection.name}`]}
+                  />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
     </form>

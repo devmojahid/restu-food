@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/Components/ui/badge';
 
 const FeaturedPosts = ({ posts }) => {
+
     if (!posts?.length) return null;
 
     return (
@@ -33,12 +34,6 @@ const FeaturedPosts = ({ posts }) => {
                                 "transition-all duration-300"
                             )}
                         >
-                            {/* Featured Badge */}
-                            <div className="absolute top-4 right-4 z-10">
-                                <Badge variant="default" className="bg-primary">
-                                    Featured
-                                </Badge>
-                            </div>
 
                             {/* Image */}
                             <Link 
@@ -55,13 +50,19 @@ const FeaturedPosts = ({ posts }) => {
 
                             {/* Content */}
                             <div className="p-6">
-                                <Badge 
-                                    variant="secondary"
-                                    className="mb-4"
-                                >
-                                    {post.category.name}
-                                </Badge>
-
+                               
+                                    {post?.categories?.map((category, index) => (
+                                         <Badge 
+                                            variant="secondary"
+                                            className="mb-4"
+                                        >
+                                            <span key={category.id}>
+                                                {category.name}
+                                                {index < post.categories.length - 1 && ", "}
+                                            </span>
+                                         </Badge>
+                                    ))}
+                                
                                 <h3 className="text-xl font-semibold mb-3 
                                              group-hover:text-primary transition-colors">
                                     <Link href={route('frontend.blog.single', post.slug)}>

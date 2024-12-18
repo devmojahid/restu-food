@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Traits\HasFiles;
+use App\Traits\HandlesFiles;
 use App\Traits\HasMeta;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -17,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasApiTokens, HasFactory, Notifiable, HasRoles, HasFiles, HasMeta, HasCoupons;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles, HasFiles, HasMeta, HandlesFiles, HasCoupons;
 
     public const COLLECTION_AVATAR = 'avatar';
 

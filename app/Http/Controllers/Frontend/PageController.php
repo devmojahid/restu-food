@@ -84,18 +84,22 @@ final class PageController extends Controller
         }
     }
 
-    public function blogs(): Response
+    public function blogs(Request $request): Response
     {
-        $data = $this->blogService->getBlogPageData();
+        $filters = [
+            'category' => $request->query('category')
+        ];
+
+        $data = $this->blogService->getBlogPageData($filters);
         
         return Inertia::render('Frontend/Blog/Index', [
             'posts' => $data['posts'],
             'featured' => $data['featured'],
             'categories' => $data['categories'],
-            'tags' => $data['tags'],
             'stats' => $data['stats'],
             'popularPosts' => $data['popularPosts'],
-            'recentPosts' => $data['recentPosts']
+            'recentPosts' => $data['recentPosts'],
+            'filters' => $filters
         ]);
     }
 

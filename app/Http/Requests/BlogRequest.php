@@ -20,6 +20,10 @@ class BlogRequest extends FormRequest
             'is_published' => 'boolean',
             'published_at' => 'nullable|date',
             'user_id' => 'nullable|exists:users,id',
+
+            // Related data
+            'categories' => ['nullable', 'array'],
+            'categories.*' => ['exists:categories,id'],
             
             // File validation
             'files' => 'nullable|array',

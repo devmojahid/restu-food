@@ -9,12 +9,13 @@ import Categories from './Partials/Categories';
 import PopularTags from './Partials/PopularTags';
 import Newsletter from './Partials/Newsletter';
 import { useDebounce } from '@/hooks/useDebounce';
+import { router } from '@inertiajs/react';
 
-const Index = ({ posts, featured, categories, tags, stats, popularPosts }) => {
+const Index = ({ posts, featured, categories, tags, stats, popularPosts, recentPosts, filters }) => {
     const [view, setView] = useState('grid');
     const [searchQuery, setSearchQuery] = useState('');
     const [activeFilters, setActiveFilters] = useState({
-        category: [],
+        category: filters?.category ? [filters.category] : [],
         tags: [],
         sort: 'latest'
     });
@@ -26,13 +27,33 @@ const Index = ({ posts, featured, categories, tags, stats, popularPosts }) => {
             ...prev,
             ...newFilters
         }));
+
+        if (newFilters.category) {
+            router.get(route('frontend.blogs'), { 
+                category: newFilters.category[0] 
+            }, {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true
+            });
+        }
     };
+
+    const activeCategory = categories.find(cat => cat.slug === filters?.category);
 
     return (
         <Layout>
             <Head>
-                <title>Blog - Latest Articles and Updates</title>
-                <meta name="description" content="Discover our latest articles, recipes, and culinary insights." />
+                <title>
+                    {activeCategory ? `${activeCategory.name} - Blog` : 'Blog - Latest Articles and Updates'}
+                </title>
+                <meta 
+                    name="description" 
+                    content={activeCategory 
+                        ? `Browse articles in ${activeCategory.name}` 
+                        : "Discover our latest articles, recipes, and culinary insights."
+                    } 
+                />
             </Head>
 
             {/* Hero Section */}
@@ -44,6 +65,19 @@ const Index = ({ posts, featured, categories, tags, stats, popularPosts }) => {
                     <FeaturedPosts posts={featured} />
                 </div>
             </section>
+
+            {/* Category Title */}
+            {activeCategory && (
+                <div className="container mx-auto px-4 py-6">
+                    <h2 className="text-2xl font-semibold flex items-center gap-2">
+                        <span>Category:</span>
+                        <span className="text-primary">{activeCategory.name}</span>
+                        <span className="text-sm text-muted-foreground">
+                            ({activeCategory.posts_count} posts)
+                        </span>
+                    </h2>
+                </div>
+            )}
 
             {/* Main Content */}
             <section className="py-12">
@@ -74,13 +108,6 @@ const Index = ({ posts, featured, categories, tags, stats, popularPosts }) => {
                             {/* Categories */}
                             <Categories 
                                 categories={categories}
-                                activeFilters={activeFilters}
-                                onFilterChange={handleFilterChange}
-                            />
-
-                            {/* Popular Tags */}
-                            <PopularTags 
-                                tags={tags}
                                 activeFilters={activeFilters}
                                 onFilterChange={handleFilterChange}
                             />

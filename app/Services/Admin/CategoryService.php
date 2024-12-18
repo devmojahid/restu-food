@@ -392,7 +392,7 @@ final class CategoryService extends BaseService
             ->orderBy('name', 'asc');
 
         // Debug the query
-        \Log::info('Final Category Query:', [
+        Log::info('Final Category Query:', [
             'filters' => $filters,
             'sql' => $query->toSql(),
             'bindings' => $query->getBindings(),

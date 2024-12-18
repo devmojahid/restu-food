@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Folder } from 'lucide-react';
 import { Badge } from '@/Components/ui/badge';
+import { Link } from '@inertiajs/react';
 
 const Categories = ({ categories, activeFilters, onFilterChange }) => {
     const handleCategoryClick = (categorySlug) => {

@@ -76,9 +76,12 @@ final class Category extends Model
         return $this->hasMany(Category::class, 'parent_id');
     }
 
-    public function blogs()
+    public function blogs(): BelongsToMany
     {
-        return $this->morphedByMany(Blog::class, 'categorizable');
+        return $this->belongsToMany(Blog::class, 'blog_category')
+            ->withTimestamps()
+            ->withPivot('sort_order')
+            ->orderByPivot('sort_order');
     }
 
     public function products()

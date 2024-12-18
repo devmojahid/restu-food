@@ -20,7 +20,7 @@ const PopularTags = ({ tags, activeFilters, onFilterChange }) => {
                 <h3 className="font-medium">Popular Tags</h3>
             </div>
             <div className="flex flex-wrap gap-2">
-                {tags.map((tag, index) => (
+                { tags && tags.map((tag, index) => (
                     <motion.div
                         key={tag.id}
                         initial={{ opacity: 0, scale: 0.8 }}

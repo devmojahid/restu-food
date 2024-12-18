@@ -1,12 +1,11 @@
-import React, { useState } from "react";
+import React from "react";
 import { Head } from "@inertiajs/react";
 import Form from "./Partials/Create/Index";
 import AdminLayout from "@/Layouts/Admin/AdminLayout";
-import { Plus, Home, FileText, Save, ArrowLeft } from "lucide-react";
+import { Plus, Home, FileText } from "lucide-react";
 import Breadcrumb from "@/Components/Admin/Breadcrumb";
 
-const CreateBlog = () => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const CreateBlog = ({ categories }) => {
   return (
     <AdminLayout>
       <Head title="Create Blog" />
@@ -19,7 +18,7 @@ const CreateBlog = () => {
           ]}
         />
 
-        <Form />
+        <Form categories={categories} />
       </div>
     </AdminLayout>
   );

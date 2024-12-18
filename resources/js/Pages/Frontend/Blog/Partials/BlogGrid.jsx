@@ -50,17 +50,23 @@ const BlogGrid = ({ posts, view, searchQuery, activeFilters }) => {
         if (!allPosts.length) return [];
         
         return allPosts.filter(post => {
-            const matchesSearch = !searchQuery || 
-                post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
+            // Search filter
+            if (searchQuery) {
+                const searchLower = searchQuery.toLowerCase();
+                const titleMatch = post.title?.toLowerCase().includes(searchLower) || false;
+                const excerptMatch = post.excerpt?.toLowerCase().includes(searchLower) || false;
+                if (!titleMatch && !excerptMatch) return false;
+            }
 
-            const matchesCategory = !activeFilters.category.length ||
-                activeFilters.category.includes(post.category?.slug);
+            // Category filter
+            if (activeFilters.category.length > 0) {
+                const postCategories = post.categories?.map(cat => cat.slug) || [];
+                if (!activeFilters.category.some(cat => postCategories.includes(cat))) {
+                    return false;
+                }
+            }
 
-            const matchesTags = !activeFilters.tags.length ||
-                post.tags?.some(tag => activeFilters.tags.includes(tag.slug));
-
-            return matchesSearch && matchesCategory && matchesTags;
+            return true;
         });
     }, [allPosts, searchQuery, activeFilters]);
 
@@ -227,9 +233,17 @@ const BlogGrid = ({ posts, view, searchQuery, activeFilters }) => {
                                 view === 'list' && "flex-1"
                             )}>
                                 {/* Category */}
-                                <Badge variant="secondary" className="mb-2">
-                                    {post.category?.name}
-                                </Badge>
+                                {post?.categories?.map((category, index) => (
+                                         <Badge 
+                                            variant="secondary"
+                                            className="mb-4"
+                                        >
+                                            <span key={category.id}>
+                                                {category.name}
+                                                {index < post.categories.length - 1 && ", "}
+                                            </span>
+                                         </Badge>
+                                    ))}
 
                                 {/* Title */}
                                 <h3 className={cn(
@@ -260,31 +274,13 @@ const BlogGrid = ({ posts, view, searchQuery, activeFilters }) => {
                                         <span>{post.reading_time} min read</span>
                                     </div>
                                     <div className="flex items-center gap-1">
-                                        <User className="w-4 h-4" />
+                                        <img 
+                                            src={post.author?.avatar}
+                                            alt={post.author?.name}
+                                            className="w-8 h-8 rounded-full object-cover"
+                                        />
                                         <span>{post.author?.name}</span>
                                     </div>
-                                </div>
-
-                                {/* Tags */}
-                                <div className="flex flex-wrap gap-2 mb-4">
-                                    {post.tags?.map(tag => (
-                                        <Badge 
-                                            key={tag.slug}
-                                            variant="outline"
-                                            className="text-xs hover:bg-primary/10 cursor-pointer
-                                                     transition-colors duration-200"
-                                            onClick={() => {
-                                                const newTags = [...activeFilters.tags, tag.slug];
-                                                router.get(
-                                                    route('frontend.blogs'),
-                                                    { ...activeFilters, tags: newTags },
-                                                    { preserveState: true },
-                                                );
-                                            }}
-                                        >
-                                            {tag.name}
-                                        </Badge>
-                                    ))}
                                 </div>
 
                                 {/* Read More Button */}

@@ -13,6 +13,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
+use App\Models\Category;
 
 final class BlogController extends Controller
 {
@@ -80,7 +81,28 @@ final class BlogController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('Admin/Blogs/Create');
+        $categories = Category::select(['id', 'name', 'slug', 'parent_id'])
+            ->where('type', 'blog')
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->with(['parent:id,name'])
+            ->get()
+            ->map(fn ($category) => [
+                'id' => $category->id,
+                'name' => $category->name,
+                'slug' => $category->slug,
+                'parent' => $category->parent ? [
+                    'id' => $category->parent->id,
+                    'name' => $category->parent->name
+                ] : null
+            ])
+            ->values()
+            ->all();
+
+        return Inertia::render('Admin/Blogs/Create', [
+            'categories' => $categories
+        ]);
     }
 
     public function edit(int $id): Response

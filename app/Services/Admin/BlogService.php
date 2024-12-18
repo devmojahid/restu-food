@@ -18,7 +18,7 @@ final class BlogService extends BaseService
     protected array $searchableFields = ['title', 'content', 'slug'];
     protected array $filterableFields = ['is_published', 'user_id', 'is_featured'];
     protected array $sortableFields = ['title', 'created_at', 'published_at', 'is_featured'];
-    protected array $relationships = ['user'];
+    protected array $relationships = ['user', 'categories'];
 
     /**
      * Get paginated blogs
@@ -31,22 +31,36 @@ final class BlogService extends BaseService
     /**
      * Store a new blog with file handling
      */
-    public function store(array $data, array $files = []): Blog
+    public function store(array $data): Model
     {
         try {
             DB::beginTransaction();
-            
-            /** @var Blog $blog */
+
+            // Create blog
             $blog = $this->model::create($data);
-            
-            if (!empty($files)) {
-                $blog->handleFiles($files);
+
+            // Handle categories if provided
+            if (!empty($data['categories'])) {
+                $categoryData = collect($data['categories'])->mapWithKeys(function ($categoryId, $index) {
+                    return [$categoryId => ['sort_order' => $index]];
+                })->all();
+                
+                $blog->categories()->attach($categoryData);
             }
-            
+
+            // Handle files if provided
+            if (!empty($data['files'])) {
+                $blog->handleFiles($data['files']);
+            }
+
             DB::commit();
             return $blog->fresh($this->relationships);
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Blog creation failed', [
+                'error' => $e->getMessage(),
+                'data' => $data
+            ]);
             throw $e;
         }
     }
@@ -54,23 +68,37 @@ final class BlogService extends BaseService
     /**
      * Update a blog with file handling
      */
-    public function update(int $id, array $data, array $files = []): Blog
+    public function update(int $id, array $data): Model
     {
         try {
             DB::beginTransaction();
 
-            /** @var Blog $blog */
             $blog = $this->findOrFail($id);
             $blog->update($data);
 
-            if (!empty($files)) {
-                $blog->handleFiles($files);
+            // Handle categories if provided
+            if (isset($data['categories'])) {
+                $categoryData = collect($data['categories'])->mapWithKeys(function ($categoryId, $index) {
+                    return [$categoryId => ['sort_order' => $index]];
+                })->all();
+                
+                $blog->categories()->sync($categoryData);
+            }
+
+            // Handle files if provided
+            if (!empty($data['files'])) {
+                $blog->handleFiles($data['files']);
             }
 
             DB::commit();
             return $blog->fresh($this->relationships);
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Blog update failed', [
+                'id' => $id,
+                'error' => $e->getMessage(),
+                'data' => $data
+            ]);
             throw $e;
         }
     }

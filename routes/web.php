@@ -66,8 +66,8 @@ use App\Http\Controllers\Frontend\RestaurantController as FrontendRestaurantCont
 */
 Route::middleware(['auth'])->group(function () {
     // File Management
-    Route::post('app/files/upload', [FileController::class, 'upload']);
-    Route::delete('app/files/{file}', [FileController::class, 'destroy']);
+    Route::post('app/files/upload', [FileController::class, 'upload'])->name('app.files.upload');
+    Route::delete('app/files/{file}', [FileController::class, 'destroy'])->name('app.files.destroy');
     
     // User Profile Updates
     Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
@@ -674,3 +674,5 @@ Route::prefix('restaurants')->name('restaurants.')->group(function () {
     Route::get('/{restaurant:slug}', [RestaurantController::class, 'show'])
         ->name('show');
 });
+
+Route::get('/blog', [PageController::class, 'blogs'])->name('frontend.blog.index');

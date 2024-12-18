@@ -9,6 +9,7 @@ use App\Traits\HandlesFiles;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 final class Blog extends Model
 {
@@ -32,15 +33,13 @@ final class Blog extends Model
         'published_at',
         'user_id',
         'category_id',
-        'tags',
         'is_featured'
     ];
 
     protected $casts = [
         'is_published' => 'boolean',
         'is_featured' => 'boolean',
-        'published_at' => 'datetime',
-        'tags' => 'array'
+        'published_at' => 'datetime'
     ];
     
     protected $appends = ['thumbnail', 'featured_image'];
@@ -65,6 +64,15 @@ final class Blog extends Model
     public function getFeaturedImageAttribute(): ?File
     {
         return $this->getFile(self::COLLECTION_FEATURED);
+    }
+
+    // Add categories relationship
+    public function categories(): BelongsToMany
+    {
+        return $this->belongsToMany(Category::class, 'blog_category')
+            ->withTimestamps()
+            ->withPivot('sort_order')
+            ->orderByPivot('sort_order');
     }
 
     // Relationships
