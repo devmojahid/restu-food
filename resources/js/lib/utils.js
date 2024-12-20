@@ -6,6 +6,14 @@ export function cn(...inputs) {
 }
 
 // Format currency
+export function formatCurrency(amount, currency = "USD", locale = "en-US") {
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: currency,
+  }).format(amount);
+}
+
+// Format price
 export function formatPrice(price) {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',

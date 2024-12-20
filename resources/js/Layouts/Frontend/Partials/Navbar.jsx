@@ -129,6 +129,28 @@ const Navbar = () => {
             href: '/offers',
             icon: null
         },
+        {
+            label: 'Pages',
+            href: '/pages',
+            icon: null,
+            children: [
+                {
+                    label: 'About',
+                    href: '/about',
+                    icon: Pizza
+                },
+                {
+                    label: 'Blog',
+                    href: '/blog',
+                    icon: Pizza
+                },
+                {
+                    label: 'Contact',
+                    href: '/contact',
+                    icon: Pizza
+                }
+            ]
+        }
     ];
 
     // Add this function to handle mobile menu clicks

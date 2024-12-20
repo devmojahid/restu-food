@@ -1,77 +1,102 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { Calendar, Clock, User, Eye, MessageCircle } from 'lucide-react';
+import { Link } from '@inertiajs/react';
+import { Calendar, Clock, User } from 'lucide-react';
+import { format } from 'date-fns';
 import { Badge } from '@/Components/ui/badge';
+import { cn } from '@/lib/utils';
 
-const PostHeader = ({ post }) => {
+const PostHeader = ({ 
+    title, 
+    excerpt, 
+    author, 
+    publishedAt, 
+    readingTime, 
+    categories = [], 
+    image 
+}) => {
     return (
-        <header className="space-y-6">
-            {/* Category */}
-            <div className="flex items-center gap-2">
-                <Badge variant="secondary">
-                    {post.category.name}
-                </Badge>
-                <span className="text-sm text-gray-500 dark:text-gray-400">
-                    {post.reading_time} min read
-                </span>
-            </div>
+        <header className="max-w-4xl mx-auto text-center space-y-8">
+            {/* Categories */}
+            {Array.isArray(categories) && categories.length > 0 && (
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                    {categories.map(category => (
+                        <Link
+                            key={category?.id}
+                            href={category?.slug ? route('frontend.blog.index', { category: category.slug }) : '#'}
+                            className="no-underline"
+                        >
+                            <Badge variant="secondary" className="hover:bg-secondary/80">
+                                {category?.name || 'Uncategorized'}
+                            </Badge>
+                        </Link>
+                    ))}
+                </div>
+            )}
 
             {/* Title */}
-            <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white"
-            >
-                {post.title}
-            </motion.h1>
+            <h1 className="text-4xl md:text-5xl font-bold leading-tight">
+                {title || 'Untitled Post'}
+            </h1>
 
-            {/* Meta Information */}
-            <div className="flex flex-wrap items-center gap-6 text-sm text-gray-600 dark:text-gray-400">
-                <div className="flex items-center gap-2">
-                    <User className="w-4 h-4" />
-                    <span>By {post.author.name}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    <time dateTime={post.published_at}>
-                        {new Date(post.published_at).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                        })}
-                    </time>
-                </div>
-                <div className="flex items-center gap-2">
-                    <Eye className="w-4 h-4" />
-                    <span>{post.views} views</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <MessageCircle className="w-4 h-4" />
-                    <span>{post.comments_count} comments</span>
-                </div>
+            {/* Excerpt */}
+            {excerpt && (
+                <p className="text-xl text-muted-foreground">
+                    {excerpt}
+                </p>
+            )}
+
+            {/* Meta Info */}
+            <div className="flex flex-wrap items-center justify-center gap-4 text-muted-foreground">
+                {/* Author */}
+                {author && (
+                    <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2">
+                            {author.avatar ? (
+                                <img 
+                                    src={author.avatar} 
+                                    alt={author.name}
+                                    className="w-8 h-8 rounded-full object-cover"
+                                />
+                            ) : (
+                                <User className="w-5 h-5" />
+                            )}
+                            <span>{author.name}</span>
+                        </div>
+                    </div>
+                )}
+
+                {/* Date */}
+                {publishedAt && (
+                    <div className="flex items-center gap-2">
+                        <Calendar className="w-5 h-5" />
+                        <time dateTime={publishedAt}>
+                            {format(new Date(publishedAt), 'MMMM d, yyyy')}
+                        </time>
+                    </div>
+                )}
+
+                {/* Reading Time */}
+                {readingTime && (
+                    <div className="flex items-center gap-2">
+                        <Clock className="w-5 h-5" />
+                        <span>{readingTime} min read</span>
+                    </div>
+                )}
             </div>
 
             {/* Featured Image */}
-            <motion.figure
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.2 }}
-                className="relative aspect-[21/9] overflow-hidden rounded-2xl"
-            >
-                <img
-                    src={post.featured_image}
-                    alt={post.title}
-                    className="w-full h-full object-cover"
-                />
-                {post.image_caption && (
-                    <figcaption className="absolute bottom-0 left-0 right-0 p-4
-                                         bg-gradient-to-t from-black/60 to-transparent">
-                        <p className="text-white text-sm">
-                            {post.image_caption}
-                        </p>
-                    </figcaption>
-                )}
-            </motion.figure>
+            {image && (
+                <div className="mt-8 rounded-lg overflow-hidden aspect-video">
+                    <img
+                        src={image}
+                        alt={title}
+                        className={cn(
+                            "w-full h-full object-cover",
+                            "transition duration-300 hover:scale-105"
+                        )}
+                    />
+                </div>
+            )}
         </header>
     );
 };

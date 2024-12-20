@@ -11,23 +11,6 @@ const PostContent = ({ content }) => {
             transition={{ delay: 0.3 }}
             className="prose prose-lg dark:prose-invert max-w-none"
         >
-            {/* Table of Contents */}
-            <div className="mb-8 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                <h3 className="text-lg font-semibold mb-2">Table of Contents</h3>
-                <nav className="space-y-1">
-                    {Array.from(content.matchAll(/<h2>(.*?)<\/h2>/g)).map((match, index) => (
-                        <a
-                            key={index}
-                            href={`#${match[1].toLowerCase().replace(/\s+/g, '-')}`}
-                            className="block text-gray-600 dark:text-gray-400 hover:text-primary
-                                     transition-colors duration-200"
-                        >
-                            {match[1]}
-                        </a>
-                    ))}
-                </nav>
-            </div>
-
             <Separator className="my-8" />
 
             {/* Content */}

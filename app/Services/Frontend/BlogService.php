@@ -206,7 +206,7 @@ final class BlogService extends BaseService
     {
         $cacheKey = "{$this->cachePrefix}post:{$slug}";
         
-        return Cache::remember($cacheKey, $this->cacheDuration, function () use ($slug) {
+        // return Cache::remember($cacheKey, $this->cacheDuration, function () use ($slug) {
             $post = Blog::with(['user', 'files', 'category'])
                 ->where('slug', $slug)
                 ->published()
@@ -230,8 +230,8 @@ final class BlogService extends BaseService
                         'name' => $post->category->name,
                         'slug' => $post->category->slug
                     ] : null,
-                    'featured_image' => $post->featured_image?->url,
-                    'thumbnail' => $post->thumbnail?->url,
+                    'featured_image' => $post->featured_image?->url ?? $post->thumbnail?->url,
+                    'thumbnail' => $post->featured_image?->url ?? $post->thumbnail?->url,
                     'meta' => [
                         'title' => $post->meta_title ?? $post->title,
                         'description' => $post->meta_description ?? $post->excerpt
@@ -242,7 +242,7 @@ final class BlogService extends BaseService
                 'previousPost' => $this->getAdjacentPost($post, 'previous'),
                 'popularPosts' => $this->getPopularPosts()
             ];
-        });
+        // });
     }
 
     private function getRelatedPosts(Blog $post, int $limit = 3): array
