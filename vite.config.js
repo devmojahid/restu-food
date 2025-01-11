@@ -3,6 +3,9 @@ import laravel from 'laravel-vite-plugin';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
+//const host = 'restu-food.test';
+const host = 'localhost';
+
 export default defineConfig({
     plugins: [
         laravel({
@@ -19,7 +22,9 @@ export default defineConfig({
     optimizeDeps: {
         include: ['react', 'react-dom', 'framer-motion', '@inertiajs/react'],
     },
-	// server: {
-	// 	port: 3006,
-	// }
+	server: {
+		// port: 3006,
+        // https: true,
+        // hmr: { host }, 
+	}
 });
