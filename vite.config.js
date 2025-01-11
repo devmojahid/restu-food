@@ -28,3 +28,17 @@ export default defineConfig({
         // hmr: { host }, 
 	}
 });
+
+
+// server: {
+//     // port: 3006,
+   
+//     https: {
+//         key: fs.readFileSync(path.resolve(__dirname, 'certs/localhost-key.pem')),
+//         cert: fs.readFileSync(path.resolve(__dirname, 'certs/localhost.pem')),
+//     },
+//     host: true,
+//     hmr: {
+//         host: 'localhost'
+//     },
+// }
