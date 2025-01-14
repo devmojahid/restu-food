@@ -3,8 +3,8 @@ import laravel from 'laravel-vite-plugin';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
-//const host = 'restu-food.test';
-const host = 'localhost';
+const host = 'restu-food.test';
+// const host = 'localhost';
 
 export default defineConfig({
     plugins: [
@@ -23,9 +23,9 @@ export default defineConfig({
         include: ['react', 'react-dom', 'framer-motion', '@inertiajs/react'],
     },
 	server: {
-		// port: 3006,
+		port: 3006,
         // https: true,
-        // hmr: { host }, 
+        hmr: { host }, 
 	}
 });
 
