@@ -114,7 +114,7 @@ const EmailSettings = ({ emailOptions = {}, defaults = {} }) => {
       return;
     }
 
-    post(route('options.store'), {
+    post(route('app.options.store'), {
       preserveScroll: true,
       onSuccess: () => {
         toast({

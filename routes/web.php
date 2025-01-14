@@ -21,7 +21,8 @@ use App\Http\Controllers\Admin\{
     ProductAddonController,
     RestaurantApplicationController,
     SystemController,
-    ZoneController
+    ZoneController,
+    ThemeOptionsController
 };
 
 
@@ -249,7 +250,7 @@ Route::prefix('app')->name('app.')->middleware(['auth'])->group(function () {
     Route::group([
         'prefix' => 'restaurants/applications',
         'as' => 'restaurants.applications.',
-    ], function () {
+     ], function () {
         Route::get('/', [RestaurantApplicationController::class, 'index'])->name('index');
         Route::post('/', [RestaurantApplicationController::class, 'store'])->name('store');
         Route::get('/{inquiry}', [RestaurantApplicationController::class, 'show'])->name('show');
@@ -263,7 +264,7 @@ Route::prefix('app')->name('app.')->middleware(['auth'])->group(function () {
     Route::group([
         'prefix' => 'kitchen-staff/applications',
         'as' => 'kitchen-staff.applications.',
-    ], function () {
+     ], function () {
         Route::get('/', [KitchenStaffApplicationController::class, 'index'])->name('index');
         Route::post('/', [KitchenStaffApplicationController::class, 'store'])->name('store');
         Route::get('/{inquiry}', [KitchenStaffApplicationController::class, 'show'])->name('show');
@@ -288,7 +289,7 @@ Route::prefix('app')->name('app.')->middleware(['auth'])->group(function () {
         'prefix' => 'delivery-staff/applications',
         'as' => 'delivery-staff.applications.',
         'middleware' => ['auth']
-    ], function () {
+        ], function () {
         Route::get('/', [DeliveryStaffApplicationController::class, 'index'])->name('index');
         Route::post('/', [DeliveryStaffApplicationController::class, 'store'])->name('store');
         Route::get('/{inquiry}', [DeliveryStaffApplicationController::class, 'show'])->name('show');
@@ -523,6 +524,11 @@ Route::prefix('app')->name('app.')->middleware(['auth'])->group(function () {
 
     // Add this inside your auth middleware group
     Route::post('/contact/submit', [PageController::class, 'submitContact'])->name('contact.submit');
+
+    // Theme Options
+    Route::prefix('theme-options')->name('theme-options.')->group(function () {
+        Route::get('/general', [ThemeOptionsController::class, 'general'])->name('general');
+    });
 
 });
 

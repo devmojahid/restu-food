@@ -136,7 +136,6 @@ const useCartStore = create(
             version: 1,
             storage: createJSONStorage(() => localStorage),
             onRehydrateStorage: () => (state) => {
-                console.log('hydration starts');
             }
         }
     )

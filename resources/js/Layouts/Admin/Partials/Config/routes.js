@@ -190,6 +190,19 @@ export const routes = {
             }
         }
     },
+    // appearance
+    appearance: {
+        name: "Appearance",
+        icon: "Paintbrush",
+        role: ["Admin"],
+        submenu: {
+            themeOptions: {
+                name: "Theme Options",
+                path: "/app/theme-options/general",
+                icon: "Settings2"
+            }
+        }
+    },
     become: {
         name: "Become",
         icon: "Package",
