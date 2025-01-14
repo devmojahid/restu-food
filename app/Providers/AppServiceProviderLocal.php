@@ -11,7 +11,7 @@ use App\Observers\CurrencyObserver;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class AppServiceProvider extends ServiceProvider
+class AppServiceProviderLocal extends ServiceProvider
 {
     /**
      * Register any application services.
@@ -26,6 +26,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // if (config('app.env') !== 'local') {
+        //     URL::forceScheme('https');
+        // }
+
         // Share errors with all views
         Inertia::share([
             'errors' => function () {
