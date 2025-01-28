@@ -186,7 +186,7 @@ const LocationBasedSuggestions = ({ restaurants }) => {
 
     useEffect(() => {
         getUserLocation();
-    }, [getUserLocation]);
+    }, []);
 
     // Filter restaurants based on selected filters
     const filteredRestaurants = restaurants?.filter(restaurant => {
