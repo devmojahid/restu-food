@@ -196,6 +196,11 @@ export const routes = {
         icon: "Paintbrush",
         role: ["Admin"],
         submenu: {
+            homepage: {
+                name: "Homepage",
+                path: "/app/appearance/homepage",
+                icon: "Home"
+            },
             themeOptions: {
                 name: "Theme Options",
                 path: "/app/theme-options/general",

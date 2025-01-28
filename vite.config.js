@@ -4,8 +4,8 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import mkcert from 'vite-plugin-mkcert';
 
-//const host = 'restu-food.test';
-const host = 'localhost';
+const host = 'restu-food.test';
+// const host = 'localhost';
 
 export default defineConfig({
     plugins: [

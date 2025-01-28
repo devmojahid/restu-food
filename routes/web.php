@@ -24,8 +24,7 @@ use App\Http\Controllers\Admin\{
     ZoneController,
     ThemeOptionsController
 };
-
-
+use App\Http\Controllers\Admin\Appearance\HomepageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\RestaurantStatsController;
 use App\Http\Controllers\Admin\RestaurantFavoriteController;
@@ -525,6 +524,10 @@ Route::prefix('app')->name('app.')->middleware(['auth'])->group(function () {
     // Add this inside your auth middleware group
     Route::post('/contact/submit', [PageController::class, 'submitContact'])->name('contact.submit');
 
+    Route::prefix('appearance')->name('appearance.')->group(function () {
+        Route::get('/homepage', [HomepageController::class, 'index'])->name('homepage.index');
+        Route::post('/homepage/update', [HomepageController::class, 'update'])->name('homepage.update');
+    });
     // Theme Options
     Route::prefix('theme-options')->name('theme-options.')->group(function () {
         Route::get('/general', [ThemeOptionsController::class, 'general'])->name('general');

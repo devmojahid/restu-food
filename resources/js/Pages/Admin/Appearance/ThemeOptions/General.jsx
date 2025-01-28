@@ -29,8 +29,8 @@ import {
   Image as ImageIcon,
   Type,
   Palette,
-  Footprints,
-  MousePointer2,
+  SquareCode,
+  PencilRuler,
   Globe,
   Share2,
   Phone,
@@ -323,7 +323,7 @@ const ThemeOptions = ({ themeOptions = {}, defaults = {} }) => {
                             : "hover:bg-muted"
                         )}
                       >
-                        <MousePointer2 className="w-4 h-4 mr-2" />
+                        <PencilRuler className="w-4 h-4 mr-2" />
                         Header
                       </button>
                       <button
@@ -335,7 +335,7 @@ const ThemeOptions = ({ themeOptions = {}, defaults = {} }) => {
                             : "hover:bg-muted"
                         )}
                       >
-                        <Footprints className="w-4 h-4 mr-2" />
+                        <SquareCode className="w-4 h-4 mr-2" />
                         Footer
                       </button>
                       <button
