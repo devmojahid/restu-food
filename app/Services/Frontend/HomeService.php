@@ -10,6 +10,7 @@ use App\Models\Offer;
 use App\Services\BaseService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
 
 final class HomeService extends BaseService
 {
@@ -19,7 +20,7 @@ final class HomeService extends BaseService
         // return Cache::remember('home_page_data', 3600, function () {
             return [
                 'heroSlides' => $this->getHeroSlides(),
-                'featuredRestaurants' => $this->getFeaturedRestaurants(),
+                'featuredRestaurants' => Inertia::defer(fn () => $this->getFeaturedRestaurants()),
                 'featuredDishes' => $this->getFeaturedDishes(),
                 'popularDishes' => $this->getPopularDishes(),
                 'specialOffers' => $this->getSpecialOffers(),

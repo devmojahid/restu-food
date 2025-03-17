@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import AdminLayout from '@/Layouts/Admin/AdminLayout';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import DashboardStats from '@/Components/Admin/Dashboard/Stats';
 import RecentOrders from '@/Components/Admin/Dashboard/RecentOrders';
 import RecentUsers from '@/Components/Admin/Dashboard/RecentUsers';
@@ -31,7 +31,7 @@ const AdminDashboard = ({ dashboardData, userRole, permissions }) => {
   return (
     <AdminLayout>
       <Head title="Admin Dashboard" />
-      
+
       <div className="space-y-6">
         {/* Header Section */}
         <div className="flex justify-between items-center">
@@ -42,8 +42,8 @@ const AdminDashboard = ({ dashboardData, userRole, permissions }) => {
             </p>
           </div>
           <div className="flex items-center space-x-4">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={handleRefresh}
               className="flex items-center"
               disabled={isRefreshing}
@@ -60,10 +60,10 @@ const AdminDashboard = ({ dashboardData, userRole, permissions }) => {
 
         {/* Summary Stats */}
         <DashboardStats stats={dashboardData.summary_stats} />
-        
+
         {/* Performance Metrics */}
         <PerformanceMetrics metrics={dashboardData.performance_analytics.metrics} />
-        
+
         {/* Revenue Overview and Quick Actions */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
@@ -83,9 +83,9 @@ const AdminDashboard = ({ dashboardData, userRole, permissions }) => {
                   ))}
                 </div>
               </div>
-              <AnalyticsChart 
+              <AnalyticsChart
                 data={dashboardData.revenue_overview[
-                  timeRange === 'daily' ? 'today' : 
+                  timeRange === 'daily' ? 'today' :
                   timeRange === 'weekly' ? 'weekly' : 'monthly'
                 ]}
                 timeRange={timeRange}
@@ -97,29 +97,29 @@ const AdminDashboard = ({ dashboardData, userRole, permissions }) => {
             <LiveNotifications />
           </div>
         </div>
-        
+
         {/* Recent Orders and Users */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <RecentOrders orders={dashboardData.recent_orders} />
           <RecentUsers users={dashboardData.performance_analytics.customers} />
         </div>
-        
+
         {/* Orders Table */}
         <div className="mt-6">
           <OrdersTable orders={dashboardData.recent_orders} />
         </div>
-        
+
         {/* Advanced Analytics */}
         <div className="mt-6">
-          <AdvancedAnalytics 
+          <AdvancedAnalytics
             data={dashboardData.performance_analytics}
             timeRange={timeRange}
           />
         </div>
-        
+
         {/* Realtime Stats */}
         <div className="mt-6">
-          <RealtimeStats 
+          <RealtimeStats
             orders={dashboardData.performance_analytics.orders}
             revenue={dashboardData.performance_analytics.revenue}
           />
@@ -129,4 +129,4 @@ const AdminDashboard = ({ dashboardData, userRole, permissions }) => {
   );
 };
 
-export default AdminDashboard; 
+export default AdminDashboard;

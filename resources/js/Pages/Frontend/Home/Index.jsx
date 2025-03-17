@@ -9,16 +9,19 @@ import SpecialOffers from './Partials/SpecialOffers';
 import PopularCategories from './Partials/PopularCategories';
 import LocationBasedSuggestions from './Partials/LocationBasedSuggestions';
 import CustomerTestimonials from './Partials/CustomerTestimonials';
+import { Deferred } from '@inertiajs/react'
 
 const Index = ({ heroSlides, featuredRestaurants, featuredDishes, popularDishes, specialOffers, popularCategories, testimonials, nearbyRestaurants }) => {
     return (
         <Layout>
             <Head title="Home" />
-            
+
             <HeroSlider slides={heroSlides} type="slider" />
-            
+
             <div className="space-y-0">
-                <FeaturedRestaurants restaurants={featuredRestaurants} />
+                <Deferred data="featuredRestaurants" fallback={<div>Loading...</div>}>
+                    <FeaturedRestaurants restaurants={featuredRestaurants} />
+                </Deferred>
                 <FeaturedDishes dishes={featuredDishes} />
                 <PopularCategories categories={popularCategories} />
                 <CustomerTestimonials testimonials={testimonials} />
@@ -30,4 +33,4 @@ const Index = ({ heroSlides, featuredRestaurants, featuredDishes, popularDishes,
     );
 };
 
-export default Index; 
+export default Index;
