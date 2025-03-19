@@ -135,10 +135,10 @@ final class ProductController extends Controller
     public function edit(Product $product): Response
     {
         $product->load([
-            'restaurant', 
-            'categories', 
-            'variants', 
-            'specifications', 
+            'restaurant',
+            'categories',
+            'variants',
+            'specifications',
             'metadata',
             'specificAttributes'
         ]);
@@ -259,7 +259,7 @@ final class ProductController extends Controller
             $viewMode = $request->get('viewMode', 'overview');
 
              // $stats = $this->getProductStats($timeRange);
-            
+
             // Enhanced dummy data for reports
             $stats = [
                 'summary' => [
@@ -398,7 +398,7 @@ final class ProductController extends Controller
                 ]
             ];
             $user = Auth::user();
-            
+
             return Inertia::render('Admin/Products/Reports/Index', [
                 'stats' => $stats,
                 'timeRange' => $timeRange,
@@ -419,7 +419,7 @@ final class ProductController extends Controller
             $timeRange = $request->get('timeRange', 'today');
 
             // $analyticsData = $this->getAnalyticsData($timeRange);
-            
+
             // Enhanced dummy data for analytics
             $analyticsData = [
                 'trends' => [
@@ -600,7 +600,7 @@ final class ProductController extends Controller
             ];
 
             $user = Auth::user();
-            
+
             return Inertia::render('Admin/Products/Analytics/Index', [
                 'analyticsData' => $analyticsData,
                 'timeRange' => $timeRange,
@@ -616,7 +616,7 @@ final class ProductController extends Controller
     public function stats(Request $request)
     {
         $timeRange = $request->get('timeRange', 'today');
-        
+
         return response()->json([
             'stats' => $this->getProductStats($timeRange),
         ]);
@@ -654,7 +654,7 @@ final class ProductController extends Controller
             $baseRevenue = rand(8000, 15000);
             $baseOrders = rand(80, 150);
             $baseUnits = rand(240, 450);
-            
+
             return [
                 'date' => $date->format('Y-m-d'),
                 'revenue' => $baseRevenue + ($days * rand(-500, 500)),
@@ -774,7 +774,7 @@ final class ProductController extends Controller
     private function getDateRange($timeRange): array
     {
         $now = Carbon::now();
-        
+
         switch ($timeRange) {
             case 'today':
                 return [
@@ -812,7 +812,7 @@ final class ProductController extends Controller
     private function getAnalyticsData($timeRange): array
     {
         $dateRange = $this->getDateRange($timeRange);
-        
+
         // Add your analytics data collection logic here
         return [
             'trends' => $this->getTrends($dateRange),
@@ -969,4 +969,4 @@ final class ProductController extends Controller
             'promotion_recommendations' => [],
         ];
     }
-} 
+}

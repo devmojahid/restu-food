@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import { RowActions } from "@/Components/Table/RowActions";
 import { useState, useMemo } from "react";
 import { formatCurrency } from "@/lib/utils";
+import { router } from "@inertiajs/react";
 
 const sortableConfigs = {
   name: {
@@ -105,7 +106,7 @@ const useProductActions = () => {
   const handleToggleFeatured = async (product) => {
     const loadingKey = `featured-${product.id}`;
     setActionLoading(prev => ({ ...prev, [loadingKey]: true }));
-    
+
     try {
       await router.put(route("app.products.toggle-featured", product.id));
       toast({
@@ -155,7 +156,7 @@ const useProductActions = () => {
 export default function ListProducts({ products }) {
   const { toast } = useToast();
   const params = new URLSearchParams(window.location.search);
-  
+
   const {
     actionLoading,
     handleBulkOperation,
@@ -305,7 +306,7 @@ export default function ListProducts({ products }) {
           },
         };
 
-        const status = row.stock_quantity <= 0 ? 'out_of_stock' : 
+        const status = row.stock_quantity <= 0 ? 'out_of_stock' :
                       row.stock_quantity <= row.low_stock_threshold ? 'low_stock' : 'in_stock';
         const config = stockConfig[status];
 
@@ -335,7 +336,7 @@ export default function ListProducts({ products }) {
           "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium",
           "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300"
         )}>
-          {row.type === 'simple' ? 'Simple' : 
+          {row.type === 'simple' ? 'Simple' :
            row.type === 'variable' ? 'Variable' : 'Bundle'}
         </span>
       ),
@@ -517,4 +518,4 @@ export default function ListProducts({ products }) {
       }
     />
   );
-} 
+}

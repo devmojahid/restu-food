@@ -32,7 +32,7 @@ final class ProductService
                 $categoryData = collect($data['categories'])->mapWithKeys(function ($categoryId, $index) {
                     return [$categoryId => ['sort_order' => $index]];
                 })->all();
-                
+
                 $product->categories()->attach($categoryData);
             }
 
@@ -52,7 +52,7 @@ final class ProductService
             if (!empty($data['variations'])) {
                 foreach ($data['variations'] as $variation) {
                     // Debug log before creating variant
-                    \Log::info('Processing variation:', ['variation' => $variation]);
+                    Log::info('Processing variation:', ['variation' => $variation]);
 
                     // Create variant first
                     $variant = $product->variants()->create([
@@ -78,7 +78,7 @@ final class ProductService
 
                     // Handle thumbnail for the variant
                     if (!empty($variation['thumbnail'])) {
-                        \Log::info('Processing variation thumbnail', [
+                        Log::info('Processing variation thumbnail', [
                             'variation_id' => $variant->id,
                             'thumbnail' => $variation['thumbnail']
                         ]);
@@ -109,7 +109,7 @@ final class ProductService
                 $categoryData = collect($data['categories'])->mapWithKeys(function ($categoryId, $index) {
                     return [$categoryId => ['sort_order' => $index]];
                 })->all();
-                
+
                 $product->categories()->sync($categoryData);
             }
 
@@ -138,7 +138,7 @@ final class ProductService
                 // Get existing variation IDs
                 $existingVariationIds = $product->variants()->pluck('id')->toArray();
                 $updatedVariationIds = collect($data['variations'])->pluck('id')->filter()->toArray();
-                
+
                 // Delete variations that are no longer present
                 $product->variants()
                     ->whereNotIn('id', $updatedVariationIds)
@@ -215,7 +215,7 @@ final class ProductService
         $prefix = strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $name), 0, 3));
         $timestamp = now()->format('YmdHis');
         $random = strtoupper(Str::random(3));
-        
+
         return "{$prefix}{$timestamp}{$random}";
     }
 
@@ -274,11 +274,11 @@ final class ProductService
 
                 if (isset($variation['thumbnail'])) {
                     $variant->handleFile(
-                        $variation['thumbnail'], 
+                        $variation['thumbnail'],
                         ProductVariant::COLLECTION_THUMBNAIL
                     );
                 }
             }
         }
     }
-} 
+}
