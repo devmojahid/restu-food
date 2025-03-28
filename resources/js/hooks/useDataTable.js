@@ -122,64 +122,67 @@ export const useDataTable = ({
         };
     }, [filters, searchValue, page.props.polling, pollingOptions, meta.lastUpdated]);
 
-    // Prefetch next page if enabled
-    useEffect(() => {
-        if (!enablePrefetch || !hasMoreData || isLoading || isLoadingMore) return;
+    // Update prefetch logic
+    // useEffect(() => {
+    //     if (!enablePrefetch || !hasMoreData || isLoading || isLoadingMore) return;
         
-        // Check for existing prefetch info from the server
-        const prefetchUrl = page.props.prefetch?.next_page;
+    //     // Check for existing prefetch info from the server
+    //     const prefetchUrl = page.props.prefetch?.next_page;
         
-        if (prefetchUrl && !dataCache.current.has(currentPage.current + 1)) {
-            // Cancel any existing prefetch
-            if (prefetchControllerRef.current) {
-                prefetchControllerRef.current.abort();
-            }
+    //     if (prefetchUrl && !dataCache.current.has(currentPage.current + 1)) {
+    //         // Cancel any existing prefetch
+    //         if (prefetchControllerRef.current) {
+    //             prefetchControllerRef.current.abort();
+    //         }
             
-            // Create a new controller for this prefetch
-            prefetchControllerRef.current = new AbortController();
+    //         // Create a new controller for this prefetch
+    //         prefetchControllerRef.current = new AbortController();
             
-            // Use fetch to prefetch data with proper error handling
-            fetch(prefetchUrl, {
-                signal: prefetchControllerRef.current.signal,
-                headers: {
-                    'X-Inertia': true,
-                    'X-Inertia-Partial-Data': 'users,meta',
-                    'X-Inertia-Partial-Component': page.component,
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.props?.users?.data) {
-                    // Store in cache with timestamp
-                    dataCache.current.set(currentPage.current + 1, {
-                        data: data.props.users.data,
-                        timestamp: Date.now()
-                    });
-                }
-            })
-            .catch(error => {
-                // Ignore abort errors
-                if (error.name !== 'AbortError') {
-                    console.error('Prefetch error:', error);
-                    // Clear the cache entry if it exists
-                    dataCache.current.delete(currentPage.current + 1);
-                }
-            });
-        }
+    //         // Use fetch to prefetch data with proper error handling
+    //         fetch(prefetchUrl, {
+    //             signal: prefetchControllerRef.current.signal,
+    //             headers: {
+    //                 'X-Inertia': true,
+    //                 'X-Inertia-Partial-Data': 'users,meta',
+    //                 'X-Inertia-Partial-Component': page.component,
+    //                 'Accept': 'application/json',
+    //                 'X-Requested-With': 'XMLHttpRequest',
+    //                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+    //             },
+    //             credentials: 'same-origin'
+    //         })
+    //         .then(async response => {
+    //             if (!response.ok) {
+    //                 const errorData = await response.json().catch(() => ({}));
+    //                 throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    //             }
+    //             return response.json();
+    //         })
+    //         .then(data => {
+    //             if (data.props?.users?.data) {
+    //                 // Store in cache with timestamp
+    //                 dataCache.current.set(currentPage.current + 1, {
+    //                     data: data.props.users.data,
+    //                     timestamp: Date.now()
+    //                 });
+    //             }
+    //         })
+    //         .catch(error => {
+    //             // Ignore abort errors
+    //             if (error.name !== 'AbortError') {
+    //                 console.error('Prefetch error:', error);
+    //                 // Clear the cache entry if it exists
+    //                 dataCache.current.delete(currentPage.current + 1);
+    //             }
+    //         });
+    //     }
         
-        return () => {
-            if (prefetchControllerRef.current) {
-                prefetchControllerRef.current.abort();
-            }
-        };
-    }, [page.props.prefetch, hasMoreData, isLoading, isLoadingMore, enablePrefetch]);
+    //     return () => {
+    //         if (prefetchControllerRef.current) {
+    //             prefetchControllerRef.current.abort();
+    //         }
+    //     };
+    // }, [page.props.prefetch, hasMoreData, isLoading, isLoadingMore, enablePrefetch]);
 
     // Add cache cleanup function
     const cleanupCache = useCallback(() => {
@@ -343,6 +346,7 @@ export const useDataTable = ({
         performSearch(searchValue, filters);
     };
 
+    // Update bulk action handling
     const handleBulkAction = async (action) => {
         if (!selectedItems.length) return;
         
@@ -366,7 +370,7 @@ export const useDataTable = ({
                     payload = { ...payload, status: false };
                     break;
                 default:
-                    throw new Error('Unknown bulk action');
+                    throw new Error(`Unknown bulk action: ${action}`);
             }
             
             await router.post(route(`${routeName}.${routeSuffix}`), payload, {
@@ -389,6 +393,13 @@ export const useDataTable = ({
                     onError?.(errors);
                 }
             });
+        } catch (error) {
+            toast({
+                title: 'Error',
+                description: error.message || 'An unexpected error occurred',
+                variant: 'destructive',
+            });
+            onError?.(error);
         } finally {
             setIsLoading(false);
         }

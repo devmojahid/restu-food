@@ -6,11 +6,17 @@ import {
   DropdownMenuTrigger,
 } from "@/Components/ui/dropdown-menu";
 import { Badge } from "@/Components/ui/badge";
-import { Settings, Check } from "lucide-react";
+import { Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const TableActions = ({ selectedItems, bulkActions, onBulkAction }) => {
   if (!selectedItems?.length) return null;
+
+  const handleBulkAction = (actionId) => {
+    if (typeof onBulkAction === 'function') {
+      onBulkAction(actionId);
+    }
+  };
 
   return (
     <div className="flex flex-col sm:flex-row w-full sm:w-auto items-start sm:items-center gap-2">
@@ -34,10 +40,10 @@ export const TableActions = ({ selectedItems, bulkActions, onBulkAction }) => {
           align="start"
           className="w-[200px] sm:w-[220px] animate-in fade-in-0 zoom-in-95"
         >
-          {bulkActions.map((action) => (
+          {bulkActions?.map((action) => (
             <DropdownMenuItem
-              key={action.id}
-              onClick={() => onBulkAction(action.id)}
+              key={`bulk-action-${action.value}`}
+              onClick={() => handleBulkAction(action.value)}
               className={cn(
                 "flex items-center gap-2 px-3 py-2 cursor-pointer",
                 "hover:bg-gray-100 dark:hover:bg-gray-800",
