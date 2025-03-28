@@ -9,17 +9,18 @@ import {
 } from "@/Components/ui/select";
 import { Button } from "@/Components/ui/button";
 import { cn } from "@/lib/utils";
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 
 export const TableFilters = ({ filters, onFilterChange, isLoading }) => {
   const searchInputRef = useRef(null);
+  const [localSearch, setLocalSearch] = useState(filters?.search || "");
 
   const handleSearchSubmit = useCallback(
     (e) => {
       e.preventDefault();
-      onFilterChange("search", filters?.search || "", true);
+      onFilterChange("search", localSearch, true);
     },
-    [filters?.search, onFilterChange]
+    [localSearch, onFilterChange]
   );
 
   const handleKeyDown = useCallback(
@@ -33,8 +34,14 @@ export const TableFilters = ({ filters, onFilterChange, isLoading }) => {
   );
 
   const handleClearSearch = () => {
+    setLocalSearch("");
     onFilterChange("search", "", true);
     searchInputRef.current?.focus();
+  };
+
+  const handleSearchChange = (e) => {
+    setLocalSearch(e.target.value);
+    // Don't trigger immediate search on change - wait for submit or Enter key
   };
 
   return (
@@ -53,8 +60,8 @@ export const TableFilters = ({ filters, onFilterChange, isLoading }) => {
             ref={searchInputRef}
             type="text"
             placeholder="Search..."
-            value={filters?.search || ""}
-            onChange={(e) => onFilterChange("search", e.target.value)}
+            value={localSearch}
+            onChange={handleSearchChange}
             onKeyDown={handleKeyDown}
             className={cn(
               "pl-9 pr-24 w-full bg-transparent",
@@ -62,10 +69,12 @@ export const TableFilters = ({ filters, onFilterChange, isLoading }) => {
               "focus:ring-2 focus:ring-primary/20",
               "rounded-lg border-gray-200 dark:border-gray-700",
               "h-10 py-2 text-sm",
+              "shadow-sm",
               isLoading && "pr-9"
             )}
+            disabled={isLoading}
           />
-          {filters?.search && (
+          {localSearch && (
             <button
               type="button"
               onClick={handleClearSearch}
@@ -73,8 +82,10 @@ export const TableFilters = ({ filters, onFilterChange, isLoading }) => {
                 "absolute right-[70px] top-1/2 -translate-y-1/2",
                 "p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700",
                 "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300",
-                "transition-all duration-200"
+                "transition-all duration-200",
+                "focus:outline-none focus:ring-2 focus:ring-primary/20"
               )}
+              disabled={isLoading}
             >
               <X className="h-4 w-4" />
             </button>
@@ -89,7 +100,9 @@ export const TableFilters = ({ filters, onFilterChange, isLoading }) => {
               "bg-primary/10 hover:bg-primary/20 text-primary",
               "dark:bg-primary/20 dark:hover:bg-primary/30",
               "transition-all duration-200",
-              "rounded-md"
+              "rounded-md",
+              "shadow-sm",
+              "focus:outline-none focus:ring-2 focus:ring-primary/20"
             )}
             disabled={isLoading}
           >
@@ -108,7 +121,9 @@ export const TableFilters = ({ filters, onFilterChange, isLoading }) => {
             className={cn(
               "w-[120px] lg:w-[100px]",
               "hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors",
-              "h-10 rounded-lg"
+              "h-10 rounded-lg",
+              "shadow-sm",
+              "focus:ring-2 focus:ring-primary/20"
             )}
           >
             <SelectValue placeholder="Per page" />
@@ -116,12 +131,13 @@ export const TableFilters = ({ filters, onFilterChange, isLoading }) => {
           <SelectContent
             className="animate-in fade-in-0 zoom-in-95"
             align="end"
+            sideOffset={5}
           >
             {[10, 25, 50, 100].map((value) => (
               <SelectItem
                 key={value}
                 value={String(value)}
-                className="flex items-center justify-between"
+                className="flex items-center justify-between px-3 py-2"
               >
                 <span>{value}</span>
                 <span className="text-xs text-gray-500">rows</span>

@@ -21,27 +21,66 @@ final class UserController extends Controller
 
     public function index(Request $request): Response
     {
-        $filters = [
+        // Clean the filters by removing empty values
+        $filters = array_filter([
             'search' => $request->input('search'),
             'role' => $request->input('role'),
             'per_page' => $request->input('per_page', 10),
             'date_from' => $request->input('date_from'),
             'date_to' => $request->input('date_to'),
+            'status' => $request->input('status'),
+            'sort' => $request->input('sort', 'created_at'),
+            'direction' => $request->input('direction', 'desc'),
+        ], function ($value) {
+            return $value !== null && $value !== '';
+        });
+
+        // Get the data using the service, with proper pagination for infinite scrolling
+        $users = $this->userService->getPaginated($filters);
+
+        // Enhanced meta information for client-side handling
+        $meta = [
+            'hasMorePages' => $users->hasMorePages(),
+            'currentPage' => $users->currentPage(),
+            'lastPage' => $users->lastPage(),
+            'total' => $users->total(),
+            'from' => $users->firstItem(),
+            'to' => $users->lastItem(),
+            'lastUpdated' => now()->toIso8601String(),
+            'cacheControl' => 'private, max-age=60',
         ];
 
+        // Set up polling for real-time updates if requested
+        $pollingInterval = $request->input('polling', null);
+        
+        if ($pollingInterval && is_numeric($pollingInterval)) {
+            Inertia::share('polling', [
+                'interval' => (int) $pollingInterval,
+                'endpoint' => route('app.users.index', array_merge($filters, ['only' => 'users,meta'])),
+            ]);
+        }
+
+        // For prefetching next page data
+        if ($users->hasMorePages()) {
+            Inertia::share('prefetch', [
+                'next_page' => route('app.users.index', array_merge($filters, ['page' => $users->currentPage() + 1, 'only' => 'users,meta']))
+            ]);
+        }
+        
+        // Return the Inertia response without manually adding headers
         return Inertia::render('Admin/Users/Index', [
-            'users' => $this->userService->getPaginated($filters),
+            'users' => $users,
             'filters' => $filters,
-            'roles' => $this->userService->getAllRoles(),
+            'roles' => fn () => $this->userService->getAllRoles(), // Deferred prop
+            'meta' => $meta,
         ]);
     }
 
     public function create(): Response
     {
-        $data = [
-            'roles' => $this->userService->getAllRoles()
-        ];
-        return Inertia::render('Admin/Users/Create', $data);
+        return Inertia::render('Admin/Users/Create', [
+            'roles' => fn () => $this->userService->getAllRoles() // Deferred prop
+        ]);
     }
 
     public function store(UserRequest $request): RedirectResponse
@@ -87,7 +126,7 @@ final class UserController extends Controller
 
         return Inertia::render('Admin/Users/Edit', [
             'user' => $user,
-            'roles' => $this->userService->getAllRoles(),
+            'roles' => fn () => $this->userService->getAllRoles(), // Deferred prop
         ]);
     }
 

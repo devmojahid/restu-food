@@ -1,16 +1,17 @@
 import { DataTable } from "@/Components/Table/DataTable";
 import { useDataTable } from "@/hooks/useDataTable";
 import { useToast } from "@/Components/ui/use-toast";
-import { Trash2, UserX2, UserCheck2, Pencil, Eye } from "lucide-react";
+import { Trash2, UserX2, UserCheck2, Pencil, Eye, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { usePage } from "@inertiajs/react";
+import { router, usePage } from "@inertiajs/react";
 import { LazyImage } from "@/Components/Table/LazyImage";
 import { format, subDays } from "date-fns";
 import { RowActions } from "@/Components/Table/RowActions";
+import { useState } from "react";
 
-export default function ListUsers({ users, roles }) {
+export default function ListUsers({ users, roles, meta }) {
   const { toast } = useToast();
-  const params = new URLSearchParams(window.location.search);
+  const [enablePolling, setEnablePolling] = useState(false);
 
   // Define filter configurations
   const filterConfigs = {
@@ -184,7 +185,7 @@ export default function ListUsers({ users, roles }) {
       header: "Roles",
       cell: (row) => (
         <div className="flex flex-wrap gap-1">
-          {row.roles.map((role) => (
+          {row.roles?.map((role) => (
             <span
               key={role.id}
               className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
@@ -196,29 +197,23 @@ export default function ListUsers({ users, roles }) {
       ),
       filter: {
         type: "select",
-        options: [
-          { label: "All Roles", value: "" },
-          ...roles.map((role) => ({
-            label: role.name,
-            value: role.name,
-          })),
-        ],
+        options: filterConfigs.role.options,
       },
       responsive: {
-        hidden: "md",
+        hidden: "lg",
         priority: 3,
       },
+      className: "min-w-[150px]",
     },
     {
       id: "status",
       header: "Status",
       cell: (row) => {
-        const config = getStatusConfig(row.status?.toLowerCase());
+        const config = getStatusConfig(row.status);
         return (
           <span
             className={cn(
-              "inline-flex items-center justify-center rounded-full font-medium",
-              "transition-all duration-200",
+              "inline-flex items-center justify-center rounded-full",
               config.className
             )}
           >
@@ -228,39 +223,65 @@ export default function ListUsers({ users, roles }) {
       },
       sortable: true,
       sortConfig: sortableConfigs.status,
-      filter: filterConfigs.status,
+      filter: {
+        type: "select",
+        options: filterConfigs.status.options,
+      },
       responsive: {
-        hidden: "sm",
+        hidden: "md",
         priority: 2,
       },
-      className: "text-center sm:text-left",
+      className: "min-w-[100px]",
     },
     {
       id: "created_at",
       header: "Created At",
-      cell: (row) => sortableConfigs.created_at.format(row.created_at),
+      cell: (row) => format(new Date(row.created_at), "PPP"),
       sortable: true,
       sortConfig: sortableConfigs.created_at,
       responsive: {
-        hidden: "lg",
+        hidden: "md",
         priority: 4,
       },
+      className: "min-w-[180px]",
     },
     {
       id: "actions",
       header: "Actions",
       cell: (row) => (
         <RowActions
-          row={row}
-          actions={{
-            view: "app.users.show",
-            edit: "app.users.edit",
-            delete: "app.users.destroy",
-          }}
-          resourceName="user"
+          actions={[
+            {
+              label: "View User",
+              icon: Eye,
+              onClick: () => handleView(row),
+              className: "text-blue-600 hover:text-blue-800",
+            },
+            {
+              label: "Edit User",
+              icon: Pencil,
+              onClick: () => handleEdit(row),
+              className: "text-green-600 hover:text-green-800",
+            },
+            {
+              label: row.status === "active" ? "Deactivate" : "Activate",
+              icon: row.status === "active" ? UserX2 : UserCheck2,
+              onClick: () => handleStatusToggle(row),
+              className:
+                row.status === "active"
+                  ? "text-yellow-600 hover:text-yellow-800"
+                  : "text-green-600 hover:text-green-800",
+            },
+            {
+              label: "Delete",
+              icon: Trash2,
+              onClick: () => handleDelete(row),
+              className: "text-red-600 hover:text-red-800",
+            },
+          ]}
         />
       ),
-      width: "100px",
+      className: "w-[80px] sm:w-[100px]",
       responsive: {
         hidden: false,
         priority: 1,
@@ -268,173 +289,221 @@ export default function ListUsers({ users, roles }) {
     },
   ];
 
-  // Enhanced filter presets with proper date handling
-  const filterPresets = {
-    recentlyActive: {
-      label: "Recently Active",
-      filters: {
-        status: "active",
-        date_range: {
-          from: format(subDays(new Date(), 7), "yyyy-MM-dd"),
-          to: format(new Date(), "yyyy-MM-dd"),
-        },
-      },
-    },
-    lastMonth: {
-      label: "Last Month",
-      filters: {
-        date_range: {
-          from: format(subDays(new Date(), 30), "yyyy-MM-dd"),
-          to: format(new Date(), "yyyy-MM-dd"),
-        },
-      },
-    },
-    inactiveUsers: {
-      label: "Inactive Users",
-      filters: {
-        status: "inactive",
-      },
-    },
+  // Toggle real-time polling on/off
+  const handleTogglePolling = () => {
+    if (enablePolling) {
+      // Turn off polling
+      setEnablePolling(false);
+      
+      // Reset the URL to remove polling parameter
+      const newUrl = window.location.pathname + 
+        window.location.search.replace(/([?&])polling=\d+(&|$)/, '$1').replace(/\?$/, '');
+      
+      router.get(newUrl, {}, {
+        preserveState: true,
+        preserveScroll: true,
+        only: ['users', 'meta']
+      });
+    } else {
+      // Turn on polling (every 30 seconds)
+      setEnablePolling(true);
+      
+      // Add polling parameter to URL
+      const currentParams = new URLSearchParams(window.location.search);
+      currentParams.set('polling', '30000');
+      
+      router.get(
+        window.location.pathname + '?' + currentParams.toString(),
+        {},
+        {
+          preserveState: true,
+          preserveScroll: true,
+          only: ['users', 'meta']
+        }
+      );
+    }
   };
 
-  // Enhanced mobile responsiveness for bulk actions
-  const bulkActions = [
-    {
-      id: "delete",
-      label: "Delete",
-      labelFull: "Delete Selected", // Full label for larger screens
-      icon: Trash2,
-      variant: "destructive",
-      confirm: {
-        title: "Delete Selected Users",
-        message: "Are you sure you want to delete the selected users?",
-        confirmText: "Delete",
-        cancelText: "Cancel",
-      },
-      className: "sm:w-auto w-full",
-    },
-    {
-      id: "activate",
-      label: "Activate",
-      labelFull: "Activate Selected",
-      icon: UserCheck2,
-      variant: "default",
-      className: "sm:w-auto w-full",
-    },
-    {
-      id: "deactivate",
-      label: "Deactivate",
-      labelFull: "Deactivate Selected",
-      icon: UserX2,
-      variant: "default",
-      className: "sm:w-auto w-full",
-    },
-  ];
-
-  // Initial filters with enhanced configuration
-  const initialFilters = {
-    search: params.get("search") || "",
-    per_page: params.get("per_page") || "10",
-    sort: params.get("sort") || sortableConfigs.created_at.key,
-    direction:
-      params.get("direction") || sortableConfigs.created_at.defaultDirection,
-    // Add all filter initial values
-    status: params.get("status") || filterConfigs.status.defaultValue,
-    role: params.get("role") || filterConfigs.role.defaultValue,
-    verified: params.get("verified") || filterConfigs.verified.defaultValue,
-    date_range: {
-      from: params.get("date_from") || "",
-      to: params.get("date_to") || "",
-    },
-  };
-
-  // Custom filter components (optional)
-  const customFilterComponents = {
-    dateRange: ({ value, onChange }) => (
-      // Your custom date range component
-      <DateRangePicker value={value} onChange={onChange} className="w-full" />
-    ),
-    // Add more custom filter components as needed
-  };
-
+  // Initialize the data table hook with required configurations
   const {
     selectedItems,
     filters,
-    sorting,
+    sorting: tableSorting,
     isLoading,
+    isLoadingMore,
+    hasMoreData,
+    loadMoreData,
     handleFilterChange,
     handleBulkAction,
     handleSelectionChange,
-    handlePageChange,
     handleSort,
+    currentPage,
+    dataCache,
+    meta: tableMeta,
   } = useDataTable({
     routeName: "app.users.index",
-    initialFilters,
-    sortableConfigs,
-    filterConfigs, // Pass filter configurations
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Operation completed successfully",
-      });
+    initialFilters: {
+      search: "",
+      role: "",
+      status: "",
+      date_from: "",
+      date_to: "",
+      verified: "",
+      sort: "created_at",
+      direction: "desc",
+      per_page: 10,
     },
-    onError: () => {
+    onSuccess: () => {
+      // Handle success if needed
+    },
+    onError: (error) => {
       toast({
         title: "Error",
-        description: "Operation failed",
+        description: error?.message || "An error occurred while fetching data",
         variant: "destructive",
       });
     },
+    // Use polling from the server configuration or from our local state
+    pollingOptions: enablePolling ? { interval: 30000 } : null,
+    enablePrefetch: true, // Enable prefetching for better performance
   });
 
-  // Ensure users data has default values
-  const safeUsers = {
-    data: users?.data || [],
-    current_page: users?.current_page || 1,
-    last_page: users?.last_page || 1,
-    per_page: users?.per_page || 10,
-    total: users?.total || 0,
-    from: users?.from || 0,
-    to: users?.to || 0,
+  // Handle row actions
+  const handleView = (row) => {
+    router.get(route("app.users.show", row.id));
   };
 
-  return (
-    <DataTable
-      data={safeUsers.data}
-      columns={columns}
-      filters={filters}
-      filterConfigs={filterConfigs}
-      customFilterComponents={customFilterComponents}
-      filterPresets={filterPresets}
-      onFilterChange={handleFilterChange}
-      selectedItems={selectedItems}
-      onSelectionChange={handleSelectionChange}
-      bulkActions={bulkActions}
-      onBulkAction={handleBulkAction}
-      pagination={{
-        currentPage: safeUsers.current_page,
-        totalPages: safeUsers.last_page,
-        perPage: safeUsers.per_page,
-        total: safeUsers.total,
-        from: safeUsers.from,
-        to: safeUsers.to,
-      }}
-      onPageChange={handlePageChange}
-      isLoading={isLoading}
-      sorting={sorting}
-      onSort={handleSort}
-      // Enhanced responsive props
-      responsive={{
-        breakpoints: {
-          sm: 640,
-          md: 768,
-          lg: 1024,
-          xl: 1280,
+  const handleEdit = (row) => {
+    router.get(route("app.users.edit", row.id));
+  };
+
+  const handleDelete = (row) => {
+    if (confirm(`Are you sure you want to delete ${row.name}?`)) {
+      router.delete(route("app.users.destroy", row.id), {
+        preserveScroll: true,
+        onSuccess: () => {
+          toast({
+            title: "Success",
+            description: "User deleted successfully",
+          });
         },
-        defaultHidden: ["created_at", "email"],
-        stackedOnMobile: true,
-      }}
-      className="max-w-full overflow-x-auto"
-    />
+        onError: (error) => {
+          toast({
+            title: "Error",
+            description: error?.message || "Failed to delete user",
+            variant: "destructive",
+          });
+        },
+      });
+    }
+  };
+
+  const handleStatusToggle = (row) => {
+    const newStatus = row.status === "active" ? "inactive" : "active";
+    router.patch(
+      route("app.users.update", row.id),
+      { status: newStatus },
+      {
+        preserveScroll: true,
+        onSuccess: () => {
+          toast({
+            title: "Success",
+            description: `User ${newStatus === "active" ? "activated" : "deactivated"} successfully`,
+          });
+        },
+        onError: (error) => {
+          toast({
+            title: "Error",
+            description: error?.message || "Failed to update user status",
+            variant: "destructive",
+          });
+        },
+      }
+    );
+  };
+
+  // Handle refresh - manual data reload
+  const handleRefresh = () => {
+    return router.reload({
+      only: ['users', 'meta'],
+      preserveScroll: true,
+      preserveState: true
+    });
+  };
+
+  // Get the bulk actions for the table
+  const bulkActions = [
+    {
+      label: "Delete Selected",
+      icon: Trash2,
+      value: "delete",
+    },
+    {
+      label: "Activate Selected",
+      icon: UserCheck2,
+      value: "activate",
+    },
+    {
+      label: "Deactivate Selected",
+      icon: UserX2,
+      value: "deactivate",
+    },
+  ];
+
+  // Render the filters component
+  const renderFilters = () => {
+    return (
+      <div className="flex flex-col sm:flex-row gap-4 mb-4 hidden">
+        <div className="flex items-center space-x-2">
+          <button
+            type="button"
+            onClick={handleTogglePolling}
+            className={cn(
+              "flex items-center space-x-1 px-3 py-1 rounded-md text-sm",
+              enablePolling
+                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+            )}
+          >
+            <RefreshCw 
+              className={cn(
+                "h-4 w-4", 
+                enablePolling && "animate-spin"
+              )} 
+            />
+            <span>{enablePolling ? "Polling Active" : "Enable Polling"}</span>
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // Render the data table with all the configurations
+  return (
+    <div className="space-y-4">
+      {renderFilters()}
+      <DataTable
+        data={users?.data || []}
+        columns={columns}
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        selectedItems={selectedItems}
+        onSelectionChange={handleSelectionChange}
+        bulkActions={bulkActions}
+        onBulkAction={handleBulkAction}
+        isLoading={isLoading}
+        isLoadingMore={isLoadingMore}
+        hasMoreData={hasMoreData}
+        onLoadMore={loadMoreData}
+        sorting={tableSorting}
+        onSort={handleSort}
+        currentPage={currentPage}
+        meta={tableMeta || meta}
+        onRefresh={handleRefresh}
+        keyField="id"
+        dataCache={dataCache}
+        showLastUpdated={true}
+      />
+    </div>
   );
 }

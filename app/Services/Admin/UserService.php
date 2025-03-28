@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Cache;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
 use App\Models\File;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 
 final class UserService extends BaseService
 {
@@ -21,6 +23,77 @@ final class UserService extends BaseService
     protected array $filterableFields = ['status'];
     protected array $sortableFields = ['name', 'email', 'created_at'];
     protected array $relationships = ['roles', 'files'];
+
+    /**
+     * Get paginated users with filters for infinite scroll
+     *
+     * @param array $filters
+     * @return LengthAwarePaginator
+     */
+    public function getPaginated(array $filters = []): LengthAwarePaginator
+    {
+        $perPage = $filters['per_page'] ?? 10;
+        $query = $this->model::query()
+            ->with($this->relationships);
+
+        // Apply search filter if provided
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function (Builder $q) use ($search) {
+                foreach ($this->searchableFields as $field) {
+                    $q->orWhere($field, 'LIKE', "%{$search}%");
+                }
+            });
+        }
+
+        // Apply role filter if provided
+        if (!empty($filters['role'])) {
+            $query->whereHas('roles', function ($q) use ($filters) {
+                $q->where('name', $filters['role']);
+            });
+        }
+
+        // Apply status filter if provided
+        if (isset($filters['status']) && $filters['status'] !== '') {
+            $query->where('status', $filters['status']);
+        }
+
+        // Apply date range filter if provided
+        if (!empty($filters['date_from']) && !empty($filters['date_to'])) {
+            $query->whereBetween('created_at', [$filters['date_from'], $filters['date_to']]);
+        } else if (!empty($filters['date_from'])) {
+            $query->where('created_at', '>=', $filters['date_from']);
+        } else if (!empty($filters['date_to'])) {
+            $query->where('created_at', '<=', $filters['date_to']);
+        }
+
+        // Apply sorting
+        $sortColumn = $filters['sort'] ?? 'created_at';
+        $sortDirection = $filters['direction'] ?? 'desc';
+        
+        // Validate sort column to prevent SQL injection
+        if (in_array($sortColumn, $this->sortableFields)) {
+            $query->orderBy($sortColumn, $sortDirection);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        // Add a secondary sort by ID to ensure consistent ordering for identical values
+        $query->orderBy('id', $sortDirection);
+
+        // Use efficient eager loading to limit the data transferred
+        $query->select([
+            'id', 
+            'name', 
+            'email', 
+            'status', 
+            'created_at',
+            'email_verified_at'
+        ]);
+
+        // Paginate the results efficiently for infinite scroll
+        return $query->paginate($perPage)->withQueryString();
+    }
 
     public function getAllRoles(): array
     {
@@ -91,7 +164,7 @@ final class UserService extends BaseService
             }
 
             DB::commit();
-            // $this->clearCache();
+            $this->clearCacheForUser($id);
 
             return $user->fresh(['roles', 'files']);
         } catch (\Exception $e) {
@@ -194,6 +267,7 @@ final class UserService extends BaseService
             $user = $this->findOrFail($id);
             $user->update($data);
             DB::commit();
+            $this->clearCacheForUser($id);
             return $user->fresh();
         } catch (\Exception $e) {
             DB::rollBack();
@@ -208,6 +282,7 @@ final class UserService extends BaseService
             $user = $this->findOrFail($id);
             $user->setMultipleMeta($metaData);
             DB::commit();
+            $this->clearCacheForUser($id);
             return $user->fresh();
         } catch (\Exception $e) {
             DB::rollBack();
@@ -222,10 +297,23 @@ final class UserService extends BaseService
             $user = $this->findOrFail($id);
             $this->syncFileCollections($user, ['avatar' => $avatar]);
             DB::commit();
+            $this->clearCacheForUser($id);
             return $user->fresh(['files']);
         } catch (\Exception $e) {
             DB::rollBack();
             throw $e;
         }
+    }
+
+    /**
+     * Clear cache for a specific user
+     * 
+     * @param int $userId
+     * @return void
+     */
+    protected function clearCacheForUser(int $userId): void
+    {
+        Cache::forget("{$this->cachePrefix}{$userId}");
+        Cache::tags(['user_meta', "user_{$userId}"])->flush();
     }
 }
