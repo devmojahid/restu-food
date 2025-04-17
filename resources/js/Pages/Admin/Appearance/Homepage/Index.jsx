@@ -7,6 +7,7 @@ import SectionContent from "@/Components/Admin/PageBuilder/SectionContent";
 import ClientFeedbackSection from "./Sections/ClientFeedbackSection";
 import TopCategoriesSection from "./Sections/TopCategoriesSection";
 import WhyChooseUsSection from "./Sections/WhyChooseUsSection";
+import HeroSection from "./Sections/HeroSection";
 // Import other section components
 
 const SECTIONS = [
@@ -25,15 +26,15 @@ const HomepageEditor = ({ homepageOptions = {}, defaults = {}, dynamicData = {} 
   const { post } = useForm();
 
   const handleSave = async (data) => {
-    await post(route('appearance.homepage.update'), data);
+    await post(route('app.appearance.homepage.update'), data);
   };
 
   return (
     <AdminLayout>
       <Head title="Homepage Editor" />
 
-      <PageEditorProvider 
-        initialData={homepageOptions} 
+      <PageEditorProvider
+        initialData={homepageOptions}
         onSave={handleSave}
       >
         <div className="container mx-auto py-6">
@@ -42,6 +43,9 @@ const HomepageEditor = ({ homepageOptions = {}, defaults = {}, dynamicData = {} 
             <div className="col-span-12 lg:col-span-8">
               {SECTIONS.map(section => (
                 <SectionContent key={section.id} section={section}>
+                   {section.id === 'hero' && (
+                    <HeroSection />
+                  )}
                   {section.id === 'client_feedback' && (
                     <ClientFeedbackSection />
                   )}
@@ -67,4 +71,4 @@ const HomepageEditor = ({ homepageOptions = {}, defaults = {}, dynamicData = {} 
   );
 };
 
-export default HomepageEditor; 
+export default HomepageEditor;

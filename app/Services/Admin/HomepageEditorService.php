@@ -123,10 +123,10 @@ final class HomepageEditorService extends PageEditorService
     {
         return Cache::remember('homepage_featured_restaurants', 3600, function () {
             return Restaurant::select(
-                'id', 
-                'name', 
-                'slug', 
-                'logo', 
+                'id',
+                'name',
+                'slug',
+                'logo',
                 'cover_image',
                 'delivery_time',
                 'rating'
@@ -149,10 +149,10 @@ final class HomepageEditorService extends PageEditorService
     {
         return Cache::remember('homepage_popular_products', 3600, function () {
             return Product::select(
-                'id', 
-                'name', 
-                'slug', 
-                'image', 
+                'id',
+                'name',
+                'slug',
+                'image',
                 'price',
                 'sale_price',
                 'rating'
@@ -282,8 +282,8 @@ final class HomepageEditorService extends PageEditorService
     {
         $filename = Str::random(40) . '.' . $file->getClientOriginalExtension();
         return $file->storeAs(
-            "homepage/sections/{$section}/{$this->getFileType($file)}", 
-            $filename, 
+            "homepage/sections/{$section}/{$this->getFileType($file)}",
+            $filename,
             'public'
         );
     }
@@ -317,7 +317,7 @@ final class HomepageEditorService extends PageEditorService
     {
         if (isset($files['why_choose_us_image'])) {
             $data['why_choose_us_image'] = $this->handleSectionFileUpload(
-                'why_choose_us', 
+                'why_choose_us',
                 $files['why_choose_us_image']
             );
         }
@@ -338,7 +338,7 @@ final class HomepageEditorService extends PageEditorService
             $data['feedbacks'] = array_map(function ($feedback, $index) use ($files) {
                 if (isset($files["feedbacks.{$index}.avatar"])) {
                     $feedback['avatar'] = $this->handleSectionFileUpload(
-                        'client_feedback', 
+                        'client_feedback',
                         $files["feedbacks.{$index}.avatar"]
                     );
                 }
@@ -409,4 +409,4 @@ final class HomepageEditorService extends PageEditorService
             'date' => now()->toDateString(),
         ];
     }
-} 
+}

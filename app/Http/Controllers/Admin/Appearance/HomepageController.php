@@ -38,7 +38,7 @@ final class HomepageController extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return Inertia::render('Admin/Appearance/Homepage/Index', [
                 'homepageOptions' => [],
                 'defaults' => [],
@@ -54,6 +54,8 @@ final class HomepageController extends Controller
                 return [$item['key'] => $item['value']];
             })->toArray();
 
+            dd($options, $request->allFiles());
+
             $this->homepageEditor->updateSettings($options, $request->allFiles());
 
             return back()->with('success', 'Homepage settings saved successfully');
@@ -62,7 +64,7 @@ final class HomepageController extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return back()->with('error', 'Failed to save homepage settings');
         }
     }
