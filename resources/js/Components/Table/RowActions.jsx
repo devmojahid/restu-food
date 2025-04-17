@@ -6,7 +6,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/Components/ui/dropdown-menu";
-import { Link } from "@inertiajs/react";
+import { Link, router } from "@inertiajs/react";
 import { MoreHorizontal, Eye, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import {
@@ -19,25 +19,116 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/Components/ui/alert-dialog";
-import { router } from "@inertiajs/react";
 import { useToast } from "@/Components/ui/use-toast";
 
+/**
+ * RowActions component for displaying a dropdown of actions for a table row
+ * @param {Object} props - Component props
+ * @param {Object} props.row - Row data
+ * @param {Object|Array} props.actions - Actions configuration, can be object (legacy) or array (new)
+ * @param {String} props.resourceName - Name of the resource for alert dialog text
+ */
 export const RowActions = ({
   row,
-  actions = {
-    view: null, // route name for view action
-    edit: null, // route name for edit action
-    delete: null, // route name for delete action
-  },
+  actions,
   resourceName = "item", // For alert dialog text
 }) => {
-  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+  const [activeAlert, setActiveAlert] = useState(null);
   const { toast } = useToast();
+  
+  // Support both formats of actions for backward compatibility
+  const isLegacyFormat = !Array.isArray(actions) && typeof actions === 'object';
+  
+  // For legacy format
+  const legacyActions = isLegacyFormat ? actions : {};
+  
+  const handleActionClick = (action) => {
+    if (action.confirm) {
+      setActiveAlert(action);
+    } else if (action.onClick) {
+      action.onClick(row);
+    }
+  };
+  
+  const closeAlert = () => {
+    setActiveAlert(null);
+  };
 
-  const handleDelete = () => {
-    if (!actions.delete) return;
+  const renderItems = () => {
+    if (isLegacyFormat) {
+      // Legacy format support
+      return (
+        <>
+          {legacyActions.view && (
+            <DropdownMenuItem asChild>
+              <Link
+                href={route(legacyActions.view, row.id)}
+                className="flex items-center"
+              >
+                <Eye className="mr-2 h-4 w-4" />
+                View
+              </Link>
+            </DropdownMenuItem>
+          )}
+          {legacyActions.edit && (
+            <DropdownMenuItem asChild>
+              <Link
+                href={route(legacyActions.edit, row.id)}
+                className="flex items-center"
+              >
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit
+              </Link>
+            </DropdownMenuItem>
+          )}
+          {legacyActions.delete && (
+            <>
+              {(legacyActions.view || legacyActions.edit) && <DropdownMenuSeparator />}
+              <DropdownMenuItem
+                className="flex items-center text-red-600 focus:text-red-600"
+                onSelect={() => setActiveAlert({ id: 'delete', label: 'Delete' })}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </>
+          )}
+        </>
+      );
+    }
+    
+    // New array format
+    return (
+      <>
+        {Array.isArray(actions) && actions.map((action, index) => {
+          // Add separators between action groups if needed
+          const needsSeparator = index > 0 && 
+            (actions[index-1].group !== action.group) && 
+            action.group;
+          
+          return (
+            <div key={`action-${index}`}>
+              {needsSeparator && <DropdownMenuSeparator />}
+              <DropdownMenuItem
+                className={action.className || ""}
+                onSelect={() => handleActionClick(action)}
+              >
+                {action.icon && <action.icon className="mr-2 h-4 w-4" />}
+                {action.label}
+              </DropdownMenuItem>
+            </div>
+          );
+        })}
+      </>
+    );
+  };
 
-    router.delete(route(actions.delete, row.id), {
+  // Handle legacy delete action
+  const handleLegacyDelete = () => {
+    if (!legacyActions.delete) return;
+    closeAlert();
+
+    router.delete(route(legacyActions.delete, row.id), {
       onSuccess: () => {
         toast({
           title: "Success",
@@ -67,63 +158,42 @@ export const RowActions = ({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-[160px]">
-          {actions.view && (
-            <DropdownMenuItem asChild>
-              <Link
-                href={route(actions.view, row.id)}
-                className="flex items-center"
-              >
-                <Eye className="mr-2 h-4 w-4" />
-                View
-              </Link>
-            </DropdownMenuItem>
-          )}
-          {actions.edit && (
-            <DropdownMenuItem asChild>
-              <Link
-                href={route(actions.edit, row.id)}
-                className="flex items-center"
-              >
-                <Pencil className="mr-2 h-4 w-4" />
-                Edit
-              </Link>
-            </DropdownMenuItem>
-          )}
-          {actions.delete && (
-            <>
-              {(actions.view || actions.edit) && <DropdownMenuSeparator />}
-              <DropdownMenuItem
-                className="flex items-center text-red-600 focus:text-red-600"
-                onSelect={() => setShowDeleteAlert(true)}
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
-            </>
-          )}
+          {renderItems()}
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {actions.delete && (
-        <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
+      {/* Confirmation Dialog */}
+      {activeAlert && (
+        <AlertDialog open={!!activeAlert} onOpenChange={() => activeAlert ? null : closeAlert()}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogTitle>
+                {activeAlert.confirmTitle || "Are you absolutely sure?"}
+              </AlertDialogTitle>
               <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the
-                {row.title
-                  ? ` ${resourceName} "${row.title}"`
-                  : ` selected ${resourceName}`}{" "}
-                and remove all associated data.
+                {activeAlert.confirmMessage || 
+                  `This action cannot be undone. This will permanently affect the
+                  ${row.title ? ` ${resourceName} "${row.title}"` : ` selected ${resourceName}`} 
+                  and related data.`}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel onClick={closeAlert}>Cancel</AlertDialogCancel>
               <AlertDialogAction
-                onClick={handleDelete}
-                className="bg-red-600 focus:ring-red-600 hover:bg-red-700"
+                onClick={() => {
+                  // For legacy delete action
+                  if (isLegacyFormat && activeAlert.id === 'delete') {
+                    handleLegacyDelete();
+                  } 
+                  // For new action format
+                  else if (activeAlert.onClick) {
+                    activeAlert.onClick(row);
+                    closeAlert();
+                  }
+                }}
+                className={activeAlert.confirmButtonClass || "bg-red-600 focus:ring-red-600 hover:bg-red-700"}
               >
-                Delete
+                {activeAlert.confirmText || "Continue"}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

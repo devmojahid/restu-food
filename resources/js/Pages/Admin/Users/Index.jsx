@@ -5,12 +5,47 @@ import { Button } from "@/Components/ui/button";
 import { ArrowLeft, Plus } from "lucide-react";
 import { Link } from "@inertiajs/react";
 import Breadcrumb from "@/Components/Admin/Breadcrumb";
+import { useEffect, useState, useRef } from "react";
 
-export default function Index({ users, filters, roles }) {
+export default function Index({ users, filters, roles, meta }) {
   const breadcrumbItems = [
     { label: "Dashboard", href: "dashboard" },
     { label: "Users", href: "app.users.index" },
   ];
+
+  // Track all user data for infinite scroll
+  const [allUsers, setAllUsers] = useState(users.data || []);
+  // Track current page to prevent duplicate data
+  const currentPageRef = useRef(users.current_page || 1);
+  
+  // Add unique identifiers to prevent key collisions
+  const addUniqueIds = (data, page) => {
+    return data.map(item => ({
+      ...item,
+      _uniqueKey: `${item.id}-p${page}`
+    }));
+  };
+
+  // Update allUsers when new data comes in, handling duplicate prevention
+  useEffect(() => {
+    if (!users?.data) return;
+    
+    const newPage = users.current_page || 1;
+    
+    if (newPage === 1) {
+      // If this is the first page or filter reset, replace all data
+      setAllUsers(addUniqueIds(users.data, newPage));
+      currentPageRef.current = newPage;
+    } else if (newPage > currentPageRef.current) {
+      // Only append data if it's a new page we haven't seen before
+      setAllUsers(prev => [
+        ...prev,
+        ...addUniqueIds(users.data, newPage)
+      ]);
+      currentPageRef.current = newPage;
+    }
+    // If it's a page we've already loaded, do nothing to prevent duplicates
+  }, [users]);
 
   return (
     <AdminLayout>
@@ -38,7 +73,14 @@ export default function Index({ users, filters, roles }) {
             </Link>
           </div>
         </div>
-        <ListUsers users={users} roles={roles} />
+        <ListUsers 
+          users={{
+            ...users,
+            data: allUsers // Use our accumulated data with unique IDs
+          }} 
+          roles={roles} 
+          meta={meta} 
+        />
       </div>
     </AdminLayout>
   );

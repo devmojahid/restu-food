@@ -9,6 +9,7 @@ export const TableContent = ({
   selectedItems = [],
   onSelectionChange = () => {},
   canSelectItem = () => true,
+  keyField = "id",
 }) => {
   // Ensure we have arrays even if props are undefined
   const safeData = Array.isArray(data) ? data : [];
@@ -71,10 +72,13 @@ export const TableContent = ({
         const isSelected = safeSelectedItems.includes(row?.id);
         const isSelectable =
           typeof canSelectItem === "function" ? canSelectItem(row) : true;
+        
+        // Use the configurable key field with fallback to id
+        const rowKey = row[keyField] || row.id;
 
         return (
           <tr
-            key={row.id}
+            key={rowKey}
             onClick={(e) => handleRowClick(e, row)}
             className={cn(
               "transition-all duration-200 group",
@@ -108,7 +112,7 @@ export const TableContent = ({
             )}
             {safeColumns.map((column) => (
               <td
-                key={column.id}
+                key={`${rowKey}-${column.id}`}
                 className={cn(
                   "px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap",
                   "text-xs sm:text-sm text-gray-500 dark:text-gray-400",
