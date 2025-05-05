@@ -333,7 +333,7 @@ export default function ListBlogs({ blogs, categories = [] }) {
       cell: (row) => (
         <div className="flex items-center space-x-2">
           <LazyImage
-            src={row.user?.avatar?.url || "/images/default-avatar.png"}
+            src={row.user?.avatar?.url || "/images/avatar.jpg"}
             alt={row.user?.name}
             className="w-6 h-6 rounded-full"
           />

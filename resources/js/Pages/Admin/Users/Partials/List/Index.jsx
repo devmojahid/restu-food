@@ -134,7 +134,7 @@ export default function ListUsers({ users, roles, meta }) {
       cell: (row) => (
         <div className="flex justify-center sm:justify-start">
           <LazyImage
-            src={row.avatar?.url || "/images/default-avatar.png"}
+            src={row.avatar?.url || "/images/avatar.jpg"}
             alt={row.name}
             className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover"
           />
