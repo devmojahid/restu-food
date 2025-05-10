@@ -185,3 +185,19 @@ Follow these rules when you write code:
 - Use consts instead of functions, for example, “const toggle = () =>”. Also, define a type if possible.
 - Use the useEffect hook sparingly.
 - Always use the useCallback hook to prevent unnecessary re-renders.
+
+
+Our Custom Datatable system like 
+
+resources\js\Pages\Admin\Users\Index.jsx
+resources\js\Pages\Admin\Users\Partials\List\Index.jsx
+resources\js\Components\Table\DataTable.jsx
+resources\js\Components\Table\LazyImage.jsx
+resources\js\Components\Table\NoData.jsx
+resources\js\Components\Table\RowActions.jsx
+resources\js\Components\Table\TableActions.jsx
+resources\js\Components\Table\TableContent.jsx
+resources\js\Components\Table\TableFilters.jsx
+resources\js\Components\Table\TableHeader.jsx
+resources\js\Components\Table\TablePagination.jsx
+resources\js\Components\Table\TableSkeleton.jsx

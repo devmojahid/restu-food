@@ -360,39 +360,59 @@ export const useDataTable = ({
             switch(action) {
                 case 'delete':
                     routeSuffix = 'bulk-delete';
+                    // Use router.delete for bulk delete actions
+                    await router.delete(route(`${routeName}.${routeSuffix}`), payload, {
+                        preserveScroll: true,
+                        onSuccess: () => {
+                            setSelectedItems([]);
+                            dataCache.current.clear(); // Clear cache after bulk action
+                            toast({
+                                title: 'Success',
+                                description: `Bulk deletion completed successfully`,
+                            });
+                            onSuccess?.();
+                        },
+                        onError: (errors) => {
+                            toast({
+                                title: 'Error',
+                                description: errors.message || 'Failed to delete items',
+                                variant: 'destructive',
+                            });
+                            onError?.(errors);
+                        }
+                    });
                     break;
                 case 'activate':
+                case 'deactivate':
                     routeSuffix = 'bulk-status';
-                    payload = { ...payload, status: true };
-                    break;
-                case 'deactivate': 
-                    routeSuffix = 'bulk-status';
-                    payload = { ...payload, status: false };
+                    // Use router.put for bulk status updates
+                    await router.put(route(`${routeName}.${routeSuffix}`), {
+                        ids: selectedItems,
+                        status: action === 'activate'
+                    }, {
+                        preserveScroll: true,
+                        onSuccess: () => {
+                            setSelectedItems([]);
+                            dataCache.current.clear(); // Clear cache after bulk action
+                            toast({
+                                title: 'Success',
+                                description: `Status updated successfully for ${selectedItems.length} items`,
+                            });
+                            onSuccess?.();
+                        },
+                        onError: (errors) => {
+                            toast({
+                                title: 'Error',
+                                description: errors.message || 'Failed to update status',
+                                variant: 'destructive',
+                            });
+                            onError?.(errors);
+                        }
+                    });
                     break;
                 default:
                     throw new Error(`Unknown bulk action: ${action}`);
             }
-            
-            await router.post(route(`${routeName}.${routeSuffix}`), payload, {
-                preserveScroll: true,
-                onSuccess: () => {
-                    setSelectedItems([]);
-                    dataCache.current.clear(); // Clear cache after bulk action
-                    toast({
-                        title: 'Success',
-                        description: `Bulk action completed successfully`,
-                    });
-                    onSuccess?.();
-                },
-                onError: (errors) => {
-                    toast({
-                        title: 'Error',
-                        description: errors.message || 'Failed to perform action',
-                        variant: 'destructive',
-                    });
-                    onError?.(errors);
-                }
-            });
         } catch (error) {
             toast({
                 title: 'Error',

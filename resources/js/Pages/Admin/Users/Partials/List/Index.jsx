@@ -400,7 +400,7 @@ export default function ListUsers({ users, roles, meta }) {
 
   const handleStatusToggle = (row) => {
     const newStatus = row.status === "active" ? "inactive" : "active";
-    router.patch(
+    router.put(
       route("app.users.update", row.id),
       { status: newStatus },
       {
