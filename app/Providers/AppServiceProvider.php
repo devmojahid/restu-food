@@ -26,6 +26,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        URL::forceScheme('https');
         // Share errors with all views
         Inertia::share([
             'errors' => function () {
