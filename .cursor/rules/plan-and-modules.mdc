@@ -1,19 +1,14 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
 Today TODO:
 
 # Real time features with revarbe. and real time map and delevery tracking.  real time delevay tracking
 
 
-### **1. Real-Time Notifications & Alerts (**`*Today TODO*`**)**
-
-- **WebSocket-based Notifications**:
-    - [] New order notifications for admins and managers.
-    - [] Delivery status updates for customers via push notifications.
-- **Custom Notification Settings**:
-    - [] Upload custom notification sounds.
-    - [] Configure sound alerts (loop/once).
-- **Email & SMS Alerts**:
-    - [] Twilio API for SMS notifications.
-    - [] SendGrid/Mailgun for email notifications.
+### **. Module List (**`*Today TODO*`**)**
 
 Ecommerce
 	--Report [dashboard] 4.1 ---
@@ -177,38 +172,6 @@ Admin Settings:
 Configure delivery fee structures.
 Set base fees and surcharges.
 
-
-
-API managmenet
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Prompt Enhancer Generator:
-
-"Take the following draft prompt provided by me and enhance it in the most advanced and optimized manner possible for AI models like Claude or others. Maintain all existing details and ideas from the draft, but organize and reframe it to ensure clarity, depth, and precision. The enhanced prompt should:
-
-Include clear objectives and specific instructions for the AI.
-Be structured logically with context, purpose, and action steps.
-Include contextual keywords or terminologies that improve understanding.
-Anticipate potential ambiguities and address them proactively.
-Leverage prompt engineering techniques such as system role definition (e.g., 'You are an expert in...'), clear formatting, and contextual constraints.
-Optimize the language to be concise yet descriptive for the best AI response.
-Here is the draft prompt to enhance:
-[Insert draft prompt here]
-
-Generate the enhanced prompt in a well-organized, feature-rich, and result-oriented format, ensuring it achieves the best response quality from the AI."
 
 
 
