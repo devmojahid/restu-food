@@ -437,17 +437,7 @@ export default function ListUsers({ users, roles, meta }) {
       label: "Delete Selected",
       icon: Trash2,
       value: "delete",
-    },
-    {
-      label: "Activate Selected",
-      icon: UserCheck2,
-      value: "activate",
-    },
-    {
-      label: "Deactivate Selected",
-      icon: UserX2,
-      value: "deactivate",
-    },
+    }
   ];
 
   // Render the filters component

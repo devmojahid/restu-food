@@ -153,10 +153,9 @@ Route::prefix('app')->name('app.')->middleware(['auth'])->group(function () {
         Route::get('/{user}/edit', [UserController::class, 'edit'])->name('edit');
         Route::put('/{user}', [UserController::class, 'update'])->name('update');
         Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
-        Route::delete('/bulk-delete', [UserController::class, 'bulkDelete'])->name('bulk-delete');
-        Route::put('/bulk-status', [UserController::class, 'bulkUpdateStatus'])->name('bulk-status');
+        Route::delete('/bulk-delete', [UserController::class, 'bulkDelete'])->name('index.bulk-delete');
+        Route::put('/bulk-status', [UserController::class, 'bulkUpdateStatus'])->name('index.bulk-status');
     });
-
     Route::prefix('roles')->name('roles.')->group(function () {
         // Roles Management
         Route::resource('/', RoleController::class);
