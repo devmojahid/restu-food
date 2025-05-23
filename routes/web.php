@@ -156,9 +156,9 @@ Route::prefix('app')->name('app.')->middleware(['auth'])->group(function () {
         Route::delete('/bulk-delete', [UserController::class, 'bulkDelete'])->name('index.bulk-delete');
         Route::put('/bulk-status', [UserController::class, 'bulkUpdateStatus'])->name('index.bulk-status');
     });
+    Route::resource('roles', RoleController::class);
     Route::prefix('roles')->name('roles.')->group(function () {
         // Roles Management
-        Route::resource('/', RoleController::class);
         Route::put('{role}/permissions', [RoleController::class, 'updatePermissions'])
             ->name('permissions.update');
     });
