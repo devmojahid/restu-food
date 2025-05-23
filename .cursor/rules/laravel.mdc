@@ -1,3 +1,8 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
 Project context: This is a Laravel 11 project with Inertia Js and React Js realtime food ordering and delivery app. and also it has admin panel. and also it has a mobile app. and also it has a web app. and also it has a api. and there have single admin panel for deferant role users like admin, manager, delivery boy, customer. and also it has a payment gateway. and also it has a email and sms notification system. and also it has a report system. and also it has a chat system. and also it has a live location tracking system. and also it has a live chat system. and also it has a live support system. and also it has a live notification system. and also it has a live report system. and also it has a live chat system. and also it has a live support system. and also it has a live notification system. and also it has a live report system. all this features uses laravel breeze for authentication and authorization.and all the project is build for mobile first and also it has a desktop version. i need fully functional and fully 100% responsive system for all devices. and complete project should real time features ready using Laravel Reverb.
 
 - Most Important Note: avoid useing extra js file make all functionality inside jsx file not extra js files if not need very importent usely all code should in jsx file.
@@ -47,6 +52,12 @@ return Application::configure(basePath: dirname(__DIR__))
 - Use strict typing: declare(strict_types=1)
 - Implement proper error handling and logging
 - Use Service Classes for business logic with slim controllers
+- Prefer soft deletes for models using the `SoftDeletes` trait:
+- Use `php artisan make:{option}` to create models, migrations, controllers, etc.
+- `app\Console\Kernel.php` does not exist in Laravel 12+. If the file is not present, use the the [app.php](mdc:bootstrap/app.php) file for related configurations.
+- In Laravel 11+ commands created in `app\Console\Commands\` are automatically registered and available to use.
+- Add environment variables to config files and avoid using env variables directly in the code. For example `config('app.name')` instead of `env('APP_NAME')`.
+- Avoid N+1 queries by using eager loading or batch loading. Examples:
 
 ## Technology Stack
 - Laravel 11 with streamlined application structure
@@ -199,4 +210,5 @@ resources\js\Components\Table\TableContent.jsx
 resources\js\Components\Table\TableFilters.jsx
 resources\js\Components\Table\TableHeader.jsx
 resources\js\Components\Table\TablePagination.jsx
+
 resources\js\Components\Table\TableSkeleton.jsx
