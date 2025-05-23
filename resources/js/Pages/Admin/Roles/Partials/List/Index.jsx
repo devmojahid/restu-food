@@ -150,8 +150,10 @@ export default function ListRoles({ roles }) {
           row={row}
           actions={{
             view: "app.roles.show",
-            edit: row.name !== "Admin" ? "app.roles.edit" : null,
-            delete: row.name !== "Admin" ? "app.roles.destroy" : null,
+            edit: row.name ? "app.roles.edit" : null,
+            delete: row.name ? "app.roles.destroy" : null,
+            // edit: row.name !== "Admin" ? "app.roles.edit" : null,
+            // delete: row.name !== "Admin" ? "app.roles.destroy" : null,
           }}
           // Enhanced custom actions
           customActions={[

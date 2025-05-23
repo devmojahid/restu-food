@@ -177,6 +177,7 @@ final class UserController extends Controller
 
     public function bulkDelete(Request $request): RedirectResponse
     {
+        dd("dsad");
         try {
             $validated = $request->validate([
                 'ids' => 'required|array',
