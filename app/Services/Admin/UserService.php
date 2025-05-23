@@ -260,6 +260,14 @@ final class UserService extends BaseService
         }
     }
 
+    public function updateStatus(int $id, string $status): User
+    {
+        $user = $this->findOrFail($id);
+        $user->update(['status' => $status]);
+        $this->clearCacheForUser($id);
+        return $user->fresh();
+    }
+
     public function updateUserData(int $id, array $data): User
     {
         try {

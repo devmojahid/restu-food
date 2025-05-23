@@ -99,32 +99,32 @@ export default function ListUsers({ users, roles, meta }) {
 
   // Enhanced responsive design for status badges
   const getStatusConfig = (status) =>
-    ({
-      active: {
-        className: cn(
-          "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-          "whitespace-nowrap text-xs sm:text-sm",
-          "px-2 py-1 sm:px-3 sm:py-1.5"
-        ),
-        label: "Active",
-      },
-      inactive: {
-        className: cn(
-          "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-          "whitespace-nowrap text-xs sm:text-sm",
-          "px-2 py-1 sm:px-3 sm:py-1.5"
-        ),
-        label: "Inactive",
-      },
-      banned: {
-        className: cn(
-          "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
-          "whitespace-nowrap text-xs sm:text-sm",
-          "px-2 py-1 sm:px-3 sm:py-1.5"
-        ),
-        label: "Banned",
-      },
-    }[status || "inactive"]);
+  ({
+    active: {
+      className: cn(
+        "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+        "whitespace-nowrap text-xs sm:text-sm",
+        "px-2 py-1 sm:px-3 sm:py-1.5"
+      ),
+      label: "Active",
+    },
+    inactive: {
+      className: cn(
+        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+        "whitespace-nowrap text-xs sm:text-sm",
+        "px-2 py-1 sm:px-3 sm:py-1.5"
+      ),
+      label: "Inactive",
+    },
+    banned: {
+      className: cn(
+        "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+        "whitespace-nowrap text-xs sm:text-sm",
+        "px-2 py-1 sm:px-3 sm:py-1.5"
+      ),
+      label: "Banned",
+    },
+  }[status || "inactive"]);
 
   // Enhanced columns with better responsive design
   const columns = [
@@ -294,11 +294,11 @@ export default function ListUsers({ users, roles, meta }) {
     if (enablePolling) {
       // Turn off polling
       setEnablePolling(false);
-      
+
       // Reset the URL to remove polling parameter
-      const newUrl = window.location.pathname + 
+      const newUrl = window.location.pathname +
         window.location.search.replace(/([?&])polling=\d+(&|$)/, '$1').replace(/\?$/, '');
-      
+
       router.get(newUrl, {}, {
         preserveState: true,
         preserveScroll: true,
@@ -307,11 +307,11 @@ export default function ListUsers({ users, roles, meta }) {
     } else {
       // Turn on polling (every 30 seconds)
       setEnablePolling(true);
-      
+
       // Add polling parameter to URL
       const currentParams = new URLSearchParams(window.location.search);
       currentParams.set('polling', '30000');
-      
+
       router.get(
         window.location.pathname + '?' + currentParams.toString(),
         {},
@@ -401,7 +401,7 @@ export default function ListUsers({ users, roles, meta }) {
   const handleStatusToggle = (row) => {
     const newStatus = row.status === "active" ? "inactive" : "active";
     router.put(
-      route("app.users.update", row.id),
+      route("app.users.status", row.id),
       { status: newStatus },
       {
         preserveScroll: true,
@@ -410,6 +410,7 @@ export default function ListUsers({ users, roles, meta }) {
             title: "Success",
             description: `User ${newStatus === "active" ? "activated" : "deactivated"} successfully`,
           });
+          handleRefresh();
         },
         onError: (error) => {
           toast({
@@ -424,6 +425,7 @@ export default function ListUsers({ users, roles, meta }) {
 
   // Handle refresh - manual data reload
   const handleRefresh = () => {
+    console.log("refresh");
     return router.reload({
       only: ['users', 'meta'],
       preserveScroll: true,
@@ -455,11 +457,11 @@ export default function ListUsers({ users, roles, meta }) {
                 : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
             )}
           >
-            <RefreshCw 
+            <RefreshCw
               className={cn(
-                "h-4 w-4", 
+                "h-4 w-4",
                 enablePolling && "animate-spin"
-              )} 
+              )}
             />
             <span>{enablePolling ? "Polling Active" : "Enable Polling"}</span>
           </button>

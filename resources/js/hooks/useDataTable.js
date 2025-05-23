@@ -65,7 +65,7 @@ export const useDataTable = ({
         // Check if polling is enabled from props or options
         const serverPolling = page.props.polling;
         const clientPolling = pollingOptions;
-        
+
         if (serverPolling?.interval || clientPolling?.interval) {
             const interval = serverPolling?.interval || clientPolling.interval;
             const endpoint = serverPolling?.endpoint || route(routeName, getCleanedParams({
@@ -73,11 +73,11 @@ export const useDataTable = ({
                 search: searchValue,
                 only: 'users,meta'
             }));
-            
+
             pollingTimerRef.current = setInterval(() => {
                 // Don't poll if we're already loading data
                 if (isLoading || isLoadingMore) return;
-                
+
                 // Use fetch instead of Inertia to avoid unnecessary re-renders
                 fetch(endpoint, {
                     headers: {
@@ -87,34 +87,34 @@ export const useDataTable = ({
                         'Accept': 'application/json',
                     }
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.props) {
-                        // Update meta
-                        if (data.props.meta) {
-                            setMeta(data.props.meta);
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.props) {
+                            // Update meta
+                            if (data.props.meta) {
+                                setMeta(data.props.meta);
+                            }
+
+                            // Check if data has changed by comparing lastUpdated
+                            const newLastUpdated = data.props.meta?.lastUpdated;
+                            const currentLastUpdated = meta.lastUpdated;
+
+                            if (newLastUpdated && newLastUpdated !== currentLastUpdated) {
+                                // Data has changed, trigger a reload
+                                router.reload({
+                                    only: ['users', 'meta'],
+                                    preserveScroll: true,
+                                    preserveState: true
+                                });
+                            }
                         }
-                        
-                        // Check if data has changed by comparing lastUpdated
-                        const newLastUpdated = data.props.meta?.lastUpdated;
-                        const currentLastUpdated = meta.lastUpdated;
-                        
-                        if (newLastUpdated && newLastUpdated !== currentLastUpdated) {
-                            // Data has changed, trigger a reload
-                            router.reload({
-                                only: ['users', 'meta'],
-                                preserveScroll: true,
-                                preserveState: true
-                            });
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('Polling error:', error);
-                });
+                    })
+                    .catch(error => {
+                        console.error('Polling error:', error);
+                    });
             }, interval);
         }
-        
+
         return () => {
             if (pollingTimerRef.current) {
                 clearInterval(pollingTimerRef.current);
@@ -125,19 +125,19 @@ export const useDataTable = ({
     // Update prefetch logic
     // useEffect(() => {
     //     if (!enablePrefetch || !hasMoreData || isLoading || isLoadingMore) return;
-        
+
     //     // Check for existing prefetch info from the server
     //     const prefetchUrl = page.props.prefetch?.next_page;
-        
+
     //     if (prefetchUrl && !dataCache.current.has(currentPage.current + 1)) {
     //         // Cancel any existing prefetch
     //         if (prefetchControllerRef.current) {
     //             prefetchControllerRef.current.abort();
     //         }
-            
+
     //         // Create a new controller for this prefetch
     //         prefetchControllerRef.current = new AbortController();
-            
+
     //         // Use fetch to prefetch data with proper error handling
     //         fetch(prefetchUrl, {
     //             signal: prefetchControllerRef.current.signal,
@@ -176,7 +176,7 @@ export const useDataTable = ({
     //             }
     //         });
     //     }
-        
+
     //     return () => {
     //         if (prefetchControllerRef.current) {
     //             prefetchControllerRef.current.abort();
@@ -188,7 +188,7 @@ export const useDataTable = ({
     const cleanupCache = useCallback(() => {
         const now = Date.now();
         const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-        
+
         for (const [key, value] of dataCache.current.entries()) {
             if (now - value.timestamp > CACHE_DURATION) {
                 dataCache.current.delete(key);
@@ -216,7 +216,7 @@ export const useDataTable = ({
     const getCleanedParams = (params) => {
         const essentialParams = ['search', 'sort', 'direction', 'page', 'per_page'];
         const cleanedParams = {};
-        
+
         Object.keys(params).forEach(key => {
             // Only include non-empty essential params or full non-empty objects
             if (essentialParams.includes(key)) {
@@ -235,7 +235,7 @@ export const useDataTable = ({
                 cleanedParams[key] = params[key];
             }
         });
-        
+
         return cleanedParams;
     };
 
@@ -246,7 +246,7 @@ export const useDataTable = ({
             search: value,
             page: 1
         };
-        
+
         currentPage.current = 1;
         setHasMoreData(true);
         setIsLoading(true);
@@ -305,7 +305,7 @@ export const useDataTable = ({
 
         // For non-search filters
         setIsLoading(true);
-        
+
         const cleanedParams = getCleanedParams({
             ...newFilters,
             search: searchValue
@@ -347,21 +347,23 @@ export const useDataTable = ({
     };
 
     // Update bulk action handling
+    // Update bulk action handling
     const handleBulkAction = async (action) => {
         if (!selectedItems.length) return;
-        
+
         try {
             setIsLoading(true);
-            
+
             let routeSuffix;
             let payload = { ids: selectedItems };
-            
+
             // Map action to appropriate route and payload
-            switch(action) {
+            switch (action) {
                 case 'delete':
                     routeSuffix = 'bulk-delete';
-                    // Use router.delete for bulk delete actions
-                    await router.delete(route(`${routeName}.${routeSuffix}`), payload, {
+                    // For DELETE requests with Inertia.js, pass data in the options object
+                    await router.delete(route(`${routeName}.${routeSuffix}`), {
+                        data: payload, // Data goes in the options object for DELETE requests
                         preserveScroll: true,
                         onSuccess: () => {
                             setSelectedItems([]);
@@ -385,7 +387,7 @@ export const useDataTable = ({
                 case 'activate':
                 case 'deactivate':
                     routeSuffix = 'bulk-status';
-                    // Use router.put for bulk status updates
+                    // For PUT requests, data is passed as the second parameter
                     await router.put(route(`${routeName}.${routeSuffix}`), {
                         ids: selectedItems,
                         status: action === 'activate'
@@ -434,7 +436,7 @@ export const useDataTable = ({
         if (isLoading || isLoadingMore || !hasMoreData) return;
 
         const nextPage = currentPage.current + 1;
-        
+
         // Check cache first
         if (dataCache.current.has(nextPage)) {
             // Use cached data - signal to parent component
@@ -464,12 +466,12 @@ export const useDataTable = ({
                 only: ['users', 'meta'],
                 onSuccess: (page) => {
                     setIsLoadingMore(false);
-                    
+
                     // Check if we have more data
                     if (page.props.users && page.props.users.data) {
                         // Store in cache
                         dataCache.current.set(nextPage, page.props.users.data);
-                        
+
                         // Update meta and check if we have more pages
                         if (page.props.meta) {
                             setMeta(page.props.meta);
@@ -477,7 +479,7 @@ export const useDataTable = ({
                         } else {
                             // Fallback if meta is not available
                             setHasMoreData(
-                                page.props.users.data.length > 0 && 
+                                page.props.users.data.length > 0 &&
                                 page.props.users.current_page < page.props.users.last_page
                             );
                         }
@@ -491,7 +493,7 @@ export const useDataTable = ({
                 }
             }
         );
-        
+
         return false; // Default - not using cached data
     }, [filters, searchValue, sorting, isLoading, isLoadingMore, hasMoreData, routeName]);
 

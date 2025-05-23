@@ -177,7 +177,6 @@ final class UserController extends Controller
 
     public function bulkDelete(Request $request): RedirectResponse
     {
-        dd("dsad");
         try {
             $validated = $request->validate([
                 'ids' => 'required|array',
@@ -212,6 +211,25 @@ final class UserController extends Controller
             return back()->with('toast', [
                 'type' => 'success',
                 'message' => 'User status updated successfully'
+            ]);
+        } catch (\Exception $e) {
+            return back()->with('toast', [
+                'type' => 'error',
+                'message' => 'Error updating status: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    // updateStatus
+    public function updateStatus(User $user, Request $request): RedirectResponse
+    {
+        try {
+            $this->userService->updateStatus($user->id, $request->input('status'));
+            dd($user);
+        return back()->with('toast', [
+                'type' => 'success',
+                'message' => 'User status updated successfully',
+                'user' => $user
             ]);
         } catch (\Exception $e) {
             return back()->with('toast', [

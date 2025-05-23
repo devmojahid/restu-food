@@ -146,6 +146,9 @@ Route::prefix('app')->name('app.')->middleware(['auth'])->group(function () {
     */
     // Users Management
     Route::group(['prefix' => 'users', 'as' => 'users.'], function () {
+        Route::delete('/bulk-delete', [UserController::class, 'bulkDelete'])->name('index.bulk-delete');
+        Route::put('/bulk-status', [UserController::class, 'bulkUpdateStatus'])->name('index.bulk-status');
+
         Route::get('/', [UserController::class, 'index'])->name('index');
         Route::get('/create', [UserController::class, 'create'])->name('create');
         Route::post('/', [UserController::class, 'store'])->name('store');
@@ -153,9 +156,9 @@ Route::prefix('app')->name('app.')->middleware(['auth'])->group(function () {
         Route::get('/{user}/edit', [UserController::class, 'edit'])->name('edit');
         Route::put('/{user}', [UserController::class, 'update'])->name('update');
         Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
-        Route::delete('/bulk-delete', [UserController::class, 'bulkDelete'])->name('index.bulk-delete');
-        Route::put('/bulk-status', [UserController::class, 'bulkUpdateStatus'])->name('index.bulk-status');
+        Route::put('/{user}/status', [UserController::class, 'updateStatus'])->name('status');
     });
+
     Route::resource('roles', RoleController::class);
     Route::prefix('roles')->name('roles.')->group(function () {
         // Roles Management
