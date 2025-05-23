@@ -89,8 +89,13 @@ final class UserController extends Controller
             $data = $request->validated();
             
             $data['files'] = [
-                'avatar' => $request->input('avatar'),
+                'avatar' => $data['avatar'] ?? null,
             ];
+
+            // Remove avatar from data to avoid duplicate processing
+            if (isset($data['avatar'])) {
+                unset($data['avatar']);
+            }
 
             $user = $this->userService->store($data);
 
@@ -135,8 +140,13 @@ final class UserController extends Controller
         try {
             $data = $request->validated();
             $data['files'] = [
-                'avatar' => $request->input('avatar'),
+                'avatar' => $data['avatar'] ?? null,
             ];
+
+            // Remove avatar from data to avoid duplicate processing
+            if (isset($data['avatar'])) {
+                unset($data['avatar']);
+            }
 
             $this->userService->update($user->id, $data);
 
