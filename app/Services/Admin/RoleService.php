@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Log;
 
 final class RoleService
 {
-    private const CACHE_TTL = 3600; // 1 hour
+    private const CACHE_TTL = 60; // 1 minute
     private const CACHE_KEYS = [
         'roles.all',
         'roles.stats',
@@ -23,47 +23,83 @@ final class RoleService
         'roles.paginated',
     ];
 
+    protected string $model = Role::class;
+    protected array $searchableFields = ['name', 'guard_name'];
+    protected array $filterableFields = ['guard_name'];
+    protected array $sortableFields = ['name', 'created_at', 'updated_at', 'users_count'];
+    protected array $relationships = ['permissions'];
+
+    /**
+     * Get paginated roles with filters for infinite scroll
+     *
+     * @param array $filters
+     * @return LengthAwarePaginator
+     */
     public function getPaginated(array $filters = []): LengthAwarePaginator
     {
-        $cacheKey = $this->generateCacheKey('roles.paginated', $filters);
+        $perPage = $filters['per_page'] ?? 10;
+        
+        $query = $this->model::query()
+            ->withCount('users'); // Count users for each role
 
-        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($filters) {
-            $query = Role::with(['permissions', 'users'])
-                ->withCount('users');
-
-            // Apply search filter
-            if (!empty($filters['search'])) {
-                $searchTerm = trim($filters['search']);
-                if (!empty($searchTerm)) {
-                    $query->where(function ($q) use ($searchTerm) {
-                        $q->where('name', 'like', "%{$searchTerm}%")
-                            ->orWhere('created_at', 'like', "%{$searchTerm}%");
+        // Apply search filter if provided
+        if (!empty($filters['search'])) {
+            $search = trim($filters['search']);
+            if (!empty($search)) {
+                $query->where(function (Builder $q) use ($search) {
+                    foreach ($this->searchableFields as $field) {
+                        $q->orWhere($field, 'LIKE', "%{$search}%");
+                    }
+                    // Also search in permissions
+                    $q->orWhereHas('permissions', function ($permQuery) use ($search) {
+                        $permQuery->where('name', 'LIKE', "%{$search}%");
                     });
-                }
+                });
             }
+        }
 
-            // Apply date filters
-            if (!empty($filters['date_from'])) {
-                $query->whereDate('created_at', '>=', $filters['date_from']);
-            }
-            if (!empty($filters['date_to'])) {
-                $query->whereDate('created_at', '<=', $filters['date_to']);
-            }
+        // Apply status/guard_name filter if provided
+        if (!empty($filters['status'])) {
+            $query->where('guard_name', $filters['status']);
+        }
 
-            // Apply sorting
-            $sortField = $filters['sort'] ?? 'created_at';
-            $sortDirection = $filters['direction'] ?? 'desc';
+        // Apply date range filter if provided
+        if (!empty($filters['date_from']) && !empty($filters['date_to'])) {
+            $query->whereBetween('created_at', [$filters['date_from'], $filters['date_to']]);
+        } else if (!empty($filters['date_from'])) {
+            $query->where('created_at', '>=', $filters['date_from']);
+        } else if (!empty($filters['date_to'])) {
+            $query->where('created_at', '<=', $filters['date_to']);
+        }
 
-            // Validate sort field to prevent SQL injection
-            $allowedSortFields = ['name', 'created_at', 'updated_at', 'users_count'];
-            if (!in_array($sortField, $allowedSortFields)) {
-                $sortField = 'created_at';
-            }
+        // Apply sorting
+        $sortColumn = $filters['sort'] ?? 'created_at';
+        $sortDirection = $filters['direction'] ?? 'desc';
+        
+        // Validate sort column to prevent SQL injection
+        if (in_array($sortColumn, $this->sortableFields)) {
+            $query->orderBy($sortColumn, $sortDirection);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
 
-            $query->orderBy($sortField, $sortDirection);
+        // Add a secondary sort by ID to ensure consistent ordering
+        $query->orderBy('id', $sortDirection);
 
-            return $query->paginate($filters['per_page'] ?? 10);
-        });
+        // Load only necessary relationships for the index view
+        $query->with(['permissions:id,name']);
+
+        // Select only necessary columns for better performance
+        $query->select([
+            'id',
+            'name',
+            'guard_name',
+            'created_at',
+            'updated_at'
+        ]);
+
+        // Paginate the results efficiently
+        return $query->paginate($perPage)->withQueryString();
     }
 
     public function getAllPermissions(): Collection
@@ -108,7 +144,17 @@ final class RoleService
             }
 
             DB::commit();
+            
+            // Clear cache more aggressively
             $this->clearAllCache();
+            
+            // Clear permission cache from Spatie directly
+            app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+            
+            // Also clear some specific cached keys that might contain role data
+            Cache::forget("roles.all");
+            Cache::forget("roles.paginated");
+            Cache::forget("roles.stats");
 
             return $role->fresh(['permissions']);
         } catch (\Exception $e) {
@@ -139,8 +185,17 @@ final class RoleService
 
             DB::commit();
 
-            // Clear cache after successful update
+            // Clear cache after successful update - be more aggressive with cache clearing
             $this->clearAllCache();
+            
+            // Clear permission cache from Spatie directly
+            app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+            
+            // Also clear some specific cached keys that might contain role data
+            Cache::forget("roles.details.{$role->id}");
+            Cache::forget("roles.all");
+            Cache::forget("roles.paginated");
+            Cache::forget("roles.stats");
 
             // Return fresh instance with permissions
             return $role->fresh(['permissions']);
@@ -225,6 +280,58 @@ final class RoleService
         });
     }
 
+    public function cloneRole(Role $role): Role
+    {
+        try {
+            DB::beginTransaction();
+
+            // Create a clone of the role with a unique name
+            $clonedRole = Role::create([
+                'name' => $this->generateUniqueName($role->name),
+                'guard_name' => $role->guard_name ?? 'web',
+            ]);
+
+            // Clone permissions
+            $permissions = $role->permissions()->pluck('name')->toArray();
+            if (!empty($permissions)) {
+                $clonedRole->syncPermissions($permissions);
+            }
+
+            DB::commit();
+            
+            // Clear cache aggressively
+            $this->clearAllCache();
+            app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+            return $clonedRole->fresh(['permissions']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Role cloning failed', [
+                'id' => $role->id,
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Generate a unique name for a cloned role
+     */
+    private function generateUniqueName(string $originalName): string
+    {
+        $baseName = $originalName . ' (Copy)';
+        $name = $baseName;
+        $counter = 1;
+
+        // Keep incrementing until we find a unique name
+        while (Role::where('name', $name)->exists()) {
+            $name = $baseName . ' ' . $counter;
+            $counter++;
+        }
+
+        return $name;
+    }
+
     private function clearAllCache(): void
     {
         try {
@@ -253,6 +360,16 @@ final class RoleService
             // Clear specific pattern-based cache keys
             $this->clearCacheByPattern('roles.*');
             $this->clearCacheByPattern('permissions.*');
+            
+            // Force immediate flush for some cache drivers
+            if (method_exists(Cache::getStore(), 'flush')) {
+                try {
+                    Cache::getStore()->flush();
+                } catch (\Exception $e) {
+                    // Some cache implementations don't support flush
+                    Log::error('Cache flush failed', ['error' => $e->getMessage()]);
+                }
+            }
         } catch (\Exception $e) {
             Log::error('Cache clearing failed', [
                 'error' => $e->getMessage()
@@ -264,26 +381,35 @@ final class RoleService
     private function clearCacheByPattern(string $pattern): void
     {
         try {
-            $cache = Cache::getStore();
-
-            if (method_exists($cache, 'getPrefix')) {
-                $prefix = $cache->getPrefix();
-
-                // Get all cache keys
-                if (method_exists($cache, 'all')) {
-                    $keys = array_keys($cache->all());
-
-                    foreach ($keys as $key) {
-                        // Remove prefix from key
-                        $unprefixedKey = str_replace($prefix, '', $key);
-
-                        // If key matches pattern, delete it
-                        if (fnmatch($pattern, $unprefixedKey)) {
-                            Cache::forget($unprefixedKey);
+            // Use a simpler approach that doesn't rely on implementation-specific methods
+            // This works with any cache driver
+            if (in_array($pattern, ['roles.*', 'permissions.*'])) {
+                // Clear specific cache keys we know are used
+                $keys = [
+                    'roles.all',
+                    'roles.stats',
+                    'permissions.all',
+                    'roles.paginated',
+                    'roles.details.*',
+                ];
+                
+                foreach ($keys as $key) {
+                    if (strpos($key, '*') !== false) {
+                        // For wildcard keys, get the prefix and flush tags
+                        $prefix = str_replace('*', '', $key);
+                        Cache::forget($prefix);
+                        // Also try with tags if available
+                        try {
+                            Cache::tags([$prefix])->flush();
+                        } catch (\Exception $e) {
+                            // Some cache drivers don't support tags
                         }
+                    } else {
+                        Cache::forget($key);
                     }
                 }
             }
+
         } catch (\Exception $e) {
             Log::error('Pattern-based cache clearing failed', [
                 'pattern' => $pattern,

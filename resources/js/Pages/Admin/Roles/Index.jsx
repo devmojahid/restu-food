@@ -5,12 +5,47 @@ import { Button } from "@/Components/ui/button";
 import { ArrowLeft, Plus, FolderKey } from "lucide-react";
 import { Link } from "@inertiajs/react";
 import Breadcrumb from "@/Components/Admin/Breadcrumb";
+import { useEffect, useState, useRef } from "react";
 
-export default function Index({ roles }) {
+export default function Index({ roles, meta, filters, stats }) {
   const breadcrumbItems = [
     { label: "Dashboard", href: "dashboard" },
     { label: "Roles", href: "app.roles.index" },
   ];
+
+  // Track all roles data for infinite scroll
+  const [allRoles, setAllRoles] = useState(roles.data || []);
+  // Track current page to prevent duplicate data
+  const currentPageRef = useRef(roles.current_page || 1);
+
+  // Add unique identifiers to prevent key collisions
+  const addUniqueIds = (data, page) => {
+    return data.map(item => ({
+      ...item,
+      _uniqueKey: `${item.id}-p${page}`
+    }));
+  };
+
+  // Update allRoles when new data comes in, handling duplicate prevention
+  useEffect(() => {
+    if (!roles?.data) return;
+
+    const newPage = roles.current_page || 1;
+
+    if (newPage === 1) {
+      // If this is the first page or filter reset, replace all data
+      setAllRoles(addUniqueIds(roles.data, newPage));
+      currentPageRef.current = newPage;
+    } else if (newPage > currentPageRef.current) {
+      // Only append data if it's a new page we haven't seen before
+      setAllRoles(prev => [
+        ...prev,
+        ...addUniqueIds(roles.data, newPage)
+      ]);
+      currentPageRef.current = newPage;
+    }
+    // If it's a page we've already loaded, do nothing to prevent duplicates
+  }, [roles]);
 
   return (
     <AdminLayout>
@@ -38,7 +73,15 @@ export default function Index({ roles }) {
             </Link>
           </div>
         </div>
-        <ListRoles roles={roles} />
+        <ListRoles
+          roles={{
+            ...roles,
+            data: allRoles // Use our accumulated data with unique IDs
+          }}
+          meta={meta}
+          stats={stats}
+          filters={filters}
+        />
       </div>
     </AdminLayout>
   );

@@ -164,6 +164,10 @@ Route::prefix('app')->name('app.')->middleware(['auth'])->group(function () {
         // Roles Management
         Route::put('{role}/permissions', [RoleController::class, 'updatePermissions'])
             ->name('permissions.update');
+        Route::delete('/bulk-delete', [RoleController::class, 'bulkDelete'])
+            ->name('bulk-delete');
+        Route::post('{role}/clone', [RoleController::class, 'clone'])
+            ->name('clone');
     });
 
     /*

@@ -20,21 +20,59 @@ final class RoleController extends Controller
         private readonly RoleService $roleService
     ) {}
 
+    // Fixed Role Controller
     public function index(Request $request): Response
     {
-        $filters = [
+        // Clean the filters by removing empty values
+        $filters = array_filter([
             'search' => $request->input('search'),
             'per_page' => $request->input('per_page', 10),
             'sort' => $request->input('sort', 'created_at'),
             'direction' => $request->input('direction', 'desc'),
             'date_from' => $request->input('date_from'),
             'date_to' => $request->input('date_to'),
+            'status' => $request->input('status'), // Add status filter if needed
+        ], function ($value) {
+            return $value !== null && $value !== '';
+        });
+
+        // Get the data using the service
+        $roles = $this->roleService->getPaginated($filters);
+        
+        // Enhanced meta information for client-side handling
+        $meta = [
+            'hasMorePages' => $roles->hasMorePages(),
+            'currentPage' => $roles->currentPage(),
+            'lastPage' => $roles->lastPage(),
+            'total' => $roles->total(),
+            'from' => $roles->firstItem(),
+            'to' => $roles->lastItem(),
+            'lastUpdated' => now()->toIso8601String(),
+            'cacheControl' => 'private, max-age=60',
         ];
 
+        // Set up polling for real-time updates if requested
+        $pollingInterval = $request->input('polling', null);
+        
+        if ($pollingInterval && is_numeric($pollingInterval)) {
+            Inertia::share('polling', [
+                'interval' => (int) $pollingInterval,
+                'endpoint' => route('app.roles.index', array_merge($filters, ['only' => 'roles,meta'])),
+            ]);
+        }
+
+        // For prefetching next page data
+        if ($roles->hasMorePages()) {
+            Inertia::share('prefetch', [
+                'next_page' => route('app.roles.index', array_merge($filters, ['page' => $roles->currentPage() + 1, 'only' => 'roles,meta']))
+            ]);
+        }
+
         return Inertia::render('Admin/Roles/Index', [
-            'roles' => $this->roleService->getPaginated($filters),
+            'roles' => $roles,
             'filters' => $filters,
-            'stats' => $this->roleService->getStats(),
+            'stats' => fn () => $this->roleService->getStats(), // Deferred prop for better performance
+            'meta' => $meta,
         ]);
     }
 
@@ -138,25 +176,21 @@ final class RoleController extends Controller
         }
     }
 
-    public function export(Request $request): RedirectResponse
+    public function clone(Role $role): RedirectResponse
     {
         try {
-            $filters = [
-                'search' => $request->input('search'),
-                'date_from' => $request->input('date_from'),
-                'date_to' => $request->input('date_to'),
-            ];
+            $clonedRole = $this->roleService->cloneRole($role);
 
-            $this->roleService->exportRoles($filters);
-
-            return back()->with('toast', [
-                'type' => 'success',
-                'message' => 'Role export started. You will be notified when ready.'
-            ]);
+            return redirect()
+                ->route('app.roles.edit', $clonedRole)
+                ->with('toast', [
+                    'type' => 'success',
+                    'message' => "Role {$role->name} cloned successfully."
+                ]);
         } catch (\Exception $e) {
             return back()->with('toast', [
                 'type' => 'error',
-                'message' => 'Error exporting roles: ' . $e->getMessage()
+                'message' => 'Error cloning role: ' . $e->getMessage()
             ]);
         }
     }
