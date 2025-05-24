@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { useForm } from "@inertiajs/react";
+import React, { useEffect } from 'react';
 import { usePageEditor } from '@/Components/Admin/PageBuilder/PageEditorContext';
 import { Input } from "@/Components/ui/input";
 import { Label } from "@/Components/ui/label";
@@ -13,89 +12,95 @@ import { Plus, Trash2, MoveUp, MoveDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const HeroSection = () => {
-  const { handleSave, isSaving } = usePageEditor();
-  const [activeTab, setActiveTab] = useState('single');
-  const { data, setData } = useForm({
-    hero_enabled: true,
-    hero_type: 'single', // 'single' or 'slider'
-    hero_title: '',
-    hero_subtitle: '',
-    hero_image: null,
-    hero_cta_text: '',
-    hero_cta_link: '',
-    hero_background_overlay: 0.5,
-    hero_text_alignment: 'center',
-    hero_slides: [],
-  });
+  // Get context values
+  const {
+    formData,
+    updateFormData,
+    updateNestedFormData,
+    addFile,
+    isSaving,
+    handleSubmit
+  } = usePageEditor();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    await handleSave(data);
+  // Set default tab based on hero_type
+  const [activeTab, setActiveTab] = React.useState(formData.hero_type || 'single');
+
+  // Update tab when hero_type changes
+  useEffect(() => {
+    if (formData.hero_type) {
+      setActiveTab(formData.hero_type);
+    }
+  }, [formData.hero_type]);
+
+  const handleFileUpload = (field, files) => {
+    if (files && files.length > 0) {
+      addFile(field, files[0]);
+    }
   };
 
   const addSlide = () => {
-    setData('hero_slides', [
-      ...data.hero_slides,
-      {
-        id: Date.now(),
-        title: '',
-        description: '',
-        image: null,
-        cta: {
-          text: '',
-          link: ''
-        }
+    const slides = [...(formData.hero_slides || [])];
+    slides.push({
+      id: Date.now(),
+      title: '',
+      description: '',
+      image: null,
+      cta: {
+        text: '',
+        link: ''
       }
-    ]);
+    });
+    updateFormData('hero_slides', slides);
   };
 
   const removeSlide = (index) => {
-    setData('hero_slides', data.hero_slides.filter((_, i) => i !== index));
+    const slides = [...(formData.hero_slides || [])];
+    slides.splice(index, 1);
+    updateFormData('hero_slides', slides);
   };
 
   const moveSlide = (index, direction) => {
-    const newSlides = [...data.hero_slides];
+    const slides = [...(formData.hero_slides || [])];
     const newIndex = direction === 'up' ? index - 1 : index + 1;
 
-    if (newIndex >= 0 && newIndex < newSlides.length) {
-      [newSlides[index], newSlides[newIndex]] = [newSlides[newIndex], newSlides[index]];
-      setData('hero_slides', newSlides);
+    if (newIndex >= 0 && newIndex < slides.length) {
+      [slides[index], slides[newIndex]] = [slides[newIndex], slides[index]];
+      updateFormData('hero_slides', slides);
     }
   };
 
   const updateSlide = (index, field, value) => {
-    const newSlides = [...data.hero_slides];
     if (field.startsWith('cta.')) {
       const ctaField = field.split('.')[1];
-      newSlides[index].cta[ctaField] = value;
+      updateNestedFormData(`hero_slides.${index}.cta.${ctaField}`, value);
     } else {
-      newSlides[index][field] = value;
+      updateNestedFormData(`hero_slides.${index}.${field}`, value);
     }
-    setData('hero_slides', newSlides);
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       {/* Enable/Disable Section */}
       <div className="flex items-center justify-between">
-        <Label>Enable Hero Section</Label>
+        <Label htmlFor="hero_enabled">Enable Hero Section</Label>
         <Switch
-          checked={data.hero_enabled}
-          onCheckedChange={(checked) => setData('hero_enabled', checked)}
+          id="hero_enabled"
+          checked={formData.hero_enabled}
+          onCheckedChange={(checked) => updateFormData('hero_enabled', checked)}
         />
       </div>
 
       {/* Hero Type Selection */}
       <div className="space-y-2">
-        <Label>Hero Type</Label>
+        <Label htmlFor="hero_type">Hero Type</Label>
         <Select
-          value={data.hero_type}
+          value={formData.hero_type || 'single'}
           onValueChange={(value) => {
-            setData('hero_type', value);
+            updateFormData('hero_type', value);
             setActiveTab(value);
           }}
         >
-          <SelectTrigger>
+          <SelectTrigger id="hero_type">
             <SelectValue placeholder="Select Hero Type" />
           </SelectTrigger>
           <SelectContent>
@@ -114,10 +119,11 @@ const HeroSection = () => {
         {/* Single Hero Content */}
         <TabsContent value="single" className="space-y-6">
           <div className="space-y-2">
-            <Label>Title</Label>
+            <Label htmlFor="hero_title">Title</Label>
             <Input
-              value={data.hero_title}
-              onChange={e => setData('hero_title', e.target.value)}
+              id="hero_title"
+              value={formData.hero_title || ''}
+              onChange={e => updateFormData('hero_title', e.target.value)}
               placeholder="Type your hero title"
             />
             <p className="text-xs text-muted-foreground">
@@ -126,10 +132,11 @@ const HeroSection = () => {
           </div>
 
           <div className="space-y-2">
-            <Label>Subtitle</Label>
+            <Label htmlFor="hero_subtitle">Subtitle</Label>
             <Input
-              value={data.hero_subtitle}
-              onChange={e => setData('hero_subtitle', e.target.value)}
+              id="hero_subtitle"
+              value={formData.hero_subtitle || ''}
+              onChange={e => updateFormData('hero_subtitle', e.target.value)}
               placeholder="Type your hero subtitle"
             />
           </div>
@@ -138,38 +145,41 @@ const HeroSection = () => {
             <Label>Background Image</Label>
             <FileUploader
               maxFiles={1}
-              value={data.hero_image}
-              onUpload={(files) => setData('hero_image', files[0])}
+              onUpload={(files) => handleFileUpload('hero_image', files)}
               className="min-h-[200px]"
+              // Show existing image if available
+              value={formData.hero_image}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>CTA Text</Label>
+              <Label htmlFor="hero_cta_text">CTA Text</Label>
               <Input
-                value={data.hero_cta_text}
-                onChange={e => setData('hero_cta_text', e.target.value)}
+                id="hero_cta_text"
+                value={formData.hero_cta_text || ''}
+                onChange={e => updateFormData('hero_cta_text', e.target.value)}
                 placeholder="Order Now"
               />
             </div>
             <div className="space-y-2">
-              <Label>CTA Link</Label>
+              <Label htmlFor="hero_cta_link">CTA Link</Label>
               <Input
-                value={data.hero_cta_link}
-                onChange={e => setData('hero_cta_link', e.target.value)}
+                id="hero_cta_link"
+                value={formData.hero_cta_link || ''}
+                onChange={e => updateFormData('hero_cta_link', e.target.value)}
                 placeholder="/restaurants"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label>Text Alignment</Label>
+            <Label htmlFor="hero_text_alignment">Text Alignment</Label>
             <Select
-              value={data.hero_text_alignment}
-              onValueChange={value => setData('hero_text_alignment', value)}
+              value={formData.hero_text_alignment || 'center'}
+              onValueChange={value => updateFormData('hero_text_alignment', value)}
             >
-              <SelectTrigger>
+              <SelectTrigger id="hero_text_alignment">
                 <SelectValue placeholder="Select text alignment" />
               </SelectTrigger>
               <SelectContent>
@@ -181,18 +191,19 @@ const HeroSection = () => {
           </div>
 
           <div className="space-y-2">
-            <Label>Background Overlay Opacity</Label>
+            <Label htmlFor="hero_background_overlay">Background Overlay Opacity</Label>
             <Input
+              id="hero_background_overlay"
               type="range"
               min="0"
               max="1"
               step="0.1"
-              value={data.hero_background_overlay}
-              onChange={e => setData('hero_background_overlay', parseFloat(e.target.value))}
+              value={formData.hero_background_overlay || 0.5}
+              onChange={e => updateFormData('hero_background_overlay', parseFloat(e.target.value))}
               className="w-full"
             />
             <div className="text-xs text-muted-foreground">
-              Current value: {data.hero_background_overlay}
+              Current value: {formData.hero_background_overlay || 0.5}
             </div>
           </div>
         </TabsContent>
@@ -214,7 +225,7 @@ const HeroSection = () => {
           </div>
 
           <div className="space-y-6">
-            {data.hero_slides.map((slide, index) => (
+            {(formData.hero_slides || []).map((slide, index) => (
               <Card key={slide.id} className="p-6">
                 <div className="flex justify-between items-start mb-4">
                   <h4 className="font-medium">Slide {index + 1}</h4>
@@ -233,7 +244,7 @@ const HeroSection = () => {
                       variant="ghost"
                       size="icon"
                       onClick={() => moveSlide(index, 'down')}
-                      disabled={index === data.hero_slides.length - 1}
+                      disabled={index === (formData.hero_slides?.length || 0) - 1}
                     >
                       <MoveDown className="w-4 h-4" />
                     </Button>
@@ -251,18 +262,20 @@ const HeroSection = () => {
 
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label>Title</Label>
+                    <Label htmlFor={`slide_${index}_title`}>Title</Label>
                     <Input
-                      value={slide.title}
+                      id={`slide_${index}_title`}
+                      value={slide.title || ''}
                       onChange={e => updateSlide(index, 'title', e.target.value)}
                       placeholder="Slide title"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Description</Label>
+                    <Label htmlFor={`slide_${index}_description`}>Description</Label>
                     <Input
-                      value={slide.description}
+                      id={`slide_${index}_description`}
+                      value={slide.description || ''}
                       onChange={e => updateSlide(index, 'description', e.target.value)}
                       placeholder="Slide description"
                     />
@@ -272,25 +285,32 @@ const HeroSection = () => {
                     <Label>Background Image</Label>
                     <FileUploader
                       maxFiles={1}
+                      onUpload={(files) => {
+                        if (files && files.length > 0) {
+                          addFile(`hero_slides.${index}.image`, files[0]);
+                          updateSlide(index, 'image', URL.createObjectURL(files[0]));
+                        }
+                      }}
                       value={slide.image}
-                      onUpload={(files) => updateSlide(index, 'image', files[0])}
                       className="min-h-[200px]"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>CTA Text</Label>
+                      <Label htmlFor={`slide_${index}_cta_text`}>CTA Text</Label>
                       <Input
-                        value={slide.cta.text}
+                        id={`slide_${index}_cta_text`}
+                        value={slide.cta?.text || ''}
                         onChange={e => updateSlide(index, 'cta.text', e.target.value)}
                         placeholder="Order Now"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>CTA Link</Label>
+                      <Label htmlFor={`slide_${index}_cta_link`}>CTA Link</Label>
                       <Input
-                        value={slide.cta.link}
+                        id={`slide_${index}_cta_link`}
+                        value={slide.cta?.link || ''}
                         onChange={e => updateSlide(index, 'cta.link', e.target.value)}
                         placeholder="/restaurants"
                       />
@@ -300,7 +320,7 @@ const HeroSection = () => {
               </Card>
             ))}
 
-            {data.hero_slides.length === 0 && (
+            {(!formData.hero_slides || formData.hero_slides.length === 0) && (
               <div className="text-center py-8 text-muted-foreground">
                 No slides added yet. Click "Add Slide" to create your first slide.
               </div>

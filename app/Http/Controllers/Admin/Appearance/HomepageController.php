@@ -7,7 +7,7 @@ namespace App\Http\Controllers\Admin\Appearance;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Appearance\UpdateHomepageRequest;
 use App\Services\Admin\HomepageEditorService;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Inertia\Response;
 use Inertia\Inertia;
@@ -30,7 +30,7 @@ final class HomepageController extends Controller
                 'defaults' => $defaults,
                 'dynamicData' => $dynamicData,
                 'can' => [
-                    'update' => auth()->user()->can('update', 'appearance'),
+                    'update' => Auth::check() && Auth::user()->can('update', 'appearance'),
                 ]
             ]);
         } catch (\Exception $e) {
@@ -41,33 +41,30 @@ final class HomepageController extends Controller
 
             return Inertia::render('Admin/Appearance/Homepage/Index', [
                 'homepageOptions' => [],
-                'defaults' => [],
-                'error' => 'Failed to load homepage settings'
+                'defaults' => $this->homepageEditor->getDefaultSettings(),
+                'error' => 'Failed to load homepage settings: ' . $e->getMessage()
             ]);
         }
     }
 
-    // public function update(UpdateHomepageRequest $request)
-    public function update(Request $request)
+    public function update(UpdateHomepageRequest $request)
     {
-        dd($request->all());
         try {
-            $options = collect($request->validated('options'))->mapWithKeys(function ($item) {
-                return [$item['key'] => $item['value']];
-            })->toArray();
-
-            dd($options, $request->allFiles());
-
-            $this->homepageEditor->updateSettings($options, $request->allFiles());
-
-            return back()->with('success', 'Homepage settings saved successfully');
+            // Process form data
+            $data = $request->validated();
+            
+            // In Laravel 11's streamlined approach, we'll let the HomepageEditorService
+            // handle the file processing directly via the request
+            $this->homepageEditor->updateSettingsFromRequest($request);
+            
+            return redirect()->back()->with('success', 'Homepage settings updated successfully');
         } catch (\Exception $e) {
-            Log::error('Failed to save homepage settings', [
+            Log::error('Failed to update homepage settings', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-
-            return back()->with('error', 'Failed to save homepage settings');
+            
+            return redirect()->back()->with('error', 'Failed to save homepage settings: ' . $e->getMessage());
         }
     }
 }

@@ -6,32 +6,398 @@ namespace App\Services\Frontend;
 
 use App\Models\Restaurant;
 use App\Models\Product;
-use App\Models\Offer;
+use App\Models\Option;
+use App\Models\Category;
 use App\Services\BaseService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
+use Illuminate\Support\Str;
 
 final class HomeService extends BaseService
 {
+    /**
+     * The key used for homepage settings
+     */
+    private const HOMEPAGE_OPTION_KEY = 'homepage_settings';
+
+    /**
+     * Get all data needed for the homepage
+     */
     public function getHomePageData(): array
     {
-        // Use caching for better performance
-        // return Cache::remember('home_page_data', 3600, function () {
+        $homepageSettings = $this->getHomepageSettings();
+
+        // Cache the data for 1 hour in production
+        $cacheTtl = app()->environment('production') ? 3600 : 5;
+        
+        return Cache::remember('home_page_data', $cacheTtl, function () use ($homepageSettings) {
             return [
-                'heroSlides' => $this->getHeroSlides(),
-                'featuredRestaurants' => Inertia::defer(fn () => $this->getFeaturedRestaurants()),
+                'heroSlides' => $this->getHeroSlides($homepageSettings),
+                'featuredRestaurants' => $this->getFeaturedRestaurants(),
                 'featuredDishes' => $this->getFeaturedDishes(),
                 'popularDishes' => $this->getPopularDishes(),
                 'specialOffers' => $this->getSpecialOffers(),
-                'popularCategories' => $this->getPopularCategories(),
+                'popularCategories' => $this->getPopularCategories($homepageSettings),
                 'stats' => $this->getStats(),
                 'nearbyRestaurants' => $this->getNearbyRestaurants(),
-                'testimonials' => $this->getTestimonials(),
+                'testimonials' => $this->getTestimonials($homepageSettings),
+                'siteSettings' => [
+                    'layout_width' => $homepageSettings['layout_width'] ?? 'contained',
+                    'color_scheme' => $homepageSettings['color_scheme'] ?? 'system',
+                    'primary_color' => $homepageSettings['primary_color'] ?? '#22C55E',
+                    'secondary_color' => $homepageSettings['secondary_color'] ?? '#0EA5E9',
+                    'font_heading' => $homepageSettings['font_heading'] ?? 'inter',
+                    'font_body' => $homepageSettings['font_body'] ?? 'inter',
+                    'animations_enabled' => $homepageSettings['animations_enabled'] ?? true,
+                ],
+                'whyChooseUs' => [
+                    'enabled' => $homepageSettings['why_choose_us_enabled'] ?? true,
+                    'title' => $homepageSettings['why_choose_us_title'] ?? 'Why Choose Us',
+                    'text' => $homepageSettings['why_choose_us_text'] ?? 'We offer the best food delivery service',
+                    'image' => $homepageSettings['why_choose_us_image'] ?? null,
+                    'layout' => $homepageSettings['why_choose_us_layout'] ?? 'side-by-side',
+                    'image_position' => $homepageSettings['why_choose_us_image_position'] ?? 'right',
+                    'features' => $homepageSettings['why_choose_us_features'] ?? $this->getDefaultWhyChooseUsFeatures(),
+                ],
             ];
-        // });
+        });
     }
 
+    /**
+     * Get homepage settings from the database or defaults
+     */
+    private function getHomepageSettings(): array
+    {
+        return Cache::remember('homepage_settings_frontend', 3600, function () {
+            $settings = Option::where('key', self::HOMEPAGE_OPTION_KEY)->first()?->value;
+            return $settings ?: [];
+        });
+    }
+
+    /**
+     * Get hero slides from settings or defaults
+     */
+    private function getHeroSlides(array $settings): array
+    {
+        // Check if hero slides exist and are properly formatted
+        if (isset($settings['hero_type']) && $settings['hero_type'] === 'slider' && !empty($settings['hero_slides']) && is_array($settings['hero_slides'])) {
+            return array_map(function ($slide) {
+                // Make sure image is a full URL
+                $image = !empty($slide['image']) ? $slide['image'] : '/images/hero/slide1.jpg';
+                
+                if (!empty($image) && !Str::startsWith($image, ['http://', 'https://'])) {
+                    $image = asset($image);
+                }
+                
+                // Ensure cta is properly structured
+                $cta = !empty($slide['cta']) && is_array($slide['cta']) ? $slide['cta'] : ['text' => 'Order Now', 'link' => '/menu'];
+                
+                return [
+                    'id' => $slide['id'] ?? rand(1000, 9999),
+                    'title' => $slide['title'] ?? '',
+                    'description' => $slide['description'] ?? '',
+                    'image' => $image,
+                    'cta' => [
+                        'text' => $cta['text'] ?? 'Order Now',
+                        'link' => $cta['link'] ?? '/menu'
+                    ]
+                ];
+            }, $settings['hero_slides']);
+        }
+        
+        // Use single hero as a slide if it's specified as single type or type is not set
+        if (!isset($settings['hero_type']) || $settings['hero_type'] === 'single') {
+            $heroImage = !empty($settings['hero_image']) ? $settings['hero_image'] : '/images/hero/slide1.jpg';
+            
+            // Make sure image is a full URL
+            if (!empty($heroImage) && !Str::startsWith($heroImage, ['http://', 'https://'])) {
+                $heroImage = asset($heroImage);
+            }
+            
+            return [
+                [
+                    'id' => 1,
+                    'title' => $settings['hero_title'] ?? 'Delicious Food Delivered To Your Doorstep',
+                    'description' => $settings['hero_subtitle'] ?? 'Choose from thousands of restaurants and get your food delivered fast',
+                    'image' => $heroImage,
+                    'cta' => [
+                        'text' => $settings['hero_cta_text'] ?? 'Order Now',
+                        'link' => $settings['hero_cta_link'] ?? '/menu'
+                    ]
+                ]
+            ];
+        }
+        
+        // Fallback to default slides
+        return [
+            [
+                'id' => 1,
+                'title' => 'Delicious Food Delivered To Your Doorstep',
+                'description' => 'Choose from thousands of restaurants and get your food delivered fast',
+                'image' => '/images/hero/slide1.jpg',
+                'cta' => [
+                    'text' => 'Order Now',
+                    'link' => '/menu'
+                ]
+            ]
+        ];
+    }
+
+    /**
+     * Get popular categories from database with settings applied
+     */
+    private function getPopularCategories(array $settings): array
+    {
+        // If categories section is disabled, return empty array
+        if (isset($settings['top_categories_enabled']) && !$settings['top_categories_enabled']) {
+            return [];
+        }
+
+        // Number of categories to show
+        $limit = $settings['top_categories_count'] ?? 8;
+
+        // Try to get categories from DB
+        try {
+            $categories = Category::where('is_active', true)
+                ->orderBy('position')
+                ->take($limit)
+                ->get()
+                ->map(function ($category) {
+                    return [
+                        'id' => $category->id,
+                        'name' => $category->name,
+                        'slug' => $category->slug,
+                        'restaurants' => $category->products_count ?? 0,
+                        'image' => $category->image ? asset($category->image) : '/images/categories/default.jpg',
+                        'description' => $category->description,
+                    ];
+                })
+                ->toArray();
+
+            if (!empty($categories)) {
+                return $categories;
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch categories for homepage', [
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        // Return default categories as fallback
+        return $this->getDefaultCategories($limit);
+    }
+
+    /**
+     * Get testimonials from settings or defaults
+     */
+    private function getTestimonials(array $settings): array
+    {
+        // If client feedback section is disabled, return empty array
+        if (isset($settings['client_feedback_enabled']) && !$settings['client_feedback_enabled']) {
+            return [];
+        }
+
+        // If we have feedbacks in the settings, use them
+        if (!empty($settings['feedbacks'])) {
+            return array_map(function ($feedback) {
+                // Make sure avatar is a full URL if present
+                if (!empty($feedback['avatar']) && !Str::startsWith($feedback['avatar'], ['http://', 'https://'])) {
+                    $feedback['avatar'] = asset($feedback['avatar']);
+                }
+                
+                return [
+                    'id' => $feedback['id'] ?? rand(1000, 9999),
+                    'name' => $feedback['name'] ?? 'Anonymous',
+                    'role' => $feedback['role'] ?? 'Customer',
+                    'image' => $feedback['avatar'] ?? '/images/testimonials/default.jpg',
+                    'rating' => $feedback['rating'] ?? 5,
+                    'text' => $feedback['review'] ?? '',
+                    'date' => $feedback['date'] ?? now()->subDays(rand(1, 30))->format('Y-m-d'),
+                    'helpful_count' => $feedback['helpful_count'] ?? rand(10, 150),
+                    'verified_purchase' => $feedback['verified_purchase'] ?? true,
+                ];
+            }, $settings['feedbacks']);
+        }
+        
+        // Return default testimonials
+        return $this->getDefaultTestimonials();
+    }
+
+    /**
+     * Get default categories
+     */
+    private function getDefaultCategories(int $limit = 8): array
+    {
+        $allCategories = [
+            [
+                'id' => 1,
+                'name' => 'Pizza',
+                'slug' => 'pizza',
+                'restaurants' => 45,
+                'image' => '/images/categories/pizza.jpg',
+                'description' => 'Delicious pizzas from your favorite restaurants'
+            ],
+            [
+                'id' => 2,
+                'name' => 'Burger',
+                'slug' => 'burger',
+                'restaurants' => 38,
+                'image' => '/images/categories/burger.jpg',
+                'description' => 'Juicy burgers with various toppings'
+            ],
+            [
+                'id' => 3,
+                'name' => 'Sushi',
+                'slug' => 'sushi',
+                'restaurants' => 25,
+                'image' => '/images/categories/sushi.jpg',
+                'description' => 'Fresh and authentic Japanese sushi'
+            ],
+            [
+                'id' => 4,
+                'name' => 'Desserts',
+                'slug' => 'desserts',
+                'restaurants' => 32,
+                'image' => '/images/categories/desserts.jpg',
+                'description' => 'Sweet treats to satisfy your cravings'
+            ],
+            [
+                'id' => 5,
+                'name' => 'Coffee',
+                'slug' => 'coffee',
+                'restaurants' => 28,
+                'image' => '/images/categories/coffee.jpg',
+                'description' => 'Premium coffee from top cafés'
+            ],
+            [
+                'id' => 6,
+                'name' => 'Salads',
+                'slug' => 'salads',
+                'restaurants' => 22,
+                'image' => '/images/categories/salads.jpg',
+                'description' => 'Fresh and healthy salad options'
+            ],
+            [
+                'id' => 7,
+                'name' => 'Sandwiches',
+                'slug' => 'sandwiches',
+                'restaurants' => 35,
+                'image' => '/images/categories/sandwiches.jpg',
+                'description' => 'Tasty sandwiches for any time of day'
+            ],
+            [
+                'id' => 8,
+                'name' => 'Drinks',
+                'slug' => 'drinks',
+                'restaurants' => 40,
+                'image' => '/images/categories/drinks.jpg',
+                'description' => 'Refreshing beverages and cocktails'
+            ],
+            [
+                'id' => 9,
+                'name' => 'Chinese',
+                'slug' => 'chinese',
+                'restaurants' => 30,
+                'image' => '/images/categories/chinese.jpg',
+                'description' => 'Authentic Chinese cuisine'
+            ],
+            [
+                'id' => 10,
+                'name' => 'Indian',
+                'slug' => 'indian',
+                'restaurants' => 28,
+                'image' => '/images/categories/indian.jpg',
+                'description' => 'Flavorful Indian dishes'
+            ],
+            [
+                'id' => 11,
+                'name' => 'Thai',
+                'slug' => 'thai',
+                'restaurants' => 20,
+                'image' => '/images/categories/thai.jpg',
+                'description' => 'Spicy and aromatic Thai food'
+            ],
+            [
+                'id' => 12,
+                'name' => 'Mexican',
+                'slug' => 'mexican',
+                'restaurants' => 25,
+                'image' => '/images/categories/mexican.jpg',
+                'description' => 'Authentic Mexican cuisine'
+            ]
+        ];
+
+        return array_slice($allCategories, 0, $limit);
+    }
+
+    /**
+     * Get default testimonials
+     */
+    private function getDefaultTestimonials(): array
+    {
+        return [
+            [
+                'id' => 1,
+                'name' => 'Sarah Johnson',
+                'role' => 'Food Enthusiast',
+                'image' => '/images/testimonials/user1.jpg',
+                'rating' => 5,
+                'text' => "The food delivery service is exceptional! I love how I can track my order in real-time, and the food always arrives hot and fresh. The app is so user-friendly!",
+                'date' => '2024-02-15',
+                'helpful_count' => 128,
+                'verified_purchase' => true
+            ],
+            [
+                'id' => 2,
+                'name' => 'Michael Chen',
+                'role' => 'Regular Customer',
+                'image' => '/images/testimonials/user2.jpg',
+                'rating' => 5,
+                'text' => "I've been using this service for months now, and I'm consistently impressed. The variety of restaurants is amazing, and the delivery drivers are always professional.",
+                'date' => '2024-02-18',
+                'helpful_count' => 95,
+                'verified_purchase' => true
+            ],
+            [
+                'id' => 3,
+                'name' => 'Emily Rodriguez',
+                'role' => 'Food Blogger',
+                'image' => '/images/testimonials/user3.jpg',
+                'rating' => 4,
+                'text' => "Great selection of restaurants and prompt delivery service. The only reason for 4 stars is that I wish they had more vegan options. Otherwise, perfect!",
+                'date' => '2024-02-20',
+                'helpful_count' => 76,
+                'verified_purchase' => true
+            ]
+        ];
+    }
+
+    /**
+     * Get default "Why Choose Us" features
+     */
+    private function getDefaultWhyChooseUsFeatures(): array
+    {
+        return [
+            [
+                'title' => 'Fast Delivery',
+                'text' => 'Get your food delivered within 30 minutes',
+                'icon' => 'truck'
+            ],
+            [
+                'title' => 'Quality Food',
+                'text' => 'We ensure the best quality food',
+                'icon' => 'utensils'
+            ],
+            [
+                'title' => 'Best Prices',
+                'text' => 'Affordable prices for quality meals',
+                'icon' => 'tag'
+            ]
+        ];
+    }
+
+    // Keep the other methods as they are for now
     private function getFeaturedRestaurants(): array
     {
         // Test data for featured restaurants
@@ -123,42 +489,82 @@ final class HomeService extends BaseService
         ];
     }
 
-    private function getHeroSlides(): array
+    private function getFeaturedDishes(): array
     {
         return [
             [
                 'id' => 1,
-                'title' => 'Delicious Food Delivered To Your Doorstep',
-                'description' => 'Choose from thousands of restaurants and get your food delivered fast',
-                'image' => '/images/hero/slide1.jpg',
-                'cta' => [
-                    'text' => 'Order Now',
-                    'link' => '/menu'
-                ]
+                'name' => 'Margherita Pizza',
+                'slug' => 'margherita-pizza',
+                'description' => 'Fresh tomatoes, mozzarella, basil, and our signature sauce on a crispy crust',
+                'price' => 14.99,
+                'image' => '/images/dishes/pizza.jpg',
+                'restaurant' => [
+                    'name' => 'Pizza Paradise',
+                    'slug' => 'pizza-paradise'
+                ],
+                'rating' => 4.8,
+                'preparation_time' => '20-25 mins',
+                'calories' => '800',
+                'discount' => 20,
+                'isNew' => true,
+                'isPopular' => true,
+                'trending' => true,
+                'vegetarian' => true,
+                'spicy' => false,
+                'orders' => 1250,
+                'created_at' => '2024-02-20T10:00:00'
             ],
             [
                 'id' => 2,
-                'title' => 'Fresh & Healthy Food',
-                'description' => 'Discover healthy options from local restaurants',
-                'image' => '/images/hero/slide2.jpg',
-                'cta' => [
-                    'text' => 'Explore Menu',
-                    'link' => '/menu'
-                ]
+                'name' => 'Spicy Chicken Burger',
+                'slug' => 'spicy-chicken-burger',
+                'description' => 'Crispy chicken fillet with spicy sauce, fresh lettuce, and special mayo',
+                'price' => 12.99,
+                'image' => '/images/dishes/burger.jpg',
+                'restaurant' => [
+                    'name' => 'Burger House',
+                    'slug' => 'burger-house'
+                ],
+                'rating' => 4.6,
+                'preparation_time' => '15-20 mins',
+                'calories' => '650',
+                'discount' => null,
+                'isNew' => false,
+                'isPopular' => true,
+                'trending' => true,
+                'vegetarian' => false,
+                'spicy' => true,
+                'orders' => 980,
+                'created_at' => '2024-02-19T15:30:00'
             ],
             [
                 'id' => 3,
-                'title' => 'Special Offers & Discounts',
-                'description' => 'Get amazing deals on your favorite restaurants',
-                'image' => '/images/hero/slide3.jpg',
-                'cta' => [
-                    'text' => 'View Offers',
-                    'link' => '/offers'
-                ]
-            ]
+                'name' => 'Vegetable Sushi Roll',
+                'slug' => 'vegetable-sushi-roll',
+                'description' => 'Fresh vegetables wrapped in sushi rice and nori seaweed',
+                'price' => 16.99,
+                'image' => '/images/dishes/sushi.jpg',
+                'restaurant' => [
+                    'name' => 'Sushi Master',
+                    'slug' => 'sushi-master'
+                ],
+                'rating' => 4.7,
+                'preparation_time' => '25-30 mins',
+                'calories' => '400',
+                'discount' => 15,
+                'isNew' => true,
+                'isPopular' => false,
+                'trending' => false,
+                'vegetarian' => true,
+                'spicy' => false,
+                'orders' => 750,
+                'created_at' => '2024-02-21T09:15:00'
+            ],
+            // Add more dishes as needed
         ];
     }
-
+    
     private function getPopularDishes(): array
     {
         return [
@@ -316,7 +722,7 @@ final class HomeService extends BaseService
             ]
         ];
     }
-
+    
     private function getSpecialOffers(): array
     {
         return [
@@ -340,7 +746,7 @@ final class HomeService extends BaseService
             ]
         ];
     }
-
+    
     private function getStats(): array
     {
         return [
@@ -348,156 +754,6 @@ final class HomeService extends BaseService
             'dishes' => 2000,
             'delivery_cities' => 50,
             'happy_customers' => '100K+'
-        ];
-    }
-
-    private function getPopularCategories(): array
-    {
-        return [
-            [
-                'id' => 1,
-                'name' => 'Pizza',
-                'slug' => 'pizza',
-                'restaurants' => 45,
-                'items' => 250,
-                'dailyOrders' => 1200,
-                'avgDeliveryTime' => '30-45',
-                'trending' => true,
-                'rating' => 4.8,
-                'image' => '/images/categories/pizza.jpg'
-            ],
-            [
-                'id' => 2,
-                'name' => 'Burger',
-                'slug' => 'burger',
-                'restaurants' => 38,
-                'items' => 180,
-                'dailyOrders' => 950,
-                'avgDeliveryTime' => '25-35',
-                'trending' => true,
-                'rating' => 4.7,
-                'image' => '/images/categories/burger.jpg'
-            ],
-            [
-                'id' => 3,
-                'name' => 'Sushi',
-                'slug' => 'sushi',
-                'restaurants' => 25,
-                'items' => 120,
-                'dailyOrders' => 450,
-                'avgDeliveryTime' => '40-50',
-                'trending' => false,
-                'rating' => 4.9,
-                'image' => '/images/categories/sushi.jpg'
-            ],
-            [
-                'id' => 4,
-                'name' => 'Desserts',
-                'slug' => 'desserts',
-                'restaurants' => 32,
-                'items' => 150,
-                'dailyOrders' => 800,
-                'avgDeliveryTime' => '25-35',
-                'trending' => false,
-                'rating' => 4.6,
-                'image' => '/images/categories/desserts.jpg'
-            ],
-            [
-                'id' => 5,
-                'name' => 'Coffee',
-                'slug' => 'coffee',
-                'restaurants' => 28,
-                'items' => 90,
-                'dailyOrders' => 1500,
-                'avgDeliveryTime' => '15-25',
-                'trending' => true,
-                'rating' => 4.7,
-                'image' => '/images/categories/coffee.jpg'
-            ],
-            [
-                'id' => 6,
-                'name' => 'Salads',
-                'slug' => 'salads',
-                'restaurants' => 22,
-                'items' => 85,
-                'dailyOrders' => 600,
-                'avgDeliveryTime' => '20-30',
-                'trending' => false,
-                'rating' => 4.5,
-                'image' => '/images/categories/salads.jpg'
-            ],
-            [
-                'id' => 7,
-                'name' => 'Sandwiches',
-                'slug' => 'sandwiches',
-                'restaurants' => 35,
-                'items' => 130,
-                'dailyOrders' => 850,
-                'avgDeliveryTime' => '20-30',
-                'trending' => false,
-                'rating' => 4.6,
-                'image' => '/images/categories/sandwiches.jpg'
-            ],
-            [
-                'id' => 8,
-                'name' => 'Drinks',
-                'slug' => 'drinks',
-                'restaurants' => 40,
-                'items' => 110,
-                'dailyOrders' => 1100,
-                'avgDeliveryTime' => '15-25',
-                'trending' => true,
-                'rating' => 4.5,
-                'image' => '/images/categories/drinks.jpg'
-            ],
-            [
-                'id' => 9,
-                'name' => 'Chinese',
-                'slug' => 'chinese',
-                'restaurants' => 30,
-                'items' => 200,
-                'dailyOrders' => 750,
-                'avgDeliveryTime' => '35-45',
-                'trending' => false,
-                'rating' => 4.7,
-                'image' => '/images/categories/chinese.jpg'
-            ],
-            [
-                'id' => 10,
-                'name' => 'Indian',
-                'slug' => 'indian',
-                'restaurants' => 28,
-                'items' => 180,
-                'dailyOrders' => 700,
-                'avgDeliveryTime' => '35-45',
-                'trending' => true,
-                'rating' => 4.8,
-                'image' => '/images/categories/indian.jpg'
-            ],
-            [
-                'id' => 11,
-                'name' => 'Thai',
-                'slug' => 'thai',
-                'restaurants' => 20,
-                'items' => 150,
-                'dailyOrders' => 500,
-                'avgDeliveryTime' => '30-40',
-                'trending' => false,
-                'rating' => 4.6,
-                'image' => '/images/categories/thai.jpg'
-            ],
-            [
-                'id' => 12,
-                'name' => 'Mexican',
-                'slug' => 'mexican',
-                'restaurants' => 25,
-                'items' => 160,
-                'dailyOrders' => 600,
-                'avgDeliveryTime' => '30-40',
-                'trending' => true,
-                'rating' => 4.7,
-                'image' => '/images/categories/mexican.jpg'
-            ]
         ];
     }
 
@@ -528,173 +784,6 @@ final class HomeService extends BaseService
                 'price_range' => '$$'
             ],
             // Add more restaurants...
-        ];
-    }
-
-    private function getFeaturedDishes(): array
-    {
-        return [
-            [
-                'id' => 1,
-                'name' => 'Margherita Pizza',
-                'slug' => 'margherita-pizza',
-                'description' => 'Fresh tomatoes, mozzarella, basil, and our signature sauce on a crispy crust',
-                'price' => 14.99,
-                'image' => '/images/dishes/pizza.jpg',
-                'restaurant' => [
-                    'name' => 'Pizza Paradise',
-                    'slug' => 'pizza-paradise'
-                ],
-                'rating' => 4.8,
-                'preparation_time' => '20-25 mins',
-                'calories' => '800',
-                'discount' => 20,
-                'isNew' => true,
-                'isPopular' => true,
-                'trending' => true,
-                'vegetarian' => true,
-                'spicy' => false,
-                'orders' => 1250,
-                'created_at' => '2024-02-20T10:00:00'
-            ],
-            [
-                'id' => 2,
-                'name' => 'Spicy Chicken Burger',
-                'slug' => 'spicy-chicken-burger',
-                'description' => 'Crispy chicken fillet with spicy sauce, fresh lettuce, and special mayo',
-                'price' => 12.99,
-                'image' => '/images/dishes/burger.jpg',
-                'restaurant' => [
-                    'name' => 'Burger House',
-                    'slug' => 'burger-house'
-                ],
-                'rating' => 4.6,
-                'preparation_time' => '15-20 mins',
-                'calories' => '650',
-                'discount' => null,
-                'isNew' => false,
-                'isPopular' => true,
-                'trending' => true,
-                'vegetarian' => false,
-                'spicy' => true,
-                'orders' => 980,
-                'created_at' => '2024-02-19T15:30:00'
-            ],
-            [
-                'id' => 3,
-                'name' => 'Vegetable Sushi Roll',
-                'slug' => 'vegetable-sushi-roll',
-                'description' => 'Fresh vegetables wrapped in sushi rice and nori seaweed',
-                'price' => 16.99,
-                'image' => '/images/dishes/sushi.jpg',
-                'restaurant' => [
-                    'name' => 'Sushi Master',
-                    'slug' => 'sushi-master'
-                ],
-                'rating' => 4.7,
-                'preparation_time' => '25-30 mins',
-                'calories' => '400',
-                'discount' => 15,
-                'isNew' => true,
-                'isPopular' => false,
-                'trending' => false,
-                'vegetarian' => true,
-                'spicy' => false,
-                'orders' => 750,
-                'created_at' => '2024-02-21T09:15:00'
-            ],
-            // Add more dishes as needed
-        ];
-    }
-
-    private function getTestimonials(): array
-    {
-        // In real application, this would come from database
-        return [
-            [
-                'id' => 1,
-                'name' => 'Sarah Johnson',
-                'role' => 'Food Enthusiast',
-                'image' => '/images/testimonials/user1.jpg',
-                'rating' => 5,
-                'text' => "The food delivery service is exceptional! I love how I can track my order in real-time, and the food always arrives hot and fresh. The app is so user-friendly!",
-                'date' => '2024-02-15',
-                'helpful_count' => 128,
-                'tags' => ['Fast Delivery', 'Great App'],
-                'verified_purchase' => true,
-                'restaurant' => 'Pizza Paradise',
-                'order_type' => 'delivery'
-            ],
-            [
-                'id' => 2,
-                'name' => 'Michael Chen',
-                'role' => 'Regular Customer',
-                'image' => '/images/testimonials/user2.jpg',
-                'rating' => 5,
-                'text' => "I've been using this service for months now, and I'm consistently impressed. The variety of restaurants is amazing, and the delivery drivers are always professional.",
-                'date' => '2024-02-18',
-                'helpful_count' => 95,
-                'tags' => ['Professional Service', 'Wide Selection'],
-                'verified_purchase' => true,
-                'restaurant' => 'Sushi Master',
-                'order_type' => 'delivery'
-            ],
-            [
-                'id' => 3,
-                'name' => 'Emily Rodriguez',
-                'role' => 'Food Blogger',
-                'image' => '/images/testimonials/user3.jpg',
-                'rating' => 4,
-                'text' => "Great selection of restaurants and prompt delivery service. The only reason for 4 stars is that I wish they had more vegan options. Otherwise, perfect!",
-                'date' => '2024-02-20',
-                'helpful_count' => 76,
-                'tags' => ['Quick Delivery', 'Good Value'],
-                'verified_purchase' => true,
-                'restaurant' => 'Veggie Delight',
-                'order_type' => 'pickup'
-            ],
-            [
-                'id' => 4,
-                'name' => 'David Wilson',
-                'role' => 'Business Professional',
-                'image' => '/images/testimonials/user4.jpg',
-                'rating' => 5,
-                'text' => "Perfect for office lunch orders! The group ordering feature is a game-changer. Customer service is also top-notch when you need them.",
-                'date' => '2024-02-22',
-                'helpful_count' => 112,
-                'tags' => ['Group Orders', 'Excellent Support'],
-                'verified_purchase' => true,
-                'restaurant' => 'Burger House',
-                'order_type' => 'delivery'
-            ],
-            [
-                'id' => 5,
-                'name' => 'Lisa Thompson',
-                'role' => 'Home Chef',
-                'image' => '/images/testimonials/user5.jpg',
-                'rating' => 5,
-                'text' => "As someone who loves to cook, I'm picky about takeout. This service consistently delivers restaurant-quality food that meets my high standards.",
-                'date' => '2024-02-23',
-                'helpful_count' => 89,
-                'tags' => ['Quality Food', 'Reliable Service'],
-                'verified_purchase' => true,
-                'restaurant' => 'Thai Spice',
-                'order_type' => 'delivery'
-            ],
-            [
-                'id' => 6,
-                'name' => 'James Parker',
-                'role' => 'Tech Professional',
-                'image' => '/images/testimonials/user6.jpg',
-                'rating' => 5,
-                'text' => "The app is intuitive and the real-time tracking is spot on. Love how I can schedule orders in advance. Makes meal planning so much easier!",
-                'date' => '2024-02-24',
-                'helpful_count' => 67,
-                'tags' => ['User Friendly', 'Advanced Features'],
-                'verified_purchase' => true,
-                'restaurant' => 'Indian Curry House',
-                'order_type' => 'scheduled'
-            ]
         ];
     }
 }

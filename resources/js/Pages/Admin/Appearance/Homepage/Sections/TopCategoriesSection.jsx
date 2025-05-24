@@ -1,70 +1,190 @@
 import React from 'react';
-import { useForm } from "@inertiajs/react";
 import { usePageEditor } from '@/Components/Admin/PageBuilder/PageEditorContext';
 import { Input } from "@/Components/ui/input";
 import { Label } from "@/Components/ui/label";
 import { Button } from "@/Components/ui/button";
-import { Card } from "@/Components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/Components/ui/select";
-import FileUploader from "@/Components/Admin/Filesystem/FileUploader";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/Components/ui/select";
+import { Switch } from "@/Components/ui/switch";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription
+} from "@/Components/ui/card";
+import { Badge } from "@/Components/ui/badge";
+import { Slider } from "@/Components/ui/slider";
 
 const TopCategoriesSection = () => {
-  const { handleSave, isSaving } = usePageEditor();
-  const { data, setData } = useForm({
-    title: '',
-    categories: [],
-    hover_background: null,
-  });
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    await handleSave(data);
-  };
+  const {
+    formData,
+    updateFormData,
+    isSaving,
+    handleSubmit,
+    isDirty
+  } = usePageEditor();
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Title Input */}
-      <div className="space-y-2">
-        <Label>Title</Label>
-        <Input
-          value={data.title}
-          onChange={e => setData('title', e.target.value)}
-          placeholder="Type text"
-        />
-        <p className="text-xs text-muted-foreground">
-          *Add your text in [text here] to make it colorful
-        </p>
-      </div>
+    <form onSubmit={handleSubmit} className="space-y-8">
+      {/* Basic Section Settings */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex justify-between items-center">
+            <CardTitle>Section Settings</CardTitle>
+            {isDirty && (
+              <Badge variant="outline" className="bg-yellow-50 text-yellow-800 border-yellow-300">
+                Unsaved Changes
+              </Badge>
+            )}
+          </div>
+          <CardDescription>
+            Configure how the categories section is displayed
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            {/* Enable/Disable Section */}
+            <div className="flex items-center justify-between">
+              <Label htmlFor="top_categories_enabled" className="flex flex-col">
+                <span className="text-sm">Enable Categories Section</span>
+                <span className="text-xs text-muted-foreground">Show the categories section on the homepage</span>
+              </Label>
+              <Switch
+                id="top_categories_enabled"
+                checked={formData.top_categories_enabled ?? true}
+                onCheckedChange={(checked) => updateFormData('top_categories_enabled', checked)}
+              />
+            </div>
 
-      {/* Categories Select */}
-      <div className="space-y-2">
-        <Label>Top Categories</Label>
-        <Select
-          value={data.categories}
-          onValueChange={value => setData('categories', value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select Top Categories" />
-          </SelectTrigger>
-          <SelectContent>
-            {/* Add your categories here */}
-          </SelectContent>
-        </Select>
-      </div>
+            {/* Section Title */}
+            <div className="space-y-2">
+              <Label htmlFor="top_categories_title">Section Title</Label>
+              <Input
+                id="top_categories_title"
+                value={formData.top_categories_title || ''}
+                onChange={e => updateFormData('top_categories_title', e.target.value)}
+                placeholder="Popular Food Categories"
+              />
+              <p className="text-xs text-muted-foreground">
+                *Add your text in [text here] to make it colorful
+              </p>
+            </div>
 
-      {/* Hover Background Image */}
-      <div className="space-y-2">
-        <Label>Hover Background Image</Label>
-        <FileUploader
-          maxFiles={1}
-          value={data.hover_background}
-          onUpload={(files) => setData('hover_background', files[0])}
-          className="min-h-[200px]"
-        />
-      </div>
+            {/* Number of Categories */}
+            <div className="space-y-2">
+              <Label className="flex justify-between">
+                <span>Number of Categories</span>
+                <span className="text-primary">{formData.top_categories_count || 8}</span>
+              </Label>
+              <Slider
+                defaultValue={[formData.top_categories_count || 8]}
+                min={4}
+                max={12}
+                step={1}
+                onValueChange={([value]) => updateFormData('top_categories_count', value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Determines how many categories to display in this section
+              </p>
+            </div>
+
+            {/* Layout Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="top_categories_layout">Layout Style</Label>
+              <Select
+                value={formData.top_categories_layout || 'grid'}
+                onValueChange={value => updateFormData('top_categories_layout', value)}
+              >
+                <SelectTrigger id="top_categories_layout">
+                  <SelectValue placeholder="Select a layout" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="grid">Grid</SelectItem>
+                  <SelectItem value="carousel">Carousel</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Grid shows all categories at once, carousel allows scrolling through categories
+              </p>
+            </div>
+
+            {/* Columns Count */}
+            <div className="space-y-2">
+              <Label htmlFor="top_categories_columns">Number of Columns</Label>
+              <Select
+                value={formData.top_categories_columns?.toString() || "4"}
+                onValueChange={value => updateFormData('top_categories_columns', parseInt(value))}
+              >
+                <SelectTrigger id="top_categories_columns">
+                  <SelectValue placeholder="Select number of columns" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="3">3 Columns</SelectItem>
+                  <SelectItem value="4">4 Columns</SelectItem>
+                  <SelectItem value="5">5 Columns</SelectItem>
+                  <SelectItem value="6">6 Columns</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Number of columns to display in grid mode (on large screens)
+              </p>
+            </div>
+
+            {/* Show Descriptions */}
+            <div className="flex items-center justify-between">
+              <Label htmlFor="top_categories_show_description" className="flex flex-col">
+                <span className="text-sm">Show Category Descriptions</span>
+                <span className="text-xs text-muted-foreground">Display descriptions for each category</span>
+              </Label>
+              <Switch
+                id="top_categories_show_description"
+                checked={formData.top_categories_show_description ?? true}
+                onCheckedChange={(checked) => updateFormData('top_categories_show_description', checked)}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Preview Card */}
+      <Card className="bg-muted/50">
+        <CardHeader>
+          <CardTitle className="text-base">Preview</CardTitle>
+          <CardDescription>
+            A visual representation of how the categories section will look
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-lg bg-card border overflow-hidden p-4">
+            <h3 className="text-xl font-semibold mb-4 text-center">
+              {formData.top_categories_title || 'Popular Food Categories'}
+            </h3>
+
+            <div className={`grid gap-4 grid-cols-${formData.top_categories_columns || 4}`}>
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="aspect-square bg-muted rounded-lg flex flex-col items-center justify-center p-4 hover:shadow-md transition-shadow">
+                  <div className="w-12 h-12 rounded-full bg-primary/20 mb-3 flex items-center justify-center">
+                    <span className="text-primary">🍕</span>
+                  </div>
+                  <h4 className="font-medium">Category {i}</h4>
+                  {(formData.top_categories_show_description ?? true) && (
+                    <p className="text-xs text-muted-foreground text-center mt-1">Short description text</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Button type="submit" disabled={isSaving}>
-        Save
+        {isSaving ? 'Saving...' : 'Save Changes'}
       </Button>
     </form>
   );

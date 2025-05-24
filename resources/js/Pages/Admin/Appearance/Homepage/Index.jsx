@@ -1,5 +1,5 @@
-import React from "react";
-import { Head, useForm, usePage } from "@inertiajs/react";
+import React, { useState, useEffect } from "react";
+import { Head, usePage } from "@inertiajs/react";
 import AdminLayout from "@/Layouts/Admin/AdminLayout";
 import { PageEditorProvider } from "@/Components/Admin/PageBuilder/PageEditorContext";
 import SectionNavigation from "@/Components/Admin/PageBuilder/SectionNavigation";
@@ -8,42 +8,158 @@ import ClientFeedbackSection from "./Sections/ClientFeedbackSection";
 import TopCategoriesSection from "./Sections/TopCategoriesSection";
 import WhyChooseUsSection from "./Sections/WhyChooseUsSection";
 import HeroSection from "./Sections/HeroSection";
-// Import other section components
+import GlobalSettingsSection from "./Sections/GlobalSettingsSection";
+import { Alert, AlertDescription, AlertTitle } from "@/Components/ui/alert";
+import { AlertCircle, CheckCircle2, RefreshCw } from "lucide-react";
+import { Button } from "@/Components/ui/button";
+import { Card, CardContent } from "@/Components/ui/card";
 
 const SECTIONS = [
   { id: 'hero', label: 'Hero Section', default: true },
   { id: 'top_categories', label: 'Top Categories' },
-  { id: 'about_us', label: 'About Us' },
-  { id: 'features', label: 'Features' },
-  { id: 'popular_products', label: 'Popular Products' },
   { id: 'why_choose_us', label: 'Why Choose Us' },
   { id: 'client_feedback', label: 'Client Feedback' },
-  { id: 'on_sale', label: 'On Sale Products' },
-  { id: 'news', label: 'News And Blogs' },
+  { id: 'global_settings', label: 'Global Settings' },
 ];
 
-const HomepageEditor = ({ homepageOptions = {}, defaults = {}, dynamicData = {} }) => {
-  const { post } = useForm();
-  const errors = usePage().props.errors;
+const HomepageEditor = ({ homepageOptions = {}, defaults = {}, dynamicData = {}, error }) => {
+  const { flash } = usePage().props;
+  const [notification, setNotification] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSave = async (data) => {
-    await post(route('app.appearance.homepage.update'), data);
-  };
+  useEffect(() => {
+    // Handle flash messages from backend
+    if (flash?.success) {
+      setNotification({
+        type: 'success',
+        message: flash.success
+      });
+    } else if (flash?.error) {
+      setNotification({
+        type: 'error',
+        message: flash.error
+      });
+    } else if (error) {
+      setNotification({
+        type: 'error',
+        message: error
+      });
+    }
 
-  // valdatetion errors
+    // Auto-dismiss notification after 5 seconds
+    const timer = setTimeout(() => {
+      setNotification(null);
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [flash, error]);
+
+  // Initialize form data with existing options or defaults
+  const initialData = Object.keys(homepageOptions).length > 0 ? homepageOptions : defaults;
+
+  // Handle critical error state
+  if (error && !Object.keys(homepageOptions).length) {
+    return (
+      <AdminLayout>
+        <Head title="Homepage Editor - Error" />
+        <div className="container mx-auto py-8">
+          <div className="bg-white rounded-lg shadow-md overflow-hidden border border-red-200">
+            <div className="bg-red-50 p-4 border-b border-red-200">
+              <div className="flex items-center">
+                <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
+                <h2 className="text-lg font-medium text-red-800">Failed to load homepage settings</h2>
+              </div>
+            </div>
+            <div className="p-6">
+              <div className="mb-6 bg-red-50 p-4 rounded-md text-sm text-red-700">
+                {error}
+              </div>
+
+              <h3 className="font-medium mb-2">Possible solutions:</h3>
+              <ul className="list-disc pl-5 mb-6 text-gray-700 space-y-1">
+                <li>Check database schema for missing columns mentioned in the error</li>
+                <li>Run database migrations if needed</li>
+                <li>Clear application cache with <code className="bg-gray-100 px-2 py-1 rounded">php artisan cache:clear</code></li>
+                <li>Check server logs for more detailed error information</li>
+              </ul>
+
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  className="mr-2"
+                  onClick={() => window.history.back()}
+                >
+                  Go Back
+                </Button>
+                <Button
+                  onClick={() => {
+                    setIsLoading(true);
+                    window.location.reload();
+                  }}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      Refreshing...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Refresh Page
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout>
       <Head title="Homepage Editor" />
-      {errors && (
-        <div className="alert alert-danger">
-          {errors.message}
+
+      {/* Notification Alert */}
+      {notification && (
+        <div className="container mx-auto py-4">
+          <Alert
+            variant={notification.type === 'error' ? "destructive" : "default"}
+            className={notification.type === 'success' ? "border-green-500 bg-green-50 text-green-800" : ""}
+          >
+            {notification.type === 'success' ? (
+              <CheckCircle2 className="h-4 w-4" />
+            ) : (
+              <AlertCircle className="h-4 w-4" />
+            )}
+            <AlertTitle>
+              {notification.type === 'success' ? "Success" : "Error"}
+            </AlertTitle>
+            <AlertDescription>{notification.message}</AlertDescription>
+          </Alert>
         </div>
       )}
+
       <PageEditorProvider
-        initialData={homepageOptions}
-        onSave={handleSave}
+        initialData={initialData}
+        saveUrl={route('app.appearance.homepage.update')}
       >
         <div className="container mx-auto py-6">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold">Homepage Builder</h1>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.open('/', '_blank')}
+              className="flex items-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-external-link"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" x2="21" y1="14" y2="3" /></svg>
+              Preview Homepage
+            </Button>
+          </div>
+
           <div className="grid grid-cols-12 gap-6">
             {/* Main Content Area */}
             <div className="col-span-12 lg:col-span-8">
@@ -61,7 +177,9 @@ const HomepageEditor = ({ homepageOptions = {}, defaults = {}, dynamicData = {} 
                   {section.id === 'why_choose_us' && (
                     <WhyChooseUsSection />
                   )}
-                  {/* Add other section components */}
+                  {section.id === 'global_settings' && (
+                    <GlobalSettingsSection />
+                  )}
                 </SectionContent>
               ))}
             </div>
@@ -69,6 +187,26 @@ const HomepageEditor = ({ homepageOptions = {}, defaults = {}, dynamicData = {} 
             {/* Right Sidebar */}
             <div className="col-span-12 lg:col-span-4">
               <SectionNavigation sections={SECTIONS} />
+
+              {/* Dynamic data info panel - useful for developers */}
+              {process.env.NODE_ENV === 'development' && Object.keys(dynamicData).length > 0 && (
+                <Card className="mt-6">
+                  <CardContent className="p-4">
+                    <h3 className="font-medium mb-2 text-sm text-slate-700">Available Dynamic Data</h3>
+                    <div className="text-xs text-slate-500 space-y-1 max-h-48 overflow-y-auto pr-1">
+                      {Object.keys(dynamicData).map(key => (
+                        <div key={key} className="flex justify-between">
+                          <span className="font-mono">{key}:</span>
+                          <span>{Array.isArray(dynamicData[key]) ?
+                            `${dynamicData[key].length} items` :
+                            typeof dynamicData[key] === 'object' ?
+                              'Object' : dynamicData[key]}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </div>

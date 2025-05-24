@@ -9,25 +9,66 @@ import SpecialOffers from './Partials/SpecialOffers';
 import PopularCategories from './Partials/PopularCategories';
 import LocationBasedSuggestions from './Partials/LocationBasedSuggestions';
 import CustomerTestimonials from './Partials/CustomerTestimonials';
-import { Deferred } from '@inertiajs/react'
+import { Alert, AlertDescription } from '@/Components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
-const Index = ({ heroSlides, featuredRestaurants, featuredDishes, popularDishes, specialOffers, popularCategories, testimonials, nearbyRestaurants }) => {
+const Index = ({
+    heroSlides = [],
+    featuredRestaurants = [],
+    featuredDishes = [],
+    popularDishes = [],
+    specialOffers = [],
+    popularCategories = [],
+    testimonials = [],
+    nearbyRestaurants = [],
+    error
+}) => {
     return (
         <Layout>
             <Head title="Home" />
 
-            <HeroSlider slides={heroSlides} type="slider" />
+            {error && (
+                <div className="container mx-auto py-4">
+                    <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                </div>
+            )}
+
+            {/* Only render the hero slider if we have slides */}
+            {heroSlides?.length > 0 && (
+                <HeroSlider slides={heroSlides} type="slider" />
+            )}
 
             <div className="space-y-0">
-                <Deferred data="featuredRestaurants" fallback={<div>Loading...</div>}>
+                {featuredRestaurants?.length > 0 && (
                     <FeaturedRestaurants restaurants={featuredRestaurants} />
-                </Deferred>
-                <FeaturedDishes dishes={featuredDishes} />
-                <PopularCategories categories={popularCategories} />
-                <CustomerTestimonials testimonials={testimonials} />
-                <LocationBasedSuggestions restaurants={nearbyRestaurants} />
-                <PopularDishes dishes={popularDishes} />
-                <SpecialOffers offers={specialOffers} />
+                )}
+
+                {featuredDishes?.length > 0 && (
+                    <FeaturedDishes dishes={featuredDishes} />
+                )}
+
+                {popularCategories?.length > 0 && (
+                    <PopularCategories categories={popularCategories} />
+                )}
+
+                {testimonials?.length > 0 && (
+                    <CustomerTestimonials testimonials={testimonials} />
+                )}
+
+                {nearbyRestaurants?.length > 0 && (
+                    <LocationBasedSuggestions restaurants={nearbyRestaurants} />
+                )}
+
+                {popularDishes?.length > 0 && (
+                    <PopularDishes dishes={popularDishes} />
+                )}
+
+                {specialOffers?.length > 0 && (
+                    <SpecialOffers offers={specialOffers} />
+                )}
             </div>
         </Layout>
     );

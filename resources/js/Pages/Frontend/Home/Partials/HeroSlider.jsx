@@ -21,8 +21,10 @@ import 'swiper/css/effect-cards';
 import 'swiper/css/effect-coverflow';
 import 'swiper/css/effect-creative';
 
-const HeroSlider = ({ slides, type = 'slider', className }) => {
-    if (!slides?.length) return null;
+const HeroSlider = ({ slides = [], type = 'slider', className }) => {
+    if (!slides || !slides.length) {
+        return null;
+    }
 
     // Enhanced scroll functionality
     const handleScrollToContent = useCallback(() => {
