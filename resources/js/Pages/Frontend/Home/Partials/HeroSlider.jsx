@@ -12,6 +12,7 @@ import { Link } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ChevronDown, ArrowUpRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import useArraySafety from '@/hooks/useArraySafety';
 
 // Import Swiper styles
 import 'swiper/css';
@@ -22,8 +23,22 @@ import 'swiper/css/effect-coverflow';
 import 'swiper/css/effect-creative';
 
 const HeroSlider = ({ slides = [], type = 'slider', className }) => {
-    if (!slides || !slides.length) {
-        return null;
+    // Use our array safety hook
+    const { ensureArray, isEmpty } = useArraySafety();
+
+    // Ensure slides is an array
+    const safeSlides = ensureArray(slides);
+
+    // Safety check for null/undefined or empty slides
+    if (isEmpty(safeSlides)) {
+        return (
+            <div className={cn("relative bg-gradient-to-r from-gray-800 to-gray-900 h-[300px] flex items-center justify-center text-white", className)}>
+                <div className="text-center">
+                    <h2 className="text-2xl font-bold mb-2">Welcome to Restu Food</h2>
+                    <p className="text-gray-300">Delicious meals delivered to your door</p>
+                </div>
+            </div>
+        );
     }
 
     // Enhanced scroll functionality
@@ -42,8 +57,8 @@ const HeroSlider = ({ slides = [], type = 'slider', className }) => {
     }, []);
 
     // Static Hero Section
-    if (type === 'hero' && slides[0]) {
-        const heroData = slides[0];
+    if (type === 'hero' && safeSlides[0]) {
+        const heroData = safeSlides[0];
 
         return (
             <div className={cn("relative h-[600px] lg:h-[700px] w-full overflow-hidden", className)}>
@@ -54,7 +69,7 @@ const HeroSlider = ({ slides = [], type = 'slider', className }) => {
                     transition={{ duration: 10, repeat: Infinity, repeatType: "reverse" }}
                     className="absolute inset-0"
                     style={{
-                        backgroundImage: `url(${heroData.image})`,
+                        backgroundImage: `url(${heroData.image || '/images/default-hero.jpg'})`,
                         backgroundPosition: 'center',
                         backgroundSize: 'cover'
                     }}
@@ -178,8 +193,8 @@ const HeroSlider = ({ slides = [], type = 'slider', className }) => {
                 loop={true}
                 className="h-[600px] lg:h-[700px] w-full"
             >
-                {slides.map((slide, index) => (
-                    <SwiperSlide key={slide.id} className="relative overflow-hidden">
+                {safeSlides.map((slide, index) => (
+                    <SwiperSlide key={slide?.id || index} className="relative overflow-hidden">
                         {({ isActive, isNext, isPrev }) => (
                             <>
                                 {/* Background Image with Zoom Effect */}
@@ -191,7 +206,7 @@ const HeroSlider = ({ slides = [], type = 'slider', className }) => {
                                     }}
                                     transition={{ duration: 1.5, ease: 'easeOut' }}
                                     className="absolute inset-0 bg-cover bg-center"
-                                    style={{ backgroundImage: `url(${slide.image})` }}
+                                    style={{ backgroundImage: `url(${slide?.image || '/images/default-slide.jpg'})` }}
                                 />
 
                                 {/* Enhanced Gradient Overlay */}
@@ -226,7 +241,7 @@ const HeroSlider = ({ slides = [], type = 'slider', className }) => {
                                                 <span className="relative">
                                                     <span className="absolute -top-8 left-0 text-xs 
                                                                    text-primary/80">Featured</span>
-                                                    Slide {index + 1} of {slides.length}
+                                                    Slide {index + 1} of {safeSlides.length}
                                                 </span>
                                             </div>
 
@@ -243,7 +258,7 @@ const HeroSlider = ({ slides = [], type = 'slider', className }) => {
                                                         ease: "easeOut"
                                                     }}
                                                 >
-                                                    {slide.title}
+                                                    {slide?.title || 'Slide Title'}
                                                 </motion.h1>
                                             </div>
 
@@ -258,7 +273,7 @@ const HeroSlider = ({ slides = [], type = 'slider', className }) => {
                                                 }}
                                                 transition={{ duration: 0.8, delay: 0.6 }}
                                             >
-                                                {slide.description}
+                                                {slide?.description || 'Slide Description'}
                                             </motion.p>
 
                                             {/* Modern CTA Buttons */}
@@ -272,14 +287,14 @@ const HeroSlider = ({ slides = [], type = 'slider', className }) => {
                                                 transition={{ duration: 0.8, delay: 0.8 }}
                                             >
                                                 <Link
-                                                    href={slide.cta.link}
+                                                    href={slide?.cta?.link || '/'}
                                                     className="group relative overflow-hidden bg-primary 
                                                              text-white px-8 py-4 rounded-full text-lg 
                                                              font-semibold transition-all duration-300 
                                                              flex items-center space-x-2 hover:shadow-lg 
                                                              hover:shadow-primary/30"
                                                 >
-                                                    <span className="relative z-10">{slide.cta.text}</span>
+                                                    <span className="relative z-10">{slide?.cta?.text || 'Learn More'}</span>
                                                     <ArrowUpRight className="w-5 h-5 group-hover:rotate-45 
                                                                          transition-transform relative z-10" />
                                                     <div className="absolute inset-0 bg-gradient-to-r 

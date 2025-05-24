@@ -247,11 +247,6 @@ final class Product extends Model
             ->first();
     }
 
-    public function reviews(): HasMany
-    {
-        return $this->hasMany(ProductReview::class);
-    }
-
     public function getAverageRating(): float
     {
         return $this->reviews()

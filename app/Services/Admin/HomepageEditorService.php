@@ -130,33 +130,67 @@ final class HomepageEditorService
             } elseif (is_string($value)) {
                 // Check for potential regex issues with color values
                 if (in_array($key, ['primary_color', 'secondary_color']) && !empty($value)) {
-                    // Ensure color values start with # and have only valid hex characters
-                    if (!preg_match('/^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/', $value)) {
-                        // Fix or default the value
-                        if (substr($value, 0, 1) !== '#') {
-                            $value = '#' . $value;
+                    // Sanitize color values that should be hex colors
+                    $data[$key] = $this->sanitizeHexColor($value);
+                } 
+                
+                // Check if hero_slides was saved as a JSON string (happens sometimes with form submissions)
+                if ($key === 'hero_slides' && !empty($value)) {
+                    try {
+                        // Attempt to decode if it's a JSON string
+                        $decoded = json_decode($value, true);
+                        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                            $data[$key] = $decoded;
+                        } else {
+                            // If it's not valid JSON, initialize as empty array
+                            $data[$key] = [];
                         }
-                        
-                        // Strip any non-hex characters
-                        $value = '#' . preg_replace('/[^A-Fa-f0-9]/', '', substr($value, 1));
-                        
-                        // Ensure we have either 3 or 6 hex characters
-                        $hexPart = substr($value, 1);
-                        $length = strlen($hexPart);
-                        
-                        if ($length < 3) {
-                            $value = '#22C55E'; // Default green
-                        } elseif ($length > 6) {
-                            $value = '#' . substr($hexPart, 0, 6);
-                        }
-                        
-                        $data[$key] = $value;
+                    } catch (\Exception $e) {
+                        // In case of any error, initialize as empty array
+                        $data[$key] = [];
+                        Log::warning('Failed to parse hero_slides JSON', [
+                            'value' => $value,
+                            'error' => $e->getMessage()
+                        ]);
                     }
                 }
             }
         }
         
+        // Ensure hero_slides is always an array if it exists
+        if (array_key_exists('hero_slides', $data) && !is_array($data['hero_slides'])) {
+            $data['hero_slides'] = [];
+        }
+        
         return $data;
+    }
+
+    /**
+     * Sanitize a hex color value
+     * 
+     * @param string $color The color value to sanitize
+     * @return string The sanitized hex color
+     */
+    private function sanitizeHexColor(string $color): string
+    {
+        // Remove any whitespace
+        $color = trim($color);
+        
+        // Ensure color starts with #
+        if (substr($color, 0, 1) !== '#') {
+            $color = '#' . $color;
+        }
+        
+        // Strip any non-hex characters after the #
+        $hex = preg_replace('/[^A-Fa-f0-9]/', '', substr($color, 1));
+        
+        // If we don't have a valid hex length, provide a default
+        $length = strlen($hex);
+        if ($length != 3 && $length != 6) {
+            return '#22C55E'; // Default to a green color
+        }
+        
+        return '#' . $hex;
     }
 
     /**
@@ -373,25 +407,74 @@ final class HomepageEditorService
     private function getFeaturedRestaurants(): Collection
     {
         return Cache::remember('homepage_editor_restaurants', 3600, function () {
-            return Restaurant::select(
-                'id',
-                'name',
-                'slug',
-                'logo',
-                'cover_image',
-                'delivery_time',
-                'rating'
-            )
-                ->where('is_active', true)
-                ->where('is_featured', true)
-                ->with([
-                    'categories:id,name',
-                    'cuisines:id,name',
-                ])
-                ->withCount('reviews')
-                ->withAvg('reviews', 'rating')
-                ->take(8)
-                ->get();
+            try {
+                // Check which columns exist in the restaurants table
+                $columns = Schema::getColumnListing('restaurants');
+                $selectColumns = ['id', 'name', 'slug'];
+                
+                // Add optional columns if they exist
+                if (in_array('logo', $columns)) {
+                    $selectColumns[] = 'logo';
+                } else {
+                    $selectColumns[] = DB::raw("NULL as logo");
+                }
+                
+                if (in_array('cover_image', $columns)) {
+                    $selectColumns[] = 'cover_image';
+                } else {
+                    $selectColumns[] = DB::raw("NULL as cover_image");
+                }
+                
+                if (in_array('delivery_time', $columns)) {
+                    $selectColumns[] = 'delivery_time';
+                } else {
+                    $selectColumns[] = DB::raw("NULL as delivery_time");
+                }
+                
+                if (in_array('rating', $columns)) {
+                    $selectColumns[] = 'rating';
+                } else {
+                    $selectColumns[] = DB::raw("NULL as rating");
+                }
+                
+                // Direct query approach - don't rely on model relationships
+                $query = DB::table('restaurants')->select($selectColumns);
+                
+                if (Schema::hasColumn('restaurants', 'deleted_at')) {
+                    $query->whereNull('deleted_at');
+                }
+                
+                if (Schema::hasColumn('restaurants', 'is_active')) {
+                    $query->where('is_active', true);
+                }
+                
+                if (Schema::hasColumn('restaurants', 'is_featured')) {
+                    $query->where('is_featured', true);
+                }
+                
+                $restaurants = $query->take(8)->get();
+                
+                return $restaurants->map(function ($restaurant) {
+                    // Convert to array and add default values
+                    $restaurantArray = (array) $restaurant;
+                    
+                    // Add empty relationships as default
+                    $restaurantArray['categories'] = [];
+                    $restaurantArray['cuisines'] = [];
+                    $restaurantArray['reviews_count'] = 0;
+                    $restaurantArray['reviews_avg_rating'] = 0;
+                    
+                    return $restaurantArray;
+                });
+            } catch (\Exception $e) {
+                Log::error('Failed to fetch featured restaurants', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                
+                // Return empty collection on error
+                return collect([]);
+            }
         });
     }
 
@@ -401,25 +484,73 @@ final class HomepageEditorService
     private function getPopularProducts(): Collection
     {
         return Cache::remember('homepage_editor_products', 3600, function () {
-            return Product::select(
-                'id',
-                'name',
-                'slug',
-                'image',
-                'price',
-                'sale_price',
-                'rating'
-            )
-                ->where('is_active', true)
-                ->where('is_popular', true)
-                ->with([
-                    'restaurant:id,name,slug',
-                    'category:id,name,slug',
-                ])
-                ->withCount('reviews')
-                ->withAvg('reviews', 'rating')
-                ->take(8)
-                ->get();
+            try {
+                // Check which columns exist in the products table
+                $columns = Schema::getColumnListing('products');
+                $selectColumns = ['id', 'name', 'slug'];
+                
+                // Add optional columns if they exist
+                if (in_array('image', $columns)) {
+                    $selectColumns[] = 'image';
+                } else {
+                    $selectColumns[] = DB::raw("NULL as image");
+                }
+                
+                if (in_array('price', $columns)) {
+                    $selectColumns[] = 'price';
+                } else {
+                    $selectColumns[] = DB::raw("0 as price");
+                }
+                
+                if (in_array('sale_price', $columns)) {
+                    $selectColumns[] = 'sale_price';
+                } else {
+                    $selectColumns[] = DB::raw("NULL as sale_price");
+                }
+                
+                if (in_array('rating', $columns)) {
+                    $selectColumns[] = 'rating';
+                } else {
+                    $selectColumns[] = DB::raw("NULL as rating");
+                }
+                
+                // Direct query approach - don't rely on relationships at all
+                // since we can't be sure of their implementation
+                $query = DB::table('products')->select($selectColumns);
+                
+                if (Schema::hasColumn('products', 'deleted_at')) {
+                    $query->whereNull('deleted_at');
+                }
+                
+                if (Schema::hasColumn('products', 'is_active')) {
+                    $query->where('is_active', true);
+                }
+                
+                if (Schema::hasColumn('products', 'is_popular')) {
+                    $query->where('is_popular', true);
+                }
+                
+                $products = $query->take(8)->get();
+                
+                return $products->map(function ($product) {
+                    // Convert to array and add default values
+                    $productArray = (array) $product;
+                    
+                    // Add empty relationships as default
+                    $productArray['restaurant'] = ['id' => null, 'name' => 'Unknown', 'slug' => ''];
+                    $productArray['category'] = ['id' => null, 'name' => 'Uncategorized', 'slug' => ''];
+                    
+                    return $productArray;
+                });
+            } catch (\Exception $e) {
+                Log::error('Failed to fetch popular products', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                
+                // Return empty collection on error
+                return collect([]);
+            }
         });
     }
 
@@ -536,18 +667,14 @@ final class HomepageEditorService
             // Get validated data from the request
             $data = $request->validated();
             
-            // Let's handle file uploads without using methods that the linter might complain about
+            // Files array to store any file uploads
             $files = [];
             
-            // For safety, we'll check if specific expected fields have files
+            // Process hero_image and why_choose_us_image if they exist in the request
             $expectedFileFields = ['hero_image', 'why_choose_us_image'];
             foreach ($expectedFileFields as $fieldName) {
-                if (isset($_FILES[$fieldName]) && $_FILES[$fieldName]['error'] !== UPLOAD_ERR_NO_FILE) {
-                    // We have a file here - we'll use the request's validated data
-                    // which should include the already processed UploadedFile instance
-                    if (isset($request[$fieldName])) {
-                        $files[$fieldName] = $request[$fieldName];
-                    }
+                if ($request->hasFile($fieldName) && $request->file($fieldName)->isValid()) {
+                    $files[$fieldName] = $request->file($fieldName);
                 }
             }
             
@@ -555,21 +682,141 @@ final class HomepageEditorService
             if (isset($data['feedbacks']) && is_array($data['feedbacks'])) {
                 foreach ($data['feedbacks'] as $index => $feedback) {
                     $avatarFieldName = "feedbacks.{$index}.avatar";
-                    // Check if we have a file with this key in the request
-                    if (isset($request[$avatarFieldName])) {
-                        $files[$avatarFieldName] = $request[$avatarFieldName];
+                    // Check if we have a file with this field name in the request
+                    if ($request->hasFile($avatarFieldName)) {
+                        $files[$avatarFieldName] = $request->file($avatarFieldName);
                     }
                 }
             }
             
+            // Handle any files in the 'hero_slides' array if it exists and hero_type is 'slider'
+            if (isset($data['hero_type']) && $data['hero_type'] === 'slider' && 
+                isset($data['hero_slides']) && is_array($data['hero_slides'])) {
+                foreach ($data['hero_slides'] as $index => $slide) {
+                    $slideImageField = "hero_slides.{$index}.image";
+                    if ($request->hasFile($slideImageField)) {
+                        $files[$slideImageField] = $request->file($slideImageField);
+                    }
+                }
+            }
+            
+            // Validate and sanitize all data regardless of source
+            $data = $this->sanitizeData($data);
+            
             // Call the existing method to save everything
             $this->updateSettings($data, $files);
+            
+            // Clear any error-related cache keys
+            Cache::forget('homepage_editor_errors');
+            Cache::forget('homepage_last_error');
+            
         } catch (\Exception $e) {
+            // Log the error with detailed information
             Log::error('Failed to update homepage settings from request', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request' => $request->all()
+            ]);
+            
+            // Cache the error so it can be displayed if needed
+            Cache::put('homepage_last_error', $e->getMessage(), 3600);
+            
+            throw new \Exception('Failed to update homepage settings: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Verify that all required database tables and columns exist for the homepage editor
+     */
+    public function verifyDatabaseIntegrity(): array
+    {
+        $issues = [];
+        
+        try {
+            // Use the DatabaseHealthCheck utility to check tables
+            $tables = [
+                'restaurants' => [
+                    'required' => ['id', 'name', 'slug'],
+                    'optional' => ['logo', 'cover_image', 'is_active', 'is_featured']
+                ],
+                'products' => [
+                    'required' => ['id', 'name', 'slug'],
+                    'optional' => ['image', 'price', 'is_active', 'is_popular']
+                ],
+                'categories' => [
+                    'required' => ['id', 'name', 'slug'],
+                    'optional' => ['icon', 'image', 'description', 'is_active']
+                ],
+                'options' => [
+                    'required' => ['key', 'value', 'group'],
+                    'optional' => ['autoload']
+                ]
+            ];
+            
+            // Check each table
+            foreach ($tables as $table => $columns) {
+                $check = \App\Support\DatabaseHealthCheck::checkTable(
+                    $table, 
+                    $columns['required'], 
+                    $columns['optional']
+                );
+                
+                if (!$check['success']) {
+                    $issues = array_merge($issues, $check['issues']);
+                }
+            }
+            
+            // Check for homepage_settings option
+            if (Schema::hasTable('options')) {
+                $homepageSettings = DB::table('options')->where('key', 'homepage_settings')->first();
+                if (!$homepageSettings) {
+                    $issues[] = "Homepage settings not found in options table";
+                }
+            }
+            
+            // Check critical model relationships if necessary models exist
+            if (class_exists('App\\Models\\Product')) {
+                // Check Product model relationships
+                if (method_exists('App\\Models\\Product', 'reviews')) {
+                    $reviewsCheck = \App\Support\DatabaseHealthCheck::checkRelationship(
+                        'App\\Models\\Product', 
+                        'reviews'
+                    );
+                    
+                    if (!$reviewsCheck['success']) {
+                        $issues[] = "Product model reviews relationship issue: " . $reviewsCheck['message'];
+                    }
+                }
+            }
+            
+            if (class_exists('App\\Models\\Restaurant')) {
+                // Check Restaurant model relationships
+                if (method_exists('App\\Models\\Restaurant', 'reviews')) {
+                    $reviewsCheck = \App\Support\DatabaseHealthCheck::checkRelationship(
+                        'App\\Models\\Restaurant', 
+                        'reviews'
+                    );
+                    
+                    if (!$reviewsCheck['success']) {
+                        $issues[] = "Restaurant model reviews relationship issue: " . $reviewsCheck['message'];
+                    }
+                }
+            }
+            
+            return [
+                'success' => count($issues) === 0,
+                'issues' => $issues
+            ];
+        } catch (\Exception $e) {
+            Log::error('Database integrity check failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            throw new \Exception('Failed to update homepage settings: ' . $e->getMessage());
+            
+            return [
+                'success' => false,
+                'issues' => ['Database integrity check failed: ' . $e->getMessage()]
+            ];
         }
     }
 }

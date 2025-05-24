@@ -21,7 +21,46 @@ final class HomepageController extends Controller
     public function index(): Response
     {
         try {
+            // First check database integrity to provide specific errors if needed
+            $integrityCheck = $this->homepageEditor->verifyDatabaseIntegrity();
+            
+            if (!$integrityCheck['success']) {
+                // Log the specific integrity issues
+                Log::warning('Homepage editor database integrity issues', [
+                    'issues' => $integrityCheck['issues']
+                ]);
+                
+                // We'll still proceed but include the warnings
+                $warnings = $integrityCheck['issues'];
+            } else {
+                $warnings = [];
+            }
+            
+            // Get settings and data
             $settings = $this->homepageEditor->getSettings();
+            
+            // Ensure hero_slides is always an array
+            if (isset($settings['hero_slides']) && !is_array($settings['hero_slides'])) {
+                // Try to decode if it's a JSON string
+                if (is_string($settings['hero_slides'])) {
+                    try {
+                        $decoded = json_decode($settings['hero_slides'], true);
+                        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                            $settings['hero_slides'] = $decoded;
+                        } else {
+                            $settings['hero_slides'] = [];
+                        }
+                    } catch (\Exception $e) {
+                        $settings['hero_slides'] = [];
+                        Log::warning('Failed to decode hero_slides', [
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+                } else {
+                    $settings['hero_slides'] = [];
+                }
+            }
+            
             $dynamicData = $this->homepageEditor->getDynamicData();
             $defaults = $this->homepageEditor->getDefaultSettings();
 
@@ -29,6 +68,7 @@ final class HomepageController extends Controller
                 'homepageOptions' => $settings,
                 'defaults' => $defaults,
                 'dynamicData' => $dynamicData,
+                'warnings' => $warnings,
                 'can' => [
                     'update' => Auth::check() && Auth::user()->can('update', 'appearance'),
                 ]

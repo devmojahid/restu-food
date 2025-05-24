@@ -9,10 +9,11 @@ import TopCategoriesSection from "./Sections/TopCategoriesSection";
 import WhyChooseUsSection from "./Sections/WhyChooseUsSection";
 import HeroSection from "./Sections/HeroSection";
 import GlobalSettingsSection from "./Sections/GlobalSettingsSection";
+import GuideModal from "./Partials/GuideModal";
 import { Alert, AlertDescription, AlertTitle } from "@/Components/ui/alert";
-import { AlertCircle, CheckCircle2, RefreshCw } from "lucide-react";
+import { AlertCircle, CheckCircle2, RefreshCw, LayoutTemplate, Eye, Settings, Brush, Clock, HelpCircle } from "lucide-react";
 import { Button } from "@/Components/ui/button";
-import { Card, CardContent } from "@/Components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/Components/ui/card";
 
 const SECTIONS = [
   { id: 'hero', label: 'Hero Section', default: true },
@@ -142,6 +143,28 @@ const HomepageEditor = ({ homepageOptions = {}, defaults = {}, dynamicData = {},
         </div>
       )}
 
+      {/* Database Integrity Warnings */}
+      {usePage().props.warnings?.length > 0 && (
+        <div className="container mx-auto py-4">
+          <Alert variant="warning" className="border-amber-500 bg-amber-50 text-amber-800">
+            <AlertCircle className="h-4 w-4 text-amber-700" />
+            <AlertTitle>Database Structure Warnings</AlertTitle>
+            <AlertDescription className="mt-2">
+              <p className="mb-2">The following database integrity issues were detected:</p>
+              <ul className="list-disc pl-5 space-y-1 text-sm">
+                {usePage().props.warnings.map((warning, index) => (
+                  <li key={index}>{warning}</li>
+                ))}
+              </ul>
+              <p className="mt-2 text-sm">
+                These issues may affect the functionality of the page builder.
+                Some features might not work as expected.
+              </p>
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
+
       <PageEditorProvider
         initialData={initialData}
         saveUrl={route('app.appearance.homepage.update')}
@@ -149,15 +172,148 @@ const HomepageEditor = ({ homepageOptions = {}, defaults = {}, dynamicData = {},
         <div className="container mx-auto py-6">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold">Homepage Builder</h1>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => window.open('/', '_blank')}
-              className="flex items-center gap-2"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-external-link"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" x2="21" y1="14" y2="3" /></svg>
-              Preview Homepage
-            </Button>
+            <div className="flex items-center gap-2">
+              <GuideModal
+                trigger={
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <HelpCircle className="h-4 w-4" />
+                    Help Guide
+                  </Button>
+                }
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.open('/', '_blank')}
+                className="flex items-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-external-link"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" x2="21" y1="14" y2="3" /></svg>
+                Preview Homepage
+              </Button>
+            </div>
+          </div>
+
+          {/* Dashboard Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex items-center space-x-2">
+                  <LayoutTemplate className="h-5 w-5 text-primary" />
+                  <CardTitle className="text-base">Active Sections</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">
+                  {Object.entries(initialData).filter(([key, value]) => key.endsWith('_enabled') && value === true).length}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Sections currently visible on homepage
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex items-center space-x-2">
+                  <Brush className="h-5 w-5 text-purple-500" />
+                  <CardTitle className="text-base">Style</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center space-x-2">
+                  <div
+                    className="w-6 h-6 rounded-full"
+                    style={{ backgroundColor: initialData.primary_color || '#22C55E' }}
+                  />
+                  <div
+                    className="w-6 h-6 rounded-full"
+                    style={{ backgroundColor: initialData.secondary_color || '#0EA5E9' }}
+                  />
+                  <div className="text-sm font-medium">
+                    {initialData.color_scheme?.charAt(0).toUpperCase() + initialData.color_scheme?.slice(1) || 'System'}
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {initialData.font_heading || 'Inter'} / {initialData.font_body || 'Inter'} fonts
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex items-center space-x-2">
+                  <Settings className="h-5 w-5 text-amber-500" />
+                  <CardTitle className="text-base">Layout</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm font-medium">
+                  {initialData.layout_width?.charAt(0).toUpperCase() + initialData.layout_width?.slice(1) || 'Contained'}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {initialData.section_spacing?.charAt(0).toUpperCase() + initialData.section_spacing?.slice(1) || 'Medium'} spacing
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex items-center space-x-2">
+                  <Clock className="h-5 w-5 text-blue-500" />
+                  <CardTitle className="text-base">Last Updated</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm font-medium">
+                  {new Date().toLocaleDateString()}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Click save to update changes
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Hero Preview */}
+          <div className="mb-8 overflow-hidden rounded-lg border">
+            <div className="bg-muted p-2 border-b flex justify-between items-center">
+              <div className="text-sm font-medium flex items-center">
+                <Eye className="h-4 w-4 mr-2 text-muted-foreground" />
+                Hero Section Preview
+              </div>
+              <div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => document.getElementById('section-hero')?.scrollIntoView({ behavior: 'smooth' })}
+                >
+                  Edit Hero
+                </Button>
+              </div>
+            </div>
+            <div className="bg-background">
+              <div
+                className="relative h-[160px] overflow-hidden"
+                style={{
+                  backgroundImage: initialData.hero_image ? `url(${initialData.hero_image})` : 'linear-gradient(to right, #22C55E, #0EA5E9)',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center'
+                }}
+              >
+                <div className="absolute inset-0 bg-black/40 flex items-center">
+                  <div className="container mx-auto px-4">
+                    <div className="max-w-xl">
+                      <h3 className="text-lg text-white font-bold">{initialData.hero_title || 'Hero Title'}</h3>
+                      <p className="text-xs text-white/80 mt-1 line-clamp-1">{initialData.hero_subtitle || 'Hero subtitle text goes here'}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-12 gap-6">

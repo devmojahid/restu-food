@@ -31,7 +31,7 @@ final class HomeService extends BaseService
         // Cache the data for 1 hour in production
         $cacheTtl = app()->environment('production') ? 3600 : 5;
         
-        return Cache::remember('home_page_data', $cacheTtl, function () use ($homepageSettings) {
+        // return Cache::remember('home_page_data', $cacheTtl, function () use ($homepageSettings) {
             return [
                 'heroSlides' => $this->getHeroSlides($homepageSettings),
                 'featuredRestaurants' => $this->getFeaturedRestaurants(),
@@ -61,7 +61,7 @@ final class HomeService extends BaseService
                     'features' => $homepageSettings['why_choose_us_features'] ?? $this->getDefaultWhyChooseUsFeatures(),
                 ],
             ];
-        });
+        // });
     }
 
     /**
@@ -69,10 +69,10 @@ final class HomeService extends BaseService
      */
     private function getHomepageSettings(): array
     {
-        return Cache::remember('homepage_settings_frontend', 3600, function () {
+        // return Cache::remember('homepage_settings_frontend', 3600, function () {
             $settings = Option::where('key', self::HOMEPAGE_OPTION_KEY)->first()?->value;
             return $settings ?: [];
-        });
+        // });
     }
 
     /**

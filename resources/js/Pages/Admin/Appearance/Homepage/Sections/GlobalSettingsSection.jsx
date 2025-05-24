@@ -206,6 +206,60 @@ const GlobalSettingsSection = () => {
                                 )}
                             </div>
 
+                            {/* Color Presets */}
+                            <div className="space-y-2 mt-4">
+                                <Label>Color Presets</Label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="p-1 h-auto flex flex-col items-center"
+                                        onClick={() => {
+                                            updateFormData('primary_color', '#22C55E');
+                                            updateFormData('secondary_color', '#0EA5E9');
+                                        }}
+                                    >
+                                        <div className="flex gap-1 mb-1">
+                                            <div className="w-4 h-4 rounded-full bg-[#22C55E]" />
+                                            <div className="w-4 h-4 rounded-full bg-[#0EA5E9]" />
+                                        </div>
+                                        <span className="text-xs">Modern</span>
+                                    </Button>
+
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="p-1 h-auto flex flex-col items-center"
+                                        onClick={() => {
+                                            updateFormData('primary_color', '#2563EB');
+                                            updateFormData('secondary_color', '#4F46E5');
+                                        }}
+                                    >
+                                        <div className="flex gap-1 mb-1">
+                                            <div className="w-4 h-4 rounded-full bg-[#2563EB]" />
+                                            <div className="w-4 h-4 rounded-full bg-[#4F46E5]" />
+                                        </div>
+                                        <span className="text-xs">Classic</span>
+                                    </Button>
+
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="p-1 h-auto flex flex-col items-center"
+                                        onClick={() => {
+                                            updateFormData('primary_color', '#18181B');
+                                            updateFormData('secondary_color', '#27272A');
+                                        }}
+                                    >
+                                        <div className="flex gap-1 mb-1">
+                                            <div className="w-4 h-4 rounded-full bg-[#18181B]" />
+                                            <div className="w-4 h-4 rounded-full bg-[#27272A]" />
+                                        </div>
+                                        <span className="text-xs">Minimal</span>
+                                    </Button>
+                                </div>
+                            </div>
+
                             <div className="p-4 border rounded-lg bg-gradient-to-r from-slate-50 to-slate-100">
                                 <h4 className="text-sm font-medium mb-3">Color Preview</h4>
                                 <div className="space-y-3">
