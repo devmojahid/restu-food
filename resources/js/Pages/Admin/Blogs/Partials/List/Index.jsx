@@ -111,7 +111,7 @@ const useBlogActions = () => {
   const handleToggleFeatured = async (blog) => {
     const loadingKey = `featured-${blog.id}`;
     setActionLoading(prev => ({ ...prev, [loadingKey]: true }));
-    
+
     try {
       await router.put(route("app.blogs.toggle-featured", blog.id));
       toast({
@@ -161,7 +161,7 @@ const useBlogActions = () => {
 export default function ListBlogs({ blogs, categories = [] }) {
   const { toast } = useToast();
   const params = new URLSearchParams(window.location.search);
-  
+
   // Use the custom hook
   const {
     actionLoading,
@@ -244,7 +244,7 @@ export default function ListBlogs({ blogs, categories = [] }) {
               "text-sm sm:text-base",
               "truncate"
             )}>
-              {row.title.length > 20 ? `${row.title.substring(0, 23)}...` : row.title} 
+              {row.title.length > 20 ? `${row.title.substring(0, 23)}...` : row.title}
             </span>
             {row.is_featured && (
               <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
@@ -453,6 +453,7 @@ export default function ListBlogs({ blogs, categories = [] }) {
     handleSort,
   } = useDataTable({
     routeName: "app.blogs.index",
+    dataKey: 'blogs', // ← This is the key! Must match your controller prop name
     initialFilters,
     sortableConfigs,
     filterConfigs

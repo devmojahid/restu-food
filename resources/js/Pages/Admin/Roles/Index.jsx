@@ -5,18 +5,27 @@ import { Button } from "@/Components/ui/button";
 import { ArrowLeft, Plus, FolderKey } from "lucide-react";
 import { Link } from "@inertiajs/react";
 import Breadcrumb from "@/Components/Admin/Breadcrumb";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 
-export default function Index({ roles, meta, filters, stats }) {
-  const breadcrumbItems = [
-    { label: "Dashboard", href: "dashboard" },
-    { label: "Roles", href: "app.roles.index" },
-  ];
+// Constants
+const BREADCRUMB_ITEMS = [
+  { label: "Dashboard", href: "dashboard" },
+  { label: "Roles", href: "app.roles.index" },
+];
 
+export default function Index({ roles, meta = {}, filters = {}, stats = {} }) {
+  console.log(roles);
   // Track all roles data for infinite scroll
-  const [allRoles, setAllRoles] = useState(roles.data || []);
+  const [allRoles, setAllRoles] = useState([]);
   // Track current page to prevent duplicate data
-  const currentPageRef = useRef(roles.current_page || 1);
+  const currentPageRef = useRef(1);
+  const prevFiltersRef = useRef({});
+
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Memoize the roles data to prevent unnecessary re-renders
+  const rolesData = useMemo(() => roles?.data || [], [roles?.data]);
+  const currentPage = useMemo(() => roles?.current_page || 1, [roles?.current_page]);
 
   // Add unique identifiers to prevent key collisions
   const addUniqueIds = (data, page) => {
@@ -26,33 +35,59 @@ export default function Index({ roles, meta, filters, stats }) {
     }));
   };
 
+  // Helper function to check if filters have changed
+  const filtersChanged = (currentFilters, prevFilters) => {
+    const currentKeys = Object.keys(currentFilters).sort();
+    const prevKeys = Object.keys(prevFilters).sort();
+
+    if (currentKeys.length !== prevKeys.length) return true;
+
+    return currentKeys.some(key => currentFilters[key] !== prevFilters[key]);
+  };
+
   // Update allRoles when new data comes in, handling duplicate prevention
   useEffect(() => {
     if (!roles?.data) return;
 
     const newPage = roles.current_page || 1;
+    const hasFiltersChanged = filtersChanged(filters, prevFiltersRef.current);
 
-    if (newPage === 1) {
-      // If this is the first page or filter reset, replace all data
+    // If filters changed, or it's the first page, or we're resetting - replace all data
+    if (hasFiltersChanged || newPage === 1 || !isInitialized) {
       setAllRoles(addUniqueIds(roles.data, newPage));
       currentPageRef.current = newPage;
+      prevFiltersRef.current = { ...filters };
+
+      if (!isInitialized) {
+        setIsInitialized(true);
+      }
     } else if (newPage > currentPageRef.current) {
-      // Only append data if it's a new page we haven't seen before
+      // Only append data if it's a new page we haven't seen before (infinite scroll)
       setAllRoles(prev => [
         ...prev,
         ...addUniqueIds(roles.data, newPage)
       ]);
       currentPageRef.current = newPage;
     }
-    // If it's a page we've already loaded, do nothing to prevent duplicates
-  }, [roles]);
+    // If it's a page we've already loaded and filters haven't changed, do nothing
+  }, [roles, filters, isInitialized]);
+
+  // Reset when component unmounts or major changes
+  useEffect(() => {
+    return () => {
+      setAllRoles([]);
+      setIsInitialized(false);
+      currentPageRef.current = 1;
+      prevFiltersRef.current = {};
+    };
+  }, []);
 
   return (
     <AdminLayout>
       <Head title="Roles List" />
 
       <div className="container mx-auto py-6 px-2 sm:px-3 lg:px-4">
-        <Breadcrumb items={breadcrumbItems} />
+        <Breadcrumb items={BREADCRUMB_ITEMS} />
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 space-y-4 sm:space-y-0">
           <h2 className="text-2xl font-bold text-gray-700 dark:text-gray-300">
             List Roles

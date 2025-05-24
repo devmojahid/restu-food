@@ -20,6 +20,7 @@ export const useDataTable = ({
     onError,
     pollingOptions = null, // { interval: 30000 }
     enablePrefetch = true,
+    dataKey = 'data',
 }) => {
     const page = usePage();
     const { toast } = useToast();
@@ -71,7 +72,7 @@ export const useDataTable = ({
             const endpoint = serverPolling?.endpoint || route(routeName, getCleanedParams({
                 ...filters,
                 search: searchValue,
-                only: 'users,meta'
+                only: `${dataKey},meta` // Use dynamic dataKey
             }));
 
             pollingTimerRef.current = setInterval(() => {
@@ -82,7 +83,7 @@ export const useDataTable = ({
                 fetch(endpoint, {
                     headers: {
                         'X-Inertia': true,
-                        'X-Inertia-Partial-Data': 'users,meta',
+                        'X-Inertia-Partial-Data': `${dataKey},meta`,
                         'X-Inertia-Partial-Component': page.component,
                         'Accept': 'application/json',
                     }
@@ -102,7 +103,7 @@ export const useDataTable = ({
                             if (newLastUpdated && newLastUpdated !== currentLastUpdated) {
                                 // Data has changed, trigger a reload
                                 router.reload({
-                                    only: ['users', 'meta'],
+                                    only: [`${dataKey}`, 'meta'],
                                     preserveScroll: true,
                                     preserveState: true
                                 });
@@ -261,7 +262,7 @@ export const useDataTable = ({
             {
                 preserveState: true,
                 preserveScroll: true,
-                only: ['users', 'meta'],
+                only: [`${dataKey}`, 'meta'],
                 onBefore: () => {
                     setIsLoading(true);
                 },
@@ -317,7 +318,7 @@ export const useDataTable = ({
             {
                 preserveState: true,
                 preserveScroll: true,
-                only: ['users', 'meta'],
+                only: [`${dataKey}`, 'meta'],
                 onBefore: () => {
                     setIsLoading(true);
                 },
@@ -463,14 +464,14 @@ export const useDataTable = ({
             {
                 preserveState: true,
                 preserveScroll: true,
-                only: ['users', 'meta'],
+                only: [`${dataKey}`, 'meta'],
                 onSuccess: (page) => {
                     setIsLoadingMore(false);
 
-                    // Check if we have more data
-                    if (page.props.users && page.props.users.data) {
+                    const pageData = page.props[dataKey];
+                    if (pageData && pageData.data) {
                         // Store in cache
-                        dataCache.current.set(nextPage, page.props.users.data);
+                        dataCache.current.set(nextPage, pageData.data);
 
                         // Update meta and check if we have more pages
                         if (page.props.meta) {
@@ -479,12 +480,31 @@ export const useDataTable = ({
                         } else {
                             // Fallback if meta is not available
                             setHasMoreData(
-                                page.props.users.data.length > 0 &&
-                                page.props.users.current_page < page.props.users.last_page
+                                pageData.data.length > 0 &&
+                                pageData.current_page < pageData.last_page
                             );
                         }
                     }
-                    return false; // Indicate we're not using cached data
+                    return false;  // Indicate we're not using cached data
+
+                    // Check if we have more data
+                    // if (page.props.users && page.props.users.data) {
+                    //     // Store in cache
+                    //     dataCache.current.set(nextPage, page.props.users.data);
+
+                    //     // Update meta and check if we have more pages
+                    //     if (page.props.meta) {
+                    //         setMeta(page.props.meta);
+                    //         setHasMoreData(page.props.meta.hasMorePages || false);
+                    //     } else {
+                    //         // Fallback if meta is not available
+                    //         setHasMoreData(
+                    //             page.props.users.data.length > 0 &&
+                    //             page.props.users.current_page < page.props.users.last_page
+                    //         );
+                    //     }
+                    // }
+                    // return false; // Indicate we're not using cached data
                 },
                 onError: () => {
                     setIsLoadingMore(false);
@@ -522,7 +542,7 @@ export const useDataTable = ({
             {
                 preserveState: true,
                 preserveScroll: true,
-                only: ['users', 'meta'],
+                only: [dataKey, 'meta'],
                 onSuccess: (page) => {
                     setIsLoading(false);
                     if (page.props.meta) {

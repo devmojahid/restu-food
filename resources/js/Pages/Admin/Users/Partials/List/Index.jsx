@@ -10,6 +10,7 @@ import { RowActions } from "@/Components/Table/RowActions";
 import { useState } from "react";
 
 export default function ListUsers({ users, roles, meta }) {
+  console.log(users);
   const { toast } = useToast();
   const [enablePolling, setEnablePolling] = useState(false);
 
@@ -342,6 +343,7 @@ export default function ListUsers({ users, roles, meta }) {
     meta: tableMeta,
   } = useDataTable({
     routeName: "app.users.index",
+    dataKey: 'users', // ← This is the key! Must match your controller prop name
     initialFilters: {
       search: "",
       role: "",

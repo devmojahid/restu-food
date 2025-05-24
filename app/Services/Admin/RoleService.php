@@ -12,6 +12,8 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\Builder;
+use Carbon\Carbon;
 
 final class RoleService
 {
@@ -25,71 +27,33 @@ final class RoleService
 
     protected string $model = Role::class;
     protected array $searchableFields = ['name', 'guard_name'];
-    protected array $filterableFields = ['guard_name'];
-    protected array $sortableFields = ['name', 'created_at', 'updated_at', 'users_count'];
+    protected array $filterableFields = ['guard_name', 'permission'];
+    protected array $sortableFields = ['name', 'created_at', 'updated_at', 'users_count', 'permissions_count'];
     protected array $relationships = ['permissions'];
 
     /**
-     * Get paginated roles with filters for infinite scroll
-     *
-     * @param array $filters
-     * @return LengthAwarePaginator
+     * Get paginated roles with comprehensive filtering and sorting
      */
     public function getPaginated(array $filters = []): LengthAwarePaginator
     {
-        $perPage = $filters['per_page'] ?? 10;
+        $perPage = min(max((int) ($filters['per_page'] ?? 10), 1), 100);
         
         $query = $this->model::query()
-            ->withCount('users'); // Count users for each role
+            ->withCount('users');
 
-        // Apply search filter if provided
-        if (!empty($filters['search'])) {
-            $search = trim($filters['search']);
-            if (!empty($search)) {
-                $query->where(function (Builder $q) use ($search) {
-                    foreach ($this->searchableFields as $field) {
-                        $q->orWhere($field, 'LIKE', "%{$search}%");
-                    }
-                    // Also search in permissions
-                    $q->orWhereHas('permissions', function ($permQuery) use ($search) {
-                        $permQuery->where('name', 'LIKE', "%{$search}%");
-                    });
-                });
-            }
-        }
-
-        // Apply status/guard_name filter if provided
-        if (!empty($filters['status'])) {
-            $query->where('guard_name', $filters['status']);
-        }
-
-        // Apply date range filter if provided
-        if (!empty($filters['date_from']) && !empty($filters['date_to'])) {
-            $query->whereBetween('created_at', [$filters['date_from'], $filters['date_to']]);
-        } else if (!empty($filters['date_from'])) {
-            $query->where('created_at', '>=', $filters['date_from']);
-        } else if (!empty($filters['date_to'])) {
-            $query->where('created_at', '<=', $filters['date_to']);
-        }
-
-        // Apply sorting
-        $sortColumn = $filters['sort'] ?? 'created_at';
-        $sortDirection = $filters['direction'] ?? 'desc';
+        // Apply search filter
+        $this->applySearchFilter($query, $filters);
         
-        // Validate sort column to prevent SQL injection
-        if (in_array($sortColumn, $this->sortableFields)) {
-            $query->orderBy($sortColumn, $sortDirection);
-        } else {
-            $query->orderBy('created_at', 'desc');
-        }
+        // Apply other filters
+        $this->applyFilters($query, $filters);
+        
+        // Apply sorting with validation
+        $this->applySorting($query, $filters);
 
-        // Add a secondary sort by ID to ensure consistent ordering
-        $query->orderBy('id', $sortDirection);
+        // Load relationships efficiently
+        $query->with(['permissions:id,name,group_name']);
 
-        // Load only necessary relationships for the index view
-        $query->with(['permissions:id,name']);
-
-        // Select only necessary columns for better performance
+        // Select only necessary columns for performance
         $query->select([
             'id',
             'name',
@@ -98,9 +62,134 @@ final class RoleService
             'updated_at'
         ]);
 
-        // Paginate the results efficiently
+        // Paginate with query string preservation
         return $query->paginate($perPage)->withQueryString();
     }
+
+    /**
+     * Apply search filtering to query
+     */
+    private function applySearchFilter(Builder $query, array $filters): void
+    {
+        if (empty($filters['search'])) {
+            return;
+        }
+
+        $search = trim($filters['search']);
+        if (empty($search)) {
+            return;
+        }
+
+        $query->where(function (Builder $q) use ($search) {
+            // Search in role fields
+            foreach ($this->searchableFields as $field) {
+                $q->orWhere($field, 'LIKE', "%{$search}%");
+            }
+            
+            // Search in related permissions
+            $q->orWhereHas('permissions', function ($permQuery) use ($search) {
+                $permQuery->where('name', 'LIKE', "%{$search}%")
+                         ->orWhere('group_name', 'LIKE', "%{$search}%");
+            });
+        });
+    }
+
+    /**
+     * Apply various filters to the query
+     */
+    private function applyFilters(Builder $query, array $filters): void
+    {
+        // Guard name filter
+        if (!empty($filters['status'])) {
+            $query->where('guard_name', $filters['status']);
+        }
+
+        // Permission-based filter
+        if (!empty($filters['permission'])) {
+            switch ($filters['permission']) {
+                case 'has_permissions':
+                    $query->has('permissions');
+                    break;
+                case 'no_permissions':
+                    $query->doesntHave('permissions');
+                    break;
+            }
+        }
+
+        // Date range filters
+        $this->applyDateFilters($query, $filters);
+    }
+
+    /**
+     * Apply date range filtering
+     */
+    private function applyDateFilters(Builder $query, array $filters): void
+    {
+        if (!empty($filters['date_from']) && !empty($filters['date_to'])) {
+            try {
+                $dateFrom = Carbon::parse($filters['date_from'])->startOfDay();
+                $dateTo = Carbon::parse($filters['date_to'])->endOfDay();
+                $query->whereBetween('created_at', [$dateFrom, $dateTo]);
+            } catch (\Exception $e) {
+                Log::warning('Invalid date range in role filter', [
+                    'date_from' => $filters['date_from'],
+                    'date_to' => $filters['date_to']
+                ]);
+            }
+        } elseif (!empty($filters['date_from'])) {
+            try {
+                $dateFrom = Carbon::parse($filters['date_from'])->startOfDay();
+                $query->where('created_at', '>=', $dateFrom);
+            } catch (\Exception $e) {
+                Log::warning('Invalid date_from in role filter', ['date_from' => $filters['date_from']]);
+            }
+        } elseif (!empty($filters['date_to'])) {
+            try {
+                $dateTo = Carbon::parse($filters['date_to'])->endOfDay();
+                $query->where('created_at', '<=', $dateTo);
+            } catch (\Exception $e) {
+                Log::warning('Invalid date_to in role filter', ['date_to' => $filters['date_to']]);
+            }
+        }
+    }
+
+     /**
+     * Apply sorting with proper validation
+     */
+    private function applySorting(Builder $query, array $filters): void
+    {
+        $sortColumn = $filters['sort'] ?? 'created_at';
+        $sortDirection = $filters['direction'] ?? 'desc';
+        
+        // Validate sort direction
+        if (!in_array(strtolower($sortDirection), ['asc', 'desc'])) {
+            $sortDirection = 'desc';
+        }
+
+        // Apply sorting based on column type
+        if (in_array($sortColumn, $this->sortableFields)) {
+            switch ($sortColumn) {
+                case 'permissions_count':
+                    $query->withCount('permissions')
+                          ->orderBy('permissions_count', $sortDirection);
+                    break;
+                case 'users_count':
+                    // users_count is already loaded via withCount
+                    $query->orderBy('users_count', $sortDirection);
+                    break;
+                default:
+                    $query->orderBy($sortColumn, $sortDirection);
+                    break;
+            }
+        } else {
+            // Default sorting
+            $query->orderBy('created_at', 'desc');
+        }
+
+        // Add secondary sort by ID for consistent ordering
+        $query->orderBy('id', $sortDirection);
+    }
+
 
     public function getAllPermissions(): Collection
     {
