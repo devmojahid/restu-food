@@ -57,7 +57,7 @@ export const useToast = () => {
     title,
     description,
     type = "default",
-    duration = 5000,
+    duration = 15000,
   }) => {
     const getIcon = () => {
       switch (type) {
@@ -77,9 +77,8 @@ export const useToast = () => {
     return toast.custom(
       (t) => (
         <div
-          className={`${
-            t.visible ? "animate-enter" : "animate-leave"
-          } relative`}
+          className={`${t.visible ? "animate-enter" : "animate-leave"
+            } relative`}
           style={getStyle(type)}
           onClick={() => toast.dismiss(t.id)}
         >
@@ -96,7 +95,7 @@ export const useToast = () => {
               )}
               {description && (
                 <p
-                  className="text-sm text-gray-600 use-toasts-js"
+                  className="text-sm text-gray-600 use-toasts-js 2"
                   style={{ margin: 0, color: "#6B7280" }}
                 >
                   {description}

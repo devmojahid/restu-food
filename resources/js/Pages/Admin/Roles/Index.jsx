@@ -15,7 +15,7 @@ const BREADCRUMB_ITEMS = [
 
 export default function Index({ roles, meta = {}, filters = {}, stats = {} }) {
   const allRoles = useInfiniteScrollData(roles, filters);
-
+  console.log("allRoles", meta);
   return (
     <AdminLayout>
       <Head title="Roles List" />

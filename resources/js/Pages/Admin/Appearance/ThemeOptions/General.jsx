@@ -187,17 +187,10 @@ const ThemeOptions = ({ themeOptions = {}, defaults = {} }) => {
     post(route('app.options.store'), {
       preserveScroll: true,
       onSuccess: () => {
-        toast({
-          title: "Success",
-          description: "Theme options saved successfully",
-        });
+        // Handle success if needed
       },
       onError: () => {
-        toast({
-          title: "Error",
-          description: "Failed to save theme options",
-          variant: "destructive",
-        });
+        // Handle error if needed
       }
     });
   };
@@ -269,9 +262,9 @@ const ThemeOptions = ({ themeOptions = {}, defaults = {} }) => {
       <SelectTrigger className="w-full">
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent 
-        side="bottom" 
-        align="start" 
+      <SelectContent
+        side="bottom"
+        align="start"
         className="w-[var(--radix-select-trigger-width)] z-[60]"
       >
         {children}
@@ -297,333 +290,95 @@ const ThemeOptions = ({ themeOptions = {}, defaults = {} }) => {
               {actionButtons}
             </div>
 
-              <Card className="relative overflow-visible">
-                <div className="flex flex-col md:flex-row">
-                  {/* Sidebar Navigation */}
-                  <div className="w-full md:w-64 border-b md:border-b-0 md:border-r">
-                    <nav className="p-4 space-y-2">
-                      <button
-                        onClick={() => setActiveTab("general")}
-                        className={cn(
-                          "flex items-center w-full px-4 py-2 text-sm rounded-lg",
-                          activeTab === "general"
-                            ? "bg-primary text-primary-foreground"
-                            : "hover:bg-muted"
-                        )}
-                      >
-                        <Settings className="w-4 h-4 mr-2" />
-                        General
-                      </button>
-                      <button
-                        onClick={() => setActiveTab("header")}
-                        className={cn(
-                          "flex items-center w-full px-4 py-2 text-sm rounded-lg",
-                          activeTab === "header"
-                            ? "bg-primary text-primary-foreground"
-                            : "hover:bg-muted"
-                        )}
-                      >
-                        <PencilRuler className="w-4 h-4 mr-2" />
-                        Header
-                      </button>
-                      <button
-                        onClick={() => setActiveTab("footer")}
-                        className={cn(
-                          "flex items-center w-full px-4 py-2 text-sm rounded-lg",
-                          activeTab === "footer"
-                            ? "bg-primary text-primary-foreground"
-                            : "hover:bg-muted"
-                        )}
-                      >
-                        <SquareCode className="w-4 h-4 mr-2" />
-                        Footer
-                      </button>
-                      <button
-                        onClick={() => setActiveTab("typography")}
-                        className={cn(
-                          "flex items-center w-full px-4 py-2 text-sm rounded-lg",
-                          activeTab === "typography"
-                            ? "bg-primary text-primary-foreground"
-                            : "hover:bg-muted"
-                        )}
-                      >
-                        <Type className="w-4 h-4 mr-2" />
-                        Typography
-                      </button>
-                      <button
-                        onClick={() => setActiveTab("social")}
-                        className={cn(
-                          "flex items-center w-full px-4 py-2 text-sm rounded-lg",
-                          activeTab === "social"
-                            ? "bg-primary text-primary-foreground"
-                            : "hover:bg-muted"
-                        )}
-                      >
-                        <Share2 className="w-4 h-4 mr-2" />
-                        Social
-                      </button>
-                    </nav>
-                  </div>
+            <Card className="relative overflow-visible">
+              <div className="flex flex-col md:flex-row">
+                {/* Sidebar Navigation */}
+                <div className="w-full md:w-64 border-b md:border-b-0 md:border-r">
+                  <nav className="p-4 space-y-2">
+                    <button
+                      onClick={() => setActiveTab("general")}
+                      className={cn(
+                        "flex items-center w-full px-4 py-2 text-sm rounded-lg",
+                        activeTab === "general"
+                          ? "bg-primary text-primary-foreground"
+                          : "hover:bg-muted"
+                      )}
+                    >
+                      <Settings className="w-4 h-4 mr-2" />
+                      General
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("header")}
+                      className={cn(
+                        "flex items-center w-full px-4 py-2 text-sm rounded-lg",
+                        activeTab === "header"
+                          ? "bg-primary text-primary-foreground"
+                          : "hover:bg-muted"
+                      )}
+                    >
+                      <PencilRuler className="w-4 h-4 mr-2" />
+                      Header
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("footer")}
+                      className={cn(
+                        "flex items-center w-full px-4 py-2 text-sm rounded-lg",
+                        activeTab === "footer"
+                          ? "bg-primary text-primary-foreground"
+                          : "hover:bg-muted"
+                      )}
+                    >
+                      <SquareCode className="w-4 h-4 mr-2" />
+                      Footer
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("typography")}
+                      className={cn(
+                        "flex items-center w-full px-4 py-2 text-sm rounded-lg",
+                        activeTab === "typography"
+                          ? "bg-primary text-primary-foreground"
+                          : "hover:bg-muted"
+                      )}
+                    >
+                      <Type className="w-4 h-4 mr-2" />
+                      Typography
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("social")}
+                      className={cn(
+                        "flex items-center w-full px-4 py-2 text-sm rounded-lg",
+                        activeTab === "social"
+                          ? "bg-primary text-primary-foreground"
+                          : "hover:bg-muted"
+                      )}
+                    >
+                      <Share2 className="w-4 h-4 mr-2" />
+                      Social
+                    </button>
+                  </nav>
+                </div>
 
-                  {/* Content Area */}
-                  <div className="flex-1 p-6">
-                    <div className={cn("space-y-6", activeTab !== "general" && "hidden")}>
-                      {/* Site Identity Section */}
-                      <div className="space-y-6">
-                        <div>
-                          <h3 className="text-lg font-medium">Site Identity</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Manage your site's logo, favicon, and basic information
-                          </p>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          {/* Logo Upload */}
-                          <div className="space-y-2">
-                            <Label>Site Logo</Label>
-                            <div className="flex items-center gap-4">
-                              {getOptionValue('site_logo') && (
-                                <img
-                                  src={getOptionValue('site_logo')}
-                                  alt="Site Logo"
-                                  className="h-12 w-auto"
-                                />
-                              )}
-                              <div className="flex-1">
-                                <Input
-                                  type="file"
-                                  accept="image/*"
-                                  onChange={(e) => handleFileUpload(e, 'site_logo')}
-                                  disabled={isUploading}
-                                  className="cursor-pointer"
-                                />
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  Recommended size: 200x60px
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Favicon Upload */}
-                          <div className="space-y-2">
-                            <Label>Favicon</Label>
-                            <div className="flex items-center gap-4">
-                              {getOptionValue('site_favicon') && (
-                                <img
-                                  src={getOptionValue('site_favicon')}
-                                  alt="Favicon"
-                                  className="h-8 w-auto"
-                                />
-                              )}
-                              <div className="flex-1">
-                                <Input
-                                  type="file"
-                                  accept="image/*"
-                                  onChange={(e) => handleFileUpload(e, 'site_favicon')}
-                                  disabled={isUploading}
-                                  className="cursor-pointer"
-                                />
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  Recommended size: 32x32px
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Site Title */}
-                          <div className="space-y-2">
-                            <Label required>Site Title</Label>
-                            <Input
-                              value={getOptionValue('site_title')}
-                              onChange={(e) => updateOption('site_title', e.target.value)}
-                              placeholder="Enter site title"
-                            />
-                          </div>
-
-                          {/* Tagline */}
-                          <div className="space-y-2">
-                            <Label>Tagline</Label>
-                            <Input
-                              value={getOptionValue('site_tagline')}
-                              onChange={(e) => updateOption('site_tagline', e.target.value)}
-                              placeholder="Enter site tagline"
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      <Separator />
-
-                      {/* Contact Information Section */}
-                      <div className="space-y-6">
-                        <div>
-                          <h3 className="text-lg font-medium">Contact Information</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Set up your business contact details
-                          </p>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div className="space-y-2">
-                            <Label>Phone Number</Label>
-                            <div className="relative">
-                              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                              <Input
-                                className="pl-9"
-                                value={getOptionValue('contact_phone')}
-                                onChange={(e) => updateOption('contact_phone', e.target.value)}
-                                placeholder="+1 (555) 000-0000"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label>Email Address</Label>
-                            <div className="relative">
-                              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                              <Input
-                                className="pl-9"
-                                type="email"
-                                value={getOptionValue('contact_email')}
-                                onChange={(e) => updateOption('contact_email', e.target.value)}
-                                placeholder="contact@example.com"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="space-y-2 md:col-span-2">
-                            <Label>Address</Label>
-                            <div className="relative">
-                              <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                              <Textarea
-                                className="pl-9 min-h-[80px] resize-none"
-                                value={getOptionValue('contact_address')}
-                                onChange={(e) => updateOption('contact_address', e.target.value)}
-                                placeholder="Enter your business address"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="space-y-2 md:col-span-2">
-                            <Label>Business Hours</Label>
-                            <div className="relative">
-                              <Clock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                              <Textarea
-                                className="pl-9 min-h-[80px] resize-none"
-                                value={getOptionValue('business_hours')}
-                                onChange={(e) => updateOption('business_hours', e.target.value)}
-                                placeholder="Monday - Friday: 9:00 AM - 5:00 PM&#10;Saturday: 10:00 AM - 3:00 PM&#10;Sunday: Closed"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Header Settings */}
-                    <div className={cn("space-y-6", activeTab !== "header" && "hidden")}>
+                {/* Content Area */}
+                <div className="flex-1 p-6">
+                  <div className={cn("space-y-6", activeTab !== "general" && "hidden")}>
+                    {/* Site Identity Section */}
+                    <div className="space-y-6">
                       <div>
-                        <h3 className="text-lg font-medium">Header Settings</h3>
+                        <h3 className="text-lg font-medium">Site Identity</h3>
                         <p className="text-sm text-muted-foreground">
-                          Customize your website's header appearance and functionality
-                        </p>
-                      </div>
-
-                      <div className="grid grid-cols-1 gap-6">
-                        <div className="space-y-2">
-                          <Label>Header Style</Label>
-                        <SelectWrapper
-                            value={getOptionValue('header_style')}
-                            onValueChange={(value) => updateOption('header_style', value)}
-                          placeholder="Select header style"
-                            >
-                              <SelectItem value="default">Default</SelectItem>
-                              <SelectItem value="centered">Centered</SelectItem>
-                              <SelectItem value="minimal">Minimal</SelectItem>
-                              <SelectItem value="modern">Modern</SelectItem>
-                        </SelectWrapper>
-                        </div>
-
-                        <Separator />
-
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between">
-                            <div className="space-y-0.5">
-                              <Label>Sticky Header</Label>
-                              <p className="text-sm text-muted-foreground">
-                                Keep the header fixed at the top while scrolling
-                              </p>
-                            </div>
-                            <Switch
-                              checked={getOptionValue('sticky_header')}
-                              onCheckedChange={(checked) => updateOption('sticky_header', checked)}
-                            />
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                            <div className="space-y-0.5">
-                              <Label>Show Search</Label>
-                              <p className="text-sm text-muted-foreground">
-                                Display search bar in header
-                              </p>
-                            </div>
-                            <Switch
-                              checked={getOptionValue('show_search')}
-                              onCheckedChange={(checked) => updateOption('show_search', checked)}
-                            />
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                            <div className="space-y-0.5">
-                              <Label>Show Cart</Label>
-                              <p className="text-sm text-muted-foreground">
-                                Display shopping cart icon in header
-                              </p>
-                            </div>
-                            <Switch
-                              checked={getOptionValue('show_cart')}
-                              onCheckedChange={(checked) => updateOption('show_cart', checked)}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Footer Settings */}
-                    <div className={cn("space-y-6", activeTab !== "footer" && "hidden")}>
-                      <div>
-                        <h3 className="text-lg font-medium">Footer Settings</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Customize your website's footer appearance and content
+                          Manage your site's logo, favicon, and basic information
                         </p>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Logo Upload */}
                         <div className="space-y-2">
-                          <Label>Footer Style</Label>
-                          <Select
-                            value={getOptionValue('footer_style')}
-                            onValueChange={(value) => updateOption('footer_style', value)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select footer style" />
-                            </SelectTrigger>
-                            <SelectContent side="bottom" align="start" position="popper" className="w-[--radix-select-trigger-width] z-50">
-                              <SelectItem value="default">Default</SelectItem>
-                              <SelectItem value="simple">Simple</SelectItem>
-                              <SelectItem value="modern">Modern</SelectItem>
-                              <SelectItem value="minimal">Minimal</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label>Footer Logo</Label>
+                          <Label>Site Logo</Label>
                           <div className="flex items-center gap-4">
-                            {getOptionValue('footer_logo') && (
+                            {getOptionValue('site_logo') && (
                               <img
-                                src={getOptionValue('footer_logo')}
-                                alt="Footer Logo"
+                                src={getOptionValue('site_logo')}
+                                alt="Site Logo"
                                 className="h-12 w-auto"
                               />
                             )}
@@ -631,207 +386,445 @@ const ThemeOptions = ({ themeOptions = {}, defaults = {} }) => {
                               <Input
                                 type="file"
                                 accept="image/*"
-                                onChange={(e) => handleFileUpload(e, 'footer_logo')}
+                                onChange={(e) => handleFileUpload(e, 'site_logo')}
                                 disabled={isUploading}
                                 className="cursor-pointer"
                               />
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Recommended size: 200x60px
+                              </p>
                             </div>
                           </div>
                         </div>
 
-                        <div className="space-y-2 md:col-span-2">
-                          <Label>Footer Text</Label>
-                          <Textarea
-                            value={getOptionValue('footer_text')}
-                            onChange={(e) => updateOption('footer_text', e.target.value)}
-                            placeholder="Enter footer text or description"
-                            className="min-h-[100px] resize-none"
-                          />
+                        {/* Favicon Upload */}
+                        <div className="space-y-2">
+                          <Label>Favicon</Label>
+                          <div className="flex items-center gap-4">
+                            {getOptionValue('site_favicon') && (
+                              <img
+                                src={getOptionValue('site_favicon')}
+                                alt="Favicon"
+                                className="h-8 w-auto"
+                              />
+                            )}
+                            <div className="flex-1">
+                              <Input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleFileUpload(e, 'site_favicon')}
+                                disabled={isUploading}
+                                className="cursor-pointer"
+                              />
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Recommended size: 32x32px
+                              </p>
+                            </div>
+                          </div>
                         </div>
 
-                        <div className="space-y-2 md:col-span-2">
-                          <Label>Copyright Text</Label>
+                        {/* Site Title */}
+                        <div className="space-y-2">
+                          <Label required>Site Title</Label>
                           <Input
-                            value={getOptionValue('copyright_text')}
-                            onChange={(e) => updateOption('copyright_text', e.target.value)}
-                            placeholder="© 2024 Your Company. All rights reserved."
+                            value={getOptionValue('site_title')}
+                            onChange={(e) => updateOption('site_title', e.target.value)}
+                            placeholder="Enter site title"
+                          />
+                        </div>
+
+                        {/* Tagline */}
+                        <div className="space-y-2">
+                          <Label>Tagline</Label>
+                          <Input
+                            value={getOptionValue('site_tagline')}
+                            onChange={(e) => updateOption('site_tagline', e.target.value)}
+                            placeholder="Enter site tagline"
                           />
                         </div>
                       </div>
                     </div>
 
-                    {/* Typography Settings */}
-                    <div className={cn("space-y-6", activeTab !== "typography" && "hidden")}>
+                    <Separator />
+
+                    {/* Contact Information Section */}
+                    <div className="space-y-6">
                       <div>
-                        <h3 className="text-lg font-medium">Typography & Colors</h3>
+                        <h3 className="text-lg font-medium">Contact Information</h3>
                         <p className="text-sm text-muted-foreground">
-                          Customize your website's fonts and color scheme
+                          Set up your business contact details
                         </p>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <Label>Primary Color</Label>
-                          <div className="flex gap-2">
-                            <Input
-                              type="color"
-                              value={getOptionValue('primary_color')}
-                              onChange={(e) => updateOption('primary_color', e.target.value)}
-                              className="w-16 p-1 h-10"
-                            />
-                            <Input
-                              type="text"
-                              value={getOptionValue('primary_color')}
-                              onChange={(e) => updateOption('primary_color', e.target.value)}
-                              placeholder="#000000"
-                              className="flex-1"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label>Secondary Color</Label>
-                          <div className="flex gap-2">
-                            <Input
-                              type="color"
-                              value={getOptionValue('secondary_color')}
-                              onChange={(e) => updateOption('secondary_color', e.target.value)}
-                              className="w-16 p-1 h-10"
-                            />
-                            <Input
-                              type="text"
-                              value={getOptionValue('secondary_color')}
-                              onChange={(e) => updateOption('secondary_color', e.target.value)}
-                              placeholder="#000000"
-                              className="flex-1"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label>Heading Font</Label>
-                          <Select
-                            value={getOptionValue('heading_font')}
-                            onValueChange={(value) => updateOption('heading_font', value)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select heading font" />
-                            </SelectTrigger>
-                            <SelectContent side="bottom" align="start" position="popper" className="w-[--radix-select-trigger-width] z-50">
-                              <SelectItem value="Inter">Inter</SelectItem>
-                              <SelectItem value="Roboto">Roboto</SelectItem>
-                              <SelectItem value="Open Sans">Open Sans</SelectItem>
-                              <SelectItem value="Poppins">Poppins</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label>Body Font</Label>
-                          <Select
-                            value={getOptionValue('body_font')}
-                            onValueChange={(value) => updateOption('body_font', value)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select body font" />
-                            </SelectTrigger>
-                            <SelectContent side="bottom" align="start" position="popper" className="w-[--radix-select-trigger-width] z-50">
-                              <SelectItem value="Inter">Inter</SelectItem>
-                              <SelectItem value="Roboto">Roboto</SelectItem>
-                              <SelectItem value="Open Sans">Open Sans</SelectItem>
-                              <SelectItem value="Poppins">Poppins</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Social Media Settings */}
-                    <div className={cn("space-y-6", activeTab !== "social" && "hidden")}>
-                      <div>
-                        <h3 className="text-lg font-medium">Social Media Links</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Connect your social media accounts
-                        </p>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                          <Label>Facebook</Label>
+                          <Label>Phone Number</Label>
                           <div className="relative">
-                            <Facebook className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
                               className="pl-9"
-                              value={getOptionValue('social_facebook')}
-                              onChange={(e) => updateOption('social_facebook', e.target.value)}
-                              placeholder="https://facebook.com/yourpage"
+                              value={getOptionValue('contact_phone')}
+                              onChange={(e) => updateOption('contact_phone', e.target.value)}
+                              placeholder="+1 (555) 000-0000"
                             />
                           </div>
                         </div>
 
                         <div className="space-y-2">
-                          <Label>Twitter</Label>
+                          <Label>Email Address</Label>
                           <div className="relative">
-                            <Twitter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
                               className="pl-9"
-                              value={getOptionValue('social_twitter')}
-                              onChange={(e) => updateOption('social_twitter', e.target.value)}
-                              placeholder="https://twitter.com/yourhandle"
+                              type="email"
+                              value={getOptionValue('contact_email')}
+                              onChange={(e) => updateOption('contact_email', e.target.value)}
+                              placeholder="contact@example.com"
                             />
                           </div>
                         </div>
 
-                        <div className="space-y-2">
-                          <Label>Instagram</Label>
+                        <div className="space-y-2 md:col-span-2">
+                          <Label>Address</Label>
                           <div className="relative">
-                            <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                              className="pl-9"
-                              value={getOptionValue('social_instagram')}
-                              onChange={(e) => updateOption('social_instagram', e.target.value)}
-                              placeholder="https://instagram.com/yourprofile"
+                            <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                            <Textarea
+                              className="pl-9 min-h-[80px] resize-none"
+                              value={getOptionValue('contact_address')}
+                              onChange={(e) => updateOption('contact_address', e.target.value)}
+                              placeholder="Enter your business address"
                             />
                           </div>
                         </div>
 
-                        <div className="space-y-2">
-                          <Label>LinkedIn</Label>
+                        <div className="space-y-2 md:col-span-2">
+                          <Label>Business Hours</Label>
                           <div className="relative">
-                            <Linkedin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                              className="pl-9"
-                              value={getOptionValue('social_linkedin')}
-                              onChange={(e) => updateOption('social_linkedin', e.target.value)}
-                              placeholder="https://linkedin.com/company/yourcompany"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label>YouTube</Label>
-                          <div className="relative">
-                            <Youtube className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                              className="pl-9"
-                              value={getOptionValue('social_youtube')}
-                              onChange={(e) => updateOption('social_youtube', e.target.value)}
-                              placeholder="https://youtube.com/yourchannel"
+                            <Clock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                            <Textarea
+                              className="pl-9 min-h-[80px] resize-none"
+                              value={getOptionValue('business_hours')}
+                              onChange={(e) => updateOption('business_hours', e.target.value)}
+                              placeholder="Monday - Friday: 9:00 AM - 5:00 PM&#10;Saturday: 10:00 AM - 3:00 PM&#10;Sunday: Closed"
                             />
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
+
+                  {/* Header Settings */}
+                  <div className={cn("space-y-6", activeTab !== "header" && "hidden")}>
+                    <div>
+                      <h3 className="text-lg font-medium">Header Settings</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Customize your website's header appearance and functionality
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-6">
+                      <div className="space-y-2">
+                        <Label>Header Style</Label>
+                        <SelectWrapper
+                          value={getOptionValue('header_style')}
+                          onValueChange={(value) => updateOption('header_style', value)}
+                          placeholder="Select header style"
+                        >
+                          <SelectItem value="default">Default</SelectItem>
+                          <SelectItem value="centered">Centered</SelectItem>
+                          <SelectItem value="minimal">Minimal</SelectItem>
+                          <SelectItem value="modern">Modern</SelectItem>
+                        </SelectWrapper>
+                      </div>
+
+                      <Separator />
+
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label>Sticky Header</Label>
+                            <p className="text-sm text-muted-foreground">
+                              Keep the header fixed at the top while scrolling
+                            </p>
+                          </div>
+                          <Switch
+                            checked={getOptionValue('sticky_header')}
+                            onCheckedChange={(checked) => updateOption('sticky_header', checked)}
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label>Show Search</Label>
+                            <p className="text-sm text-muted-foreground">
+                              Display search bar in header
+                            </p>
+                          </div>
+                          <Switch
+                            checked={getOptionValue('show_search')}
+                            onCheckedChange={(checked) => updateOption('show_search', checked)}
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label>Show Cart</Label>
+                            <p className="text-sm text-muted-foreground">
+                              Display shopping cart icon in header
+                            </p>
+                          </div>
+                          <Switch
+                            checked={getOptionValue('show_cart')}
+                            onCheckedChange={(checked) => updateOption('show_cart', checked)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer Settings */}
+                  <div className={cn("space-y-6", activeTab !== "footer" && "hidden")}>
+                    <div>
+                      <h3 className="text-lg font-medium">Footer Settings</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Customize your website's footer appearance and content
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label>Footer Style</Label>
+                        <Select
+                          value={getOptionValue('footer_style')}
+                          onValueChange={(value) => updateOption('footer_style', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select footer style" />
+                          </SelectTrigger>
+                          <SelectContent side="bottom" align="start" position="popper" className="w-[--radix-select-trigger-width] z-50">
+                            <SelectItem value="default">Default</SelectItem>
+                            <SelectItem value="simple">Simple</SelectItem>
+                            <SelectItem value="modern">Modern</SelectItem>
+                            <SelectItem value="minimal">Minimal</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Footer Logo</Label>
+                        <div className="flex items-center gap-4">
+                          {getOptionValue('footer_logo') && (
+                            <img
+                              src={getOptionValue('footer_logo')}
+                              alt="Footer Logo"
+                              className="h-12 w-auto"
+                            />
+                          )}
+                          <div className="flex-1">
+                            <Input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleFileUpload(e, 'footer_logo')}
+                              disabled={isUploading}
+                              className="cursor-pointer"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2 md:col-span-2">
+                        <Label>Footer Text</Label>
+                        <Textarea
+                          value={getOptionValue('footer_text')}
+                          onChange={(e) => updateOption('footer_text', e.target.value)}
+                          placeholder="Enter footer text or description"
+                          className="min-h-[100px] resize-none"
+                        />
+                      </div>
+
+                      <div className="space-y-2 md:col-span-2">
+                        <Label>Copyright Text</Label>
+                        <Input
+                          value={getOptionValue('copyright_text')}
+                          onChange={(e) => updateOption('copyright_text', e.target.value)}
+                          placeholder="© 2024 Your Company. All rights reserved."
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Typography Settings */}
+                  <div className={cn("space-y-6", activeTab !== "typography" && "hidden")}>
+                    <div>
+                      <h3 className="text-lg font-medium">Typography & Colors</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Customize your website's fonts and color scheme
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label>Primary Color</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            type="color"
+                            value={getOptionValue('primary_color')}
+                            onChange={(e) => updateOption('primary_color', e.target.value)}
+                            className="w-16 p-1 h-10"
+                          />
+                          <Input
+                            type="text"
+                            value={getOptionValue('primary_color')}
+                            onChange={(e) => updateOption('primary_color', e.target.value)}
+                            placeholder="#000000"
+                            className="flex-1"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Secondary Color</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            type="color"
+                            value={getOptionValue('secondary_color')}
+                            onChange={(e) => updateOption('secondary_color', e.target.value)}
+                            className="w-16 p-1 h-10"
+                          />
+                          <Input
+                            type="text"
+                            value={getOptionValue('secondary_color')}
+                            onChange={(e) => updateOption('secondary_color', e.target.value)}
+                            placeholder="#000000"
+                            className="flex-1"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Heading Font</Label>
+                        <Select
+                          value={getOptionValue('heading_font')}
+                          onValueChange={(value) => updateOption('heading_font', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select heading font" />
+                          </SelectTrigger>
+                          <SelectContent side="bottom" align="start" position="popper" className="w-[--radix-select-trigger-width] z-50">
+                            <SelectItem value="Inter">Inter</SelectItem>
+                            <SelectItem value="Roboto">Roboto</SelectItem>
+                            <SelectItem value="Open Sans">Open Sans</SelectItem>
+                            <SelectItem value="Poppins">Poppins</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Body Font</Label>
+                        <Select
+                          value={getOptionValue('body_font')}
+                          onValueChange={(value) => updateOption('body_font', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select body font" />
+                          </SelectTrigger>
+                          <SelectContent side="bottom" align="start" position="popper" className="w-[--radix-select-trigger-width] z-50">
+                            <SelectItem value="Inter">Inter</SelectItem>
+                            <SelectItem value="Roboto">Roboto</SelectItem>
+                            <SelectItem value="Open Sans">Open Sans</SelectItem>
+                            <SelectItem value="Poppins">Poppins</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Social Media Settings */}
+                  <div className={cn("space-y-6", activeTab !== "social" && "hidden")}>
+                    <div>
+                      <h3 className="text-lg font-medium">Social Media Links</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Connect your social media accounts
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label>Facebook</Label>
+                        <div className="relative">
+                          <Facebook className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            className="pl-9"
+                            value={getOptionValue('social_facebook')}
+                            onChange={(e) => updateOption('social_facebook', e.target.value)}
+                            placeholder="https://facebook.com/yourpage"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Twitter</Label>
+                        <div className="relative">
+                          <Twitter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            className="pl-9"
+                            value={getOptionValue('social_twitter')}
+                            onChange={(e) => updateOption('social_twitter', e.target.value)}
+                            placeholder="https://twitter.com/yourhandle"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Instagram</Label>
+                        <div className="relative">
+                          <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            className="pl-9"
+                            value={getOptionValue('social_instagram')}
+                            onChange={(e) => updateOption('social_instagram', e.target.value)}
+                            placeholder="https://instagram.com/yourprofile"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>LinkedIn</Label>
+                        <div className="relative">
+                          <Linkedin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            className="pl-9"
+                            value={getOptionValue('social_linkedin')}
+                            onChange={(e) => updateOption('social_linkedin', e.target.value)}
+                            placeholder="https://linkedin.com/company/yourcompany"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>YouTube</Label>
+                        <div className="relative">
+                          <Youtube className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            className="pl-9"
+                            value={getOptionValue('social_youtube')}
+                            onChange={(e) => updateOption('social_youtube', e.target.value)}
+                            placeholder="https://youtube.com/yourchannel"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </Card>
-            </div>
+              </div>
+            </Card>
           </div>
+        </div>
 
         <div className="fixed bottom-0 inset-x-0 z-50 border-t bg-background/80 backdrop-blur-sm md:left-64 dark:border-gray-800">
-            <div className="container mx-auto px-4 sm:px-6 py-4">
-              <div className="flex justify-end">
-                {actionButtons}
+          <div className="container mx-auto px-4 sm:px-6 py-4">
+            <div className="flex justify-end">
+              {actionButtons}
             </div>
           </div>
         </div>

@@ -98,9 +98,9 @@ Route::prefix('app')->name('app.')->middleware(['auth'])->group(function () {
     | Content Management Routes
     |--------------------------------------------------------------------------
     */
+    Route::resource('blogs', BlogController::class);
     Route::prefix('blogs')->name('blogs.')->group(function () {
         // Blog Management
-        Route::resource('/', BlogController::class);
         Route::get('{blog}/preview', [BlogController::class, 'preview'])->name('preview');
         Route::delete('bulk-delete', [BlogController::class, 'bulkDelete'])->name('bulk-delete');
         Route::put('bulk-status', [BlogController::class, 'bulkUpdateStatus'])->name('bulk-status');
@@ -175,6 +175,9 @@ Route::prefix('app')->name('app.')->middleware(['auth'])->group(function () {
     | E-commerce Related Routes
     |--------------------------------------------------------------------------
     */
+    
+    // Main product routes - Move this AFTER the addons routes
+    Route::resource('products', ProductController::class);
     Route::prefix('products')->name('products.')->group(function () {
         // Add-ons Management - Move these routes BEFORE the resource route
         Route::prefix('addons')->name('addons.')
@@ -187,9 +190,6 @@ Route::prefix('app')->name('app.')->middleware(['auth'])->group(function () {
                 Route::post('/bulk-action', [ProductAddonController::class, 'bulkAction'])->name('bulk-action');
                 Route::put('/order', [ProductAddonController::class, 'updateOrder'])->name('order');
             });
-
-        // Main product routes - Move this AFTER the addons routes
-        Route::resource('/', ProductController::class);
     });
 
     // Coupons Management

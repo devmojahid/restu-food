@@ -26,7 +26,7 @@ const MemoizedTableFilters = memo(TableFilters);
  */
 const addUniqueKeysToData = (data, page = 1, keyField = 'id') => {
   if (!data) return [];
-  
+
   return data.map((item, index) => ({
     ...item,
     // Add a unique key property that combines the ID, page number, and index
@@ -83,21 +83,21 @@ export const DataTable = ({
   const observerTarget = useRef(null);
   const lastLoadedTime = useRef(Date.now());
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
+
   // Process data to have unique keys
   const processedData = useMemo(() => {
     return addUniqueKeysToData(data, currentPage, keyField);
   }, [data, currentPage, keyField]);
-  
+
   // Handle cached data for improved rendering
   const allData = useCallback(() => {
     if (!dataCache || !processedData) {
       return processedData;
     }
-    
+
     // Combine current data with cached data
     let combinedData = [...processedData];
-    
+
     // Start from page 2 (page 1 is already in processedData)
     for (let page = 2; page <= currentPage; page++) {
       const cachedPageData = dataCache.get(page);
@@ -107,18 +107,18 @@ export const DataTable = ({
         combinedData = [...combinedData, ...processedCachedData];
       }
     }
-    
+
     return combinedData;
   }, [processedData, dataCache, currentPage, keyField]);
-  
+
   // Format last updated time
   const formatLastUpdated = (isoString) => {
     if (!isoString) return '';
-    
+
     try {
       const date = new Date(isoString);
       return new Intl.DateTimeFormat('en-US', {
-        hour: '2-digit', 
+        hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
         hour12: true
@@ -127,13 +127,13 @@ export const DataTable = ({
       return '';
     }
   };
-  
+
   // Handle manual refresh
   const handleRefresh = useCallback(() => {
     if (onRefresh && !isLoading && !isLoadingMore) {
       setIsRefreshing(true);
       lastLoadedTime.current = Date.now();
-      
+
       // Call refresh with a callback to reset the refreshing state
       Promise.resolve(onRefresh()).finally(() => {
         setTimeout(() => setIsRefreshing(false), 500);
@@ -144,7 +144,7 @@ export const DataTable = ({
   // Set up intersection observer for infinite scrolling
   useEffect(() => {
     if (!hasMoreData || isLoading) return;
-    
+
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasMoreData && !isLoadingMore && !isLoading) {
@@ -156,8 +156,8 @@ export const DataTable = ({
           }
         }
       },
-      { 
-        threshold: 0.1, 
+      {
+        threshold: 0.1,
         rootMargin: "400px" // Increased margin for earlier loading
       }
     );
@@ -182,22 +182,22 @@ export const DataTable = ({
 
   const renderLastUpdated = () => {
     if (!showLastUpdated || !meta.lastUpdated) return null;
-    
+
     return (
       <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
         <span>Last updated: {formatLastUpdated(meta.lastUpdated)}</span>
-        <Button 
-          variant="ghost" 
-          size="sm" 
+        <Button
+          variant="ghost"
+          size="sm"
           className="ml-2 p-1 h-6"
           onClick={handleRefresh}
           disabled={isRefreshing || isLoading}
         >
-          <RefreshCw 
+          <RefreshCw
             className={cn(
-              "h-3 w-3", 
+              "h-3 w-3",
               (isRefreshing || isLoading) && "animate-spin"
-            )} 
+            )}
           />
         </Button>
       </div>
@@ -206,7 +206,7 @@ export const DataTable = ({
 
   const renderMetaInfo = () => {
     if (!meta.total) return null;
-    
+
     return (
       <div className="flex items-center">
         <Badge variant="outline" className="text-xs font-normal">
@@ -237,7 +237,7 @@ export const DataTable = ({
               />
             </div>
           </div>
-          
+
           {/* Meta Info Section */}
           <div className="flex justify-between px-4 hidden">
             {renderMetaInfo()}
@@ -278,17 +278,17 @@ export const DataTable = ({
 
               {/* Infinite Scroll Loading Skeleton */}
               {isLoadingMore && (
-                <TableSkeleton 
-                  columns={columns} 
-                  rowCount={3} 
-                  className="border-t border-gray-200 dark:border-gray-700" 
+                <TableSkeleton
+                  columns={columns}
+                  rowCount={3}
+                  className="border-t border-gray-200 dark:border-gray-700"
                   hideHeader={true}
                 />
               )}
 
               {/* Infinite Scroll Observer Element */}
-              <div 
-                ref={observerTarget} 
+              <div
+                ref={observerTarget}
                 className={cn(
                   "h-20", // Give height to ensure it's visible for intersection
                   !hasMoreData && "hidden"
@@ -303,12 +303,12 @@ export const DataTable = ({
               )}
 
               {/* Empty State */}
-              {!isLoading && (!data || data.length === 0) && (
+              {/* {!isLoading && (!data || data.length === 0) && (
                 <NoData 
                   title="No results found"
                   description="Try adjusting your search or filters."
                 />
-              )}
+              )} */}
             </div>
           </div>
         </div>

@@ -22,49 +22,60 @@ import {
 } from "@/Components/ui/dropdown-menu";
 import { router } from "@inertiajs/react";
 
-const CategoryList = ({ categories, filters, onEdit, can }) => {
+const BULK_ACTIONS = [
+  {
+    label: "Delete Selected",
+    icon: Trash2,
+    value: "delete",
+    variant: "destructive",
+  }
+];
+
+// Filter configurations
+const filterConfigs = {
+  status: {
+    type: "select",
+    label: "Status",
+    options: [
+      { label: "All Status", value: "" },
+      { label: "Active", value: "active" },
+      { label: "Inactive", value: "inactive" },
+    ],
+    defaultValue: "",
+  },
+  parent: {
+    type: "select",
+    label: "Parent",
+    options: [
+      { label: "All", value: "" },
+      { label: "Root Categories", value: "root" },
+      { label: "Sub Categories", value: "sub" },
+    ],
+    defaultValue: "",
+  },
+};
+
+// Sort configurations
+const sortableConfigs = {
+  name: {
+    key: "name",
+    defaultDirection: "asc",
+    transform: (value) => value?.toLowerCase(),
+    priority: 1,
+  },
+  created_at: {
+    key: "created_at",
+    defaultDirection: "desc",
+    transform: (value) => new Date(value),
+    format: (value) => format(new Date(value), "PPP"),
+    priority: 2,
+  },
+};
+
+
+
+const CategoryList = ({ categories, filters: initialFilters = {}, onEdit, can, meta }) => {
   const { toast } = useToast();
-
-  // Filter configurations
-  const filterConfigs = {
-    status: {
-      type: "select",
-      label: "Status",
-      options: [
-        { label: "All Status", value: "" },
-        { label: "Active", value: "active" },
-        { label: "Inactive", value: "inactive" },
-      ],
-      defaultValue: "",
-    },
-    parent: {
-      type: "select",
-      label: "Parent",
-      options: [
-        { label: "All", value: "" },
-        { label: "Root Categories", value: "root" },
-        { label: "Sub Categories", value: "sub" },
-      ],
-      defaultValue: "",
-    },
-  };
-
-  // Sort configurations
-  const sortableConfigs = {
-    name: {
-      key: "name",
-      defaultDirection: "asc",
-      transform: (value) => value?.toLowerCase(),
-      priority: 1,
-    },
-    created_at: {
-      key: "created_at",
-      defaultDirection: "desc",
-      transform: (value) => new Date(value),
-      format: (value) => format(new Date(value), "PPP"),
-      priority: 2,
-    },
-  };
 
   // Column definitions
   const columns = [
@@ -266,20 +277,29 @@ const CategoryList = ({ categories, filters, onEdit, can }) => {
     filters: tableFilters,
     sorting,
     isLoading,
+    isLoadingMore,
+    hasMoreData,
+    loadMoreData,
     handleFilterChange,
     handleSelectionChange,
     handlePageChange,
     handleSort,
+    meta: tableMeta,
+
   } = useDataTable({
     routeName: "app.categories.index",
-    initialFilters: filters,
+    dataKey: "categories",
+    initialFilters: {
+      search: initialFilters.search || "",
+      sort: initialFilters.sort || "created_at",
+      direction: initialFilters.direction || "desc",
+      per_page: initialFilters.per_page || 10,
+      ...initialFilters
+    },
     sortableConfigs,
     filterConfigs,
     onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Operation completed successfully",
-      });
+      // Handle success if needed
     },
     onError: () => {
       toast({
@@ -303,21 +323,7 @@ const CategoryList = ({ categories, filters, onEdit, can }) => {
         "Are you sure you want to delete the selected categories? This action cannot be undone.",
       confirmText: "Delete",
       cancelText: "Cancel",
-    },
-    {
-      id: "activate",
-      label: "Activate",
-      labelFull: "Activate Selected",
-      icon: Eye,
-      variant: "default",
-    },
-    {
-      id: "deactivate",
-      label: "Deactivate",
-      labelFull: "Deactivate Selected",
-      icon: EyeOff,
-      variant: "default",
-    },
+    }
   ];
 
   // Update the handleBulkAction implementation
@@ -356,9 +362,12 @@ const CategoryList = ({ categories, filters, onEdit, can }) => {
       sorting={sorting}
       onSort={handleSort}
       isLoading={isLoading}
-      pagination={categories.meta}
+      isLoadingMore={isLoadingMore}
+      hasMoreData={hasMoreData}
+      onLoadMore={loadMoreData}
+      pagination={meta}
       onPageChange={handlePageChange}
-      bulkActions={can.delete || can.edit ? bulkActions : []}
+      bulkActions={can.delete || can.edit ? BULK_ACTIONS : []}
       onBulkAction={handleBulkAction}
       className="categories-table"
       rowSelection={{

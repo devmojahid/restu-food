@@ -6,8 +6,9 @@ import Breadcrumb from "@/Components/Admin/Breadcrumb";
 import CategoryForm from "./Partials/CategoryForm";
 import CategoryList from "./Partials/CategoryList";
 import { Card } from "@/Components/ui/card";
+import { useInfiniteScrollData } from "@/hooks/useInfiniteScrollData";
 
-const Index = ({ categories, filters, parentCategories, can }) => {
+const Index = ({ categories, filters, parentCategories, can, meta }) => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -27,18 +28,8 @@ const Index = ({ categories, filters, parentCategories, can }) => {
     setIsEditing(false);
   };
 
-  const paginatedCategories = categories || {
-    data: [],
-    meta: {
-      current_page: 1,
-      last_page: 1,
-      per_page: 10,
-      total: 0,
-      from: 0,
-      to: 0,
-    },
-  };
-
+  const allCategories = useInfiniteScrollData(categories, filters);
+  console.log("allCategories", meta);
   return (
     <AdminLayout>
       <Head title="Blog Categories" />
@@ -53,26 +44,28 @@ const Index = ({ categories, filters, parentCategories, can }) => {
 
         <div className="space-y-6">
           {/* {(can.create || can.edit) && ( */}
-            <Card className="p-6">
-              <CategoryForm
-                category={selectedCategory}
-                categories={parentCategories}
-                isEditing={isEditing}
-                onCancel={handleCancelEdit}
+          <Card className="p-6">
+            <CategoryForm
+              category={selectedCategory}
+              categories={parentCategories}
+              isEditing={isEditing}
+              onCancel={handleCancelEdit}
               onSuccess={handleSuccess}
               can={can}
             />
           </Card>
           {/* )} */}
 
-          <Card className="p-6">
-            <CategoryList
-              categories={paginatedCategories}
-              filters={filters}
-              onEdit={handleEdit}
-              can={can}
-            />
-          </Card>
+          <CategoryList
+            categories={{
+              ...categories,
+              data: allCategories,
+            }}
+            filters={filters}
+            onEdit={handleEdit}
+            can={can}
+            meta={meta}
+          />
         </div>
       </div>
     </AdminLayout>
