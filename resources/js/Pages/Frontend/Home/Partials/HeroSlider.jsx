@@ -1,12 +1,12 @@
 import React, { useEffect, useCallback } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { 
-    Autoplay, 
-    Pagination, 
-    Navigation, 
+import {
+    Autoplay,
+    Pagination,
+    Navigation,
     EffectCards,
     EffectCoverflow,
-    EffectCreative 
+    EffectCreative
 } from 'swiper/modules';
 import { Link } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -42,11 +42,11 @@ const HeroSlider = ({ slides, type = 'slider', className }) => {
     // Static Hero Section
     if (type === 'hero' && slides[0]) {
         const heroData = slides[0];
-        
+
         return (
             <div className={cn("relative h-[600px] lg:h-[700px] w-full overflow-hidden", className)}>
                 {/* Background Image with Parallax Effect */}
-                <motion.div 
+                <motion.div
                     initial={{ scale: 1.1 }}
                     animate={{ scale: 1 }}
                     transition={{ duration: 10, repeat: Infinity, repeatType: "reverse" }}
@@ -57,10 +57,10 @@ const HeroSlider = ({ slides, type = 'slider', className }) => {
                         backgroundSize: 'cover'
                     }}
                 />
-                
+
                 {/* Gradient Overlay with Enhanced Design */}
                 <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
-                
+
                 {/* Content */}
                 <div className="absolute inset-0 flex items-center">
                     <div className="container mx-auto px-4">
@@ -76,9 +76,9 @@ const HeroSlider = ({ slides, type = 'slider', className }) => {
                                 <span className="inline-block w-2 h-2 rounded-full bg-primary animate-pulse" />
                                 <span>Experience the Best Food Delivery</span>
                             </motion.div>
-                            
+
                             {/* Title with Enhanced Animation */}
-                            <motion.h1 
+                            <motion.h1
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.6, delay: 0.2 }}
@@ -86,7 +86,7 @@ const HeroSlider = ({ slides, type = 'slider', className }) => {
                             >
                                 {heroData.title}
                             </motion.h1>
-                            
+
                             {/* Description with Gradient Text */}
                             <motion.p
                                 initial={{ opacity: 0, y: 20 }}
@@ -97,7 +97,7 @@ const HeroSlider = ({ slides, type = 'slider', className }) => {
                             >
                                 {heroData.description}
                             </motion.p>
-                            
+
                             {/* CTA Buttons with Enhanced Hover Effects */}
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
@@ -116,7 +116,7 @@ const HeroSlider = ({ slides, type = 'slider', className }) => {
                                     <div className="absolute inset-0 bg-white/20 transform -skew-x-12 
                                                   translate-x-full group-hover:translate-x-0 transition-transform" />
                                 </Link>
-                                
+
                                 <Link
                                     href="/about"
                                     className="group relative overflow-hidden bg-white/10 backdrop-blur-sm 
@@ -153,19 +153,6 @@ const HeroSlider = ({ slides, type = 'slider', className }) => {
         <div className={cn("relative group", className)}>
             <Swiper
                 modules={[Autoplay, Pagination, Navigation, EffectCards, EffectCoverflow, EffectCreative]}
-                effect="creative"
-                creativeEffect={{
-                    prev: {
-                        shadow: true,
-                        translate: ['-20%', 0, -1],
-                        rotate: [0, 0, -4],
-                    },
-                    next: {
-                        shadow: true,
-                        translate: ['100%', 0, 0],
-                        rotate: [0, 0, 4],
-                    },
-                }}
                 autoplay={{
                     delay: 5000,
                     disableOnInteraction: false,
@@ -187,7 +174,6 @@ const HeroSlider = ({ slides, type = 'slider', className }) => {
                     prevEl: '.custom-swiper-prev',
                 }}
                 loop={true}
-                grabCursor={true}
                 className="h-[600px] lg:h-[700px] w-full"
             >
                 {slides.map((slide, index) => (
@@ -195,28 +181,28 @@ const HeroSlider = ({ slides, type = 'slider', className }) => {
                         {({ isActive, isNext, isPrev }) => (
                             <>
                                 {/* Background Image with Zoom Effect */}
-                                <motion.div 
+                                <motion.div
                                     initial={{ scale: 1.2 }}
-                                    animate={{ 
+                                    animate={{
                                         scale: isActive ? 1 : 1.2,
-                                        opacity: isActive ? 1 : 0.8 
+                                        opacity: isActive ? 1 : 0.8
                                     }}
                                     transition={{ duration: 1.5, ease: 'easeOut' }}
                                     className="absolute inset-0 bg-cover bg-center"
                                     style={{ backgroundImage: `url(${slide.image})` }}
                                 />
-                                
+
                                 {/* Enhanced Gradient Overlay */}
                                 <div className="absolute inset-0 bg-gradient-to-r from-black/90 
                                               via-black/70 to-transparent" />
-                                
+
                                 {/* Content with Enhanced Animations */}
                                 <div className="absolute inset-0 flex items-center">
                                     <div className="container mx-auto px-4">
-                                        <motion.div 
+                                        <motion.div
                                             className="max-w-3xl"
                                             initial={{ opacity: 0, x: -100 }}
-                                            animate={{ 
+                                            animate={{
                                                 opacity: isActive ? 1 : 0,
                                                 x: isActive ? 0 : -100
                                             }}
@@ -226,13 +212,13 @@ const HeroSlider = ({ slides, type = 'slider', className }) => {
                                             <div className="inline-flex items-center space-x-2 bg-white/10 
                                                           backdrop-blur-md text-white px-6 py-2 rounded-full 
                                                           text-sm mb-6 border border-white/20">
-                                                <motion.span 
+                                                <motion.span
                                                     className="inline-block w-2 h-2 rounded-full bg-primary"
                                                     animate={{ scale: [1, 1.2, 1] }}
-                                                    transition={{ 
+                                                    transition={{
                                                         duration: 1.5,
                                                         repeat: Infinity,
-                                                        ease: "easeInOut" 
+                                                        ease: "easeInOut"
                                                     }}
                                                 />
                                                 <span className="relative">
@@ -241,45 +227,45 @@ const HeroSlider = ({ slides, type = 'slider', className }) => {
                                                     Slide {index + 1} of {slides.length}
                                                 </span>
                                             </div>
-                                            
+
                                             {/* Enhanced Title with Split Animation */}
                                             <div className="overflow-hidden mb-6">
-                                                <motion.h1 
+                                                <motion.h1
                                                     className="text-4xl md:text-6xl lg:text-7xl font-bold 
                                                              text-white leading-tight"
                                                     initial={{ y: 100 }}
                                                     animate={{ y: isActive ? 0 : 100 }}
-                                                    transition={{ 
-                                                        duration: 0.8, 
+                                                    transition={{
+                                                        duration: 0.8,
                                                         delay: 0.4,
-                                                        ease: "easeOut" 
+                                                        ease: "easeOut"
                                                     }}
                                                 >
                                                     {slide.title}
                                                 </motion.h1>
                                             </div>
-                                            
+
                                             {/* Modern Description with Gradient */}
                                             <motion.p
                                                 className="text-lg md:text-xl text-white/90 mb-8 
                                                          max-w-2xl leading-relaxed"
                                                 initial={{ opacity: 0, y: 20 }}
-                                                animate={{ 
+                                                animate={{
                                                     opacity: isActive ? 1 : 0,
-                                                    y: isActive ? 0 : 20 
+                                                    y: isActive ? 0 : 20
                                                 }}
                                                 transition={{ duration: 0.8, delay: 0.6 }}
                                             >
                                                 {slide.description}
                                             </motion.p>
-                                            
+
                                             {/* Modern CTA Buttons */}
                                             <motion.div
                                                 className="flex flex-wrap gap-4"
                                                 initial={{ opacity: 0, y: 20 }}
-                                                animate={{ 
+                                                animate={{
                                                     opacity: isActive ? 1 : 0,
-                                                    y: isActive ? 0 : 20 
+                                                    y: isActive ? 0 : 20
                                                 }}
                                                 transition={{ duration: 0.8, delay: 0.8 }}
                                             >
@@ -298,7 +284,7 @@ const HeroSlider = ({ slides, type = 'slider', className }) => {
                                                                   from-primary-600 to-primary-500 opacity-0 
                                                                   group-hover:opacity-100 transition-opacity" />
                                                 </Link>
-                                                
+
                                                 <Link
                                                     href="/about"
                                                     className="group relative overflow-hidden bg-white/10 
@@ -321,14 +307,14 @@ const HeroSlider = ({ slides, type = 'slider', className }) => {
 
             {/* Modern Navigation Controls */}
             <div className="absolute inset-x-0 bottom-10 z-10 flex items-center justify-center gap-4">
-                <button 
+                <button
                     className="custom-swiper-prev group p-3 rounded-full bg-black/20 
                               backdrop-blur-sm hover:bg-black/40 transition-all duration-300"
                 >
                     <ArrowRight className="w-6 h-6 text-white rotate-180 
                                        group-hover:-translate-x-1 transition-transform" />
                 </button>
-                <button 
+                <button
                     className="custom-swiper-next group p-3 rounded-full bg-black/20 
                               backdrop-blur-sm hover:bg-black/40 transition-all duration-300"
                 >
