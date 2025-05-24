@@ -1,22 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useMemo, useEffect } from "react";
 import { Head, Link } from "@inertiajs/react";
-import Table from "./Partials/List/Index";
+import ListBlogs from "./Partials/List/Index";
 import AdminLayout from "@/Layouts/Admin/AdminLayout";
 import { Button } from "@/Components/ui/button";
 import { Home, FileText, Plus, ArrowLeft } from "lucide-react";
 import Breadcrumb from "@/Components/Admin/Breadcrumb";
+import { useInfiniteScrollData } from "@/hooks/useInfiniteScrollData";
+// Constants
+const BREADCRUMB_ITEMS = [
+  { label: "Dashboard", href: "dashboard" },
+  { label: "Blogs", href: "blogs", icon: FileText },
+];
 
-export default function Index({ blogs }) {
+export default function Index({ blogs, meta = {}, filters = {} }) {
+  const allBlogs = useInfiniteScrollData(blogs, filters);
+
   return (
     <AdminLayout>
       <Head title="Blogs List" />
       <div className="container mx-auto py-6 px-2 sm:px-3 lg:px-4">
-        <Breadcrumb
-          items={[
-            { label: "Dashboard", href: "dashboard", icon: Home },
-            { label: "Blogs", href: "blogs", icon: FileText },
-          ]}
-        />
+        <Breadcrumb items={BREADCRUMB_ITEMS} />
 
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 space-y-4 sm:space-y-0">
           <h2 className="text-2xl font-bold text-gray-700 dark:text-gray-300">
@@ -32,7 +35,14 @@ export default function Index({ blogs }) {
             </Link>
           </div>
         </div>
-        <Table blogs={blogs} />
+        <ListBlogs blogs={{
+          ...blogs,
+          data: allBlogs,
+          meta: meta,
+          filters: filters,
+        }}
+        />
+
       </div>
     </AdminLayout>
   );
