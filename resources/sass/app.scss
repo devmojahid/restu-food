@@ -6,6 +6,7 @@
 @tailwind components;
 @tailwind utilities;
 
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -77,25 +78,19 @@
   }
 
   .dropdown-content {
-    @apply absolute top-full right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border 
-           opacity-0 invisible translate-y-2 transition-all duration-200
-           group-hover:opacity-100 group-hover:visible group-hover:translate-y-0;
+    @apply absolute top-full right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border opacity-0 invisible translate-y-2 transition-all duration-200 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0;
   }
 
   .menu-item {
-    @apply flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-50 
-           text-gray-700 hover:text-primary transition-colors;
+    @apply flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 hover:text-primary transition-colors;
   }
 
   .search-input {
-    @apply w-full px-4 py-3 pr-12 border rounded-lg bg-gray-50
-           focus:outline-none focus:ring-2 focus:ring-primary/50 focus:bg-white
-           transition-all duration-200;
+    @apply w-full px-4 py-3 pr-12 border rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:bg-white transition-all duration-200;
   }
 
   .mobile-menu-item {
-    @apply flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 
-           text-gray-700 hover:text-primary transition-colors;
+    @apply flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 text-gray-700 hover:text-primary transition-colors;
   }
 }
 
@@ -105,6 +100,7 @@
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -115,6 +111,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -130,49 +127,44 @@
 
 // Add these responsive utilities
 .container {
-    @apply px-4 mx-auto;
-    max-width: 100%;
-    
-    @screen sm {
-        max-width: 640px;
-    }
-    
-    @screen md {
-        max-width: 768px;
-    }
-    
-    @screen lg {
-        max-width: 1024px;
-    }
-    
-    @screen xl {
-        max-width: 1280px;
-    }
-}
+  @apply px-4 mx-auto;
+  max-width: 100%;
 
-// Fix overflow issues
-html, body {
-    @apply overflow-x-hidden;
+  @screen sm {
+    max-width: 640px;
+  }
+
+  @screen md {
+    max-width: 768px;
+  }
+
+  @screen lg {
+    max-width: 1024px;
+  }
+
+  @screen xl {
+    max-width: 1280px;
+  }
 }
 
 // Better spacing for mobile
 .section-padding {
-    @apply py-12 md:py-16 lg:py-24;
+  @apply py-12 md:py-16 lg:py-24;
 }
 
 // Responsive text adjustments
 .responsive-text {
-    @apply text-base md:text-lg lg:text-xl;
+  @apply text-base md:text-lg lg:text-xl;
 }
 
 // Better form controls on mobile
 .form-control {
-    @apply w-full max-w-full;
+  @apply w-full max-w-full;
 }
 
 // Improved mobile navigation spacing
 .nav-spacing {
-    @apply mt-16 md:mt-20 lg:mt-24;
+  @apply mt-16 md:mt-20 lg:mt-24;
 }
 
 // Add these dark mode enhancements
@@ -192,49 +184,50 @@ html, body {
 
 // Add these styles for the featured restaurants swiper
 .featured-restaurants-swiper {
-    padding: 20px 0 40px;
-    
-    .swiper-button-next,
-    .swiper-button-prev {
-        color: theme('colors.primary.DEFAULT');
-        background: theme('colors.white');
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        
-        &:after {
-            font-size: 18px;
-        }
-        
-        &:hover {
-            background: theme('colors.primary.DEFAULT');
-            color: theme('colors.white');
-        }
+  padding: 20px 0 40px;
+
+  .swiper-button-next,
+  .swiper-button-prev {
+    color: theme('colors.primary.DEFAULT');
+    background: theme('colors.white');
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    &:after {
+      font-size: 18px;
     }
-    
-    .swiper-pagination-bullet {
-        background: theme('colors.primary.DEFAULT');
-        opacity: 0.5;
-        
-        &-active {
-            opacity: 1;
-            transform: scale(1.2);
-        }
+
+    &:hover {
+      background: theme('colors.primary.DEFAULT');
+      color: theme('colors.white');
     }
+  }
+
+  .swiper-pagination-bullet {
+    background: theme('colors.primary.DEFAULT');
+    opacity: 0.5;
+
+    &-active {
+      opacity: 1;
+      transform: scale(1.2);
+    }
+  }
 }
 
 // Dark mode styles
 .dark {
-    .featured-restaurants-swiper {
-        .swiper-button-next,
-        .swiper-button-prev {
-            background: theme('colors.gray.800');
-            color: theme('colors.white');
-            
-            &:hover {
-                background: theme('colors.primary.DEFAULT');
-            }
-        }
+  .featured-restaurants-swiper {
+
+    .swiper-button-next,
+    .swiper-button-prev {
+      background: theme('colors.gray.800');
+      color: theme('colors.white');
+
+      &:hover {
+        background: theme('colors.primary.DEFAULT');
+      }
     }
+  }
 }
