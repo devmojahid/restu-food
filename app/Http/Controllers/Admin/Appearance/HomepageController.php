@@ -47,8 +47,10 @@ final class HomepageController extends Controller
         }
     }
 
-    public function update(UpdateHomepageRequest $request)
+    // public function update(UpdateHomepageRequest $request)
+    public function update(Request $request)
     {
+        dd($request->all());
         try {
             $options = collect($request->validated('options'))->mapWithKeys(function ($item) {
                 return [$item['key'] => $item['value']];

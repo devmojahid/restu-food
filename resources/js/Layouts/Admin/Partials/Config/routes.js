@@ -159,10 +159,10 @@ export const routes = {
             }
         }
     },
-    marketplace: {
-        name: "Marketplace",
-        icon: "ShoppingBag",
-        role: ["Admin", "Restaurant"],
+    restaurants: {
+        name: "Restaurants",
+        icon: "Package",
+        role: ["Admin"],
         submenu: {
             restaurants: {
                 name: "Restaurants",
@@ -170,26 +170,33 @@ export const routes = {
                 icon: "Package",
                 role: ["Admin"]
             },
-            pendingRestaurants: {
-                name: "Restaurants Applications",
-                path: "/app/restaurants/applications",
+            restaurantCreate: {
+                name: "Restaurant Create",
+                path: "/app/restaurants/create",
                 icon: "Package",
                 role: ["Admin"]
             },
-            kitchenStaffApplications: {
-                name: "Kitchen Staff Applications",
-                path: "/app/kitchen-staff/applications",
-                icon: "Package",
-                role: ["Restaurant"]
-            },
-            deliveryStaffApplications: {
-                name: "Delivery Staff Applications",
-                path: "/app/delivery-staff/applications",
-                icon: "Package",
-                role: ["Admin"]
-            }
+            // pendingRestaurants: {
+            //     name: "Restaurants Applications",
+            //     path: "/app/restaurants/applications",
+            //     icon: "Package",
+            //     role: ["Admin"]
+            // }
         }
     },
+
+    // kitchenStaffApplications: {
+    //     name: "Kitchen Staff Applications",
+    //     path: "/app/kitchen-staff/applications",
+    //     icon: "Package",
+    //     role: ["Restaurant"]
+    // },
+    // deliveryStaffApplications: {
+    //     name: "Delivery Staff Applications",
+    //     path: "/app/delivery-staff/applications",
+    //     icon: "Package",
+    //     role: ["Admin"]
+    // }
     // appearance
     appearance: {
         name: "Appearance",

@@ -1,5 +1,5 @@
 import React from "react";
-import { Head, useForm } from "@inertiajs/react";
+import { Head, useForm, usePage } from "@inertiajs/react";
 import AdminLayout from "@/Layouts/Admin/AdminLayout";
 import { PageEditorProvider } from "@/Components/Admin/PageBuilder/PageEditorContext";
 import SectionNavigation from "@/Components/Admin/PageBuilder/SectionNavigation";
@@ -11,7 +11,7 @@ import HeroSection from "./Sections/HeroSection";
 // Import other section components
 
 const SECTIONS = [
-  { id: 'hero', label: 'Hero Section' },
+  { id: 'hero', label: 'Hero Section', default: true },
   { id: 'top_categories', label: 'Top Categories' },
   { id: 'about_us', label: 'About Us' },
   { id: 'features', label: 'Features' },
@@ -24,15 +24,21 @@ const SECTIONS = [
 
 const HomepageEditor = ({ homepageOptions = {}, defaults = {}, dynamicData = {} }) => {
   const { post } = useForm();
+  const errors = usePage().props.errors;
 
   const handleSave = async (data) => {
     await post(route('app.appearance.homepage.update'), data);
   };
 
+  // valdatetion errors
   return (
     <AdminLayout>
       <Head title="Homepage Editor" />
-
+      {errors && (
+        <div className="alert alert-danger">
+          {errors.message}
+        </div>
+      )}
       <PageEditorProvider
         initialData={homepageOptions}
         onSave={handleSave}
@@ -43,7 +49,7 @@ const HomepageEditor = ({ homepageOptions = {}, defaults = {}, dynamicData = {} 
             <div className="col-span-12 lg:col-span-8">
               {SECTIONS.map(section => (
                 <SectionContent key={section.id} section={section}>
-                   {section.id === 'hero' && (
+                  {section.id === 'hero' && (
                     <HeroSection />
                   )}
                   {section.id === 'client_feedback' && (
