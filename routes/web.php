@@ -146,8 +146,8 @@ Route::prefix('app')->name('app.')->middleware(['auth'])->group(function () {
     */
     // Users Management
     Route::group(['prefix' => 'users', 'as' => 'users.'], function () {
-        Route::delete('/bulk-delete', [UserController::class, 'bulkDelete'])->name('index.bulk-delete');
-        Route::put('/bulk-status', [UserController::class, 'bulkUpdateStatus'])->name('index.bulk-status');
+        Route::delete('/bulk-delete', [UserController::class, 'bulkDelete'])->name('bulk-delete');
+        Route::put('/bulk-status', [UserController::class, 'bulkUpdateStatus'])->name('bulk-status');
 
         Route::get('/', [UserController::class, 'index'])->name('index');
         Route::get('/create', [UserController::class, 'create'])->name('create');

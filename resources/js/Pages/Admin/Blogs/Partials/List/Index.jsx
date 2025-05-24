@@ -412,24 +412,6 @@ export default function ListBlogs({ blogs, categories = [] }) {
         message: "Are you sure you want to delete the selected blogs? This action cannot be undone.",
       },
     },
-    {
-      id: "publish",
-      label: "Publish",
-      icon: Eye,
-      variant: "default",
-    },
-    {
-      id: "unpublish",
-      label: "Unpublish",
-      icon: EyeOff,
-      variant: "default",
-    },
-    {
-      id: "feature",
-      label: "Feature",
-      icon: Star,
-      variant: "default",
-    },
   ];
 
   // Initial filters with error handling for date parsing

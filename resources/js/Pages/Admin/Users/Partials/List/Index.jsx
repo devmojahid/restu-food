@@ -7,96 +7,106 @@ import { router, usePage } from "@inertiajs/react";
 import { LazyImage } from "@/Components/Table/LazyImage";
 import { format, subDays } from "date-fns";
 import { RowActions } from "@/Components/Table/RowActions";
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 
-export default function ListUsers({ users, roles, meta }) {
+// ====================================
+// CONSTANTS FOR BETTER MAINTAINABILITY
+// ====================================
+
+// Sort configurations for all sortable columns
+const SORT_CONFIG = {
+  name: {
+    key: "name",
+    defaultDirection: "asc",
+    transform: (value) => value?.toLowerCase(),
+    priority: 1,
+  },
+  email: {
+    key: "email",
+    defaultDirection: "asc",
+    transform: (value) => value?.toLowerCase(),
+    priority: 2,
+  },
+  created_at: {
+    key: "created_at",
+    defaultDirection: "desc",
+    transform: (value) => new Date(value),
+    format: (value) => format(new Date(value), "PPP"),
+    priority: 3,
+  },
+  status: {
+    key: "status",
+    defaultDirection: "desc",
+    transform: (value) => String(value).toLowerCase(),
+    priority: 2,
+  },
+};
+
+// Filter configurations for all filterable columns
+const FILTER_CONFIGS = {
+  status: {
+    type: "select",
+    label: "Status",
+    options: [
+      { label: "All Status", value: "" },
+      { label: "Active", value: "active" },
+      { label: "Inactive", value: "inactive" },
+      { label: "Banned", value: "banned" },
+    ],
+    defaultValue: "",
+    transform: (value) => value?.toLowerCase(),
+    format: (value) => value?.charAt(0).toUpperCase() + value?.slice(1),
+  },
+  verified: {
+    type: "select",
+    label: "Verified Status",
+    options: [
+      { label: "All", value: "" },
+      { label: "Verified", value: "1" },
+      { label: "Unverified", value: "0" },
+    ],
+    defaultValue: "",
+  },
+  date_range: {
+    type: "date-range",
+    label: "Date Range",
+    defaultValue: {
+      from: "",
+      to: "",
+    },
+    transform: (value) => ({
+      from: value.from ? format(new Date(value.from), "yyyy-MM-dd") : "",
+      to: value.to ? format(new Date(value.to), "yyyy-MM-dd") : "",
+    }),
+  },
+};
+
+// Bulk actions available for selected items
+const BULK_ACTIONS = [
+  {
+    label: "Delete Selected",
+    icon: Trash2,
+    value: "delete",
+    variant: "destructive",
+  }
+];
+
+
+export default function ListUsers({ users, roles, meta, filters: initialFilters = {} }) {
   console.log(users);
   const { toast } = useToast();
   const [enablePolling, setEnablePolling] = useState(false);
 
-  // Define filter configurations
-  const filterConfigs = {
-    status: {
-      type: "select",
-      label: "Status",
-      options: [
-        { label: "All Status", value: "" },
-        { label: "Active", value: "active" },
-        { label: "Inactive", value: "inactive" },
-        { label: "Banned", value: "banned" },
-      ],
-      defaultValue: "",
-      // Optional: Transform value before sending to backend
-      transform: (value) => value?.toLowerCase(),
-      // Optional: Format value for display
-      format: (value) => value?.charAt(0).toUpperCase() + value?.slice(1),
-    },
-    role: {
-      type: "select",
-      label: "Role",
-      options: [
-        { label: "All Roles", value: "" },
-        ...roles.map((role) => ({
-          label: role.name,
-          value: role.name.toLowerCase(),
-        })),
-      ],
-      defaultValue: "",
-      transform: (value) => value?.toLowerCase(),
-    },
-    date_range: {
-      type: "date-range",
-      label: "Date Range",
-      defaultValue: {
-        from: "",
-        to: "",
-      },
-      transform: (value) => ({
-        from: value.from ? format(new Date(value.from), "yyyy-MM-dd") : "",
-        to: value.to ? format(new Date(value.to), "yyyy-MM-dd") : "",
-      }),
-    },
-    verified: {
-      type: "select",
-      label: "Verified Status",
-      options: [
-        { label: "All", value: "" },
-        { label: "Verified", value: "1" },
-        { label: "Unverified", value: "0" },
-      ],
-      defaultValue: "",
-    },
-  };
+  const safeUsers = useMemo(() => users?.data || [], [users]);
 
-  // Enhanced sortable configurations
-  const sortableConfigs = {
-    name: {
-      key: "name",
-      defaultDirection: "asc",
-      transform: (value) => value?.toLowerCase(),
-      priority: 1,
-    },
-    email: {
-      key: "email",
-      defaultDirection: "asc",
-      transform: (value) => value?.toLowerCase(),
-      priority: 2,
-    },
-    created_at: {
-      key: "created_at",
-      defaultDirection: "desc",
-      transform: (value) => new Date(value),
-      format: (value) => format(new Date(value), "PPP"),
-      priority: 3,
-    },
-    status: {
-      key: "status",
-      defaultDirection: "desc",
-      transform: (value) => String(value).toLowerCase(),
-      format: (value) => filterConfigs.status.format(value),
-      priority: 2,
-    },
-  };
+  // Build role filter options dynamically from props
+  const roleFilterOptions = useMemo(() => [
+    { label: "All Roles", value: "" },
+    ...roles.map((role) => ({
+      label: role.name,
+      value: role.name.toLowerCase(),
+    })),
+  ], [roles]);
 
   // Enhanced responsive design for status badges
   const getStatusConfig = (status) =>
@@ -128,7 +138,7 @@ export default function ListUsers({ users, roles, meta }) {
   }[status || "inactive"]);
 
   // Enhanced columns with better responsive design
-  const columns = [
+  const columns = useMemo(() => [
     {
       id: "avatar",
       header: "",
@@ -156,7 +166,7 @@ export default function ListUsers({ users, roles, meta }) {
         </div>
       ),
       sortable: true,
-      sortConfig: sortableConfigs.name,
+      sortConfig: SORT_CONFIG.name,
       features: {
         search: true,
         filter: true,
@@ -170,7 +180,7 @@ export default function ListUsers({ users, roles, meta }) {
       header: "Email",
       cell: (row) => row.email,
       sortable: true,
-      sortConfig: sortableConfigs.email,
+      sortConfig: SORT_CONFIG.email,
       features: {
         search: true,
         filter: true,
@@ -198,7 +208,7 @@ export default function ListUsers({ users, roles, meta }) {
       ),
       filter: {
         type: "select",
-        options: filterConfigs.role.options,
+        options: roleFilterOptions,
       },
       responsive: {
         hidden: "lg",
@@ -223,10 +233,10 @@ export default function ListUsers({ users, roles, meta }) {
         );
       },
       sortable: true,
-      sortConfig: sortableConfigs.status,
+      sortConfig: SORT_CONFIG.status,
       filter: {
         type: "select",
-        options: filterConfigs.status.options,
+        options: FILTER_CONFIGS.status.options,
       },
       responsive: {
         hidden: "md",
@@ -239,7 +249,7 @@ export default function ListUsers({ users, roles, meta }) {
       header: "Created At",
       cell: (row) => format(new Date(row.created_at), "PPP"),
       sortable: true,
-      sortConfig: sortableConfigs.created_at,
+      sortConfig: SORT_CONFIG.created_at,
       responsive: {
         hidden: "md",
         priority: 4,
@@ -288,7 +298,7 @@ export default function ListUsers({ users, roles, meta }) {
         priority: 1,
       },
     },
-  ];
+  ], [roleFilterOptions, getStatusConfig]);
 
   // Toggle real-time polling on/off
   const handleTogglePolling = () => {
@@ -335,7 +345,7 @@ export default function ListUsers({ users, roles, meta }) {
     hasMoreData,
     loadMoreData,
     handleFilterChange,
-    handleBulkAction,
+    handleBulkAction: handleBulkActionFromHook,
     handleSelectionChange,
     handleSort,
     currentPage,
@@ -345,15 +355,16 @@ export default function ListUsers({ users, roles, meta }) {
     routeName: "app.users.index",
     dataKey: 'users', // ← This is the key! Must match your controller prop name
     initialFilters: {
-      search: "",
-      role: "",
-      status: "",
-      date_from: "",
-      date_to: "",
-      verified: "",
-      sort: "created_at",
-      direction: "desc",
-      per_page: 10,
+      search: initialFilters.search || "",
+      role: initialFilters.role || "",
+      status: initialFilters.status || "",
+      date_from: initialFilters.date_from || "",
+      date_to: initialFilters.date_to || "",
+      verified: initialFilters.verified || "",
+      sort: initialFilters.sort || "created_at",
+      direction: initialFilters.direction || "desc",
+      per_page: initialFilters.per_page || 10,
+      ...initialFilters
     },
     onSuccess: () => {
       // Handle success if needed
@@ -370,16 +381,21 @@ export default function ListUsers({ users, roles, meta }) {
     enablePrefetch: true, // Enable prefetching for better performance
   });
 
+  // ====================================
+  // ACTION HANDLERS
+  // ====================================
+
+
   // Handle row actions
-  const handleView = (row) => {
+  const handleView = useCallback((row) => {
     router.get(route("app.users.show", row.id));
-  };
+  }, []);
 
-  const handleEdit = (row) => {
+  const handleEdit = useCallback((row) => {
     router.get(route("app.users.edit", row.id));
-  };
+  }, []);
 
-  const handleDelete = (row) => {
+  const handleDelete = useCallback((row) => {
     if (confirm(`Are you sure you want to delete ${row.name}?`)) {
       router.delete(route("app.users.destroy", row.id), {
         preserveScroll: true,
@@ -398,9 +414,9 @@ export default function ListUsers({ users, roles, meta }) {
         },
       });
     }
-  };
+  }, []);
 
-  const handleStatusToggle = (row) => {
+  const handleStatusToggle = useCallback((row) => {
     const newStatus = row.status === "active" ? "inactive" : "active";
     router.put(
       route("app.users.status", row.id),
@@ -423,54 +439,129 @@ export default function ListUsers({ users, roles, meta }) {
         },
       }
     );
-  };
+  }, []);
 
   // Handle refresh - manual data reload
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
     console.log("refresh");
     return router.reload({
       only: ['users', 'meta'],
       preserveScroll: true,
       preserveState: true
     });
-  };
+  }, []);
 
-  // Get the bulk actions for the table
-  const bulkActions = [
-    {
-      label: "Delete Selected",
-      icon: Trash2,
-      value: "delete",
+  // ====================================
+  // BULK ACTION HANDLERS
+  // ====================================
+
+  const handleBulkAction = useCallback((action) => {
+    switch (action) {
+      case 'delete':
+        handleBulkDelete(selectedItems);
+        break;
+      case 'activate':
+        handleBulkStatusChange(selectedItems, 'active');
+        break;
+      case 'deactivate':
+        handleBulkStatusChange(selectedItems, 'inactive');
+        break;
+      default:
+        handleBulkActionFromHook(action);
     }
-  ];
+  }, [selectedItems, handleBulkActionFromHook]);
 
-  // Render the filters component
-  const renderFilters = () => {
-    return (
-      <div className="flex flex-col sm:flex-row gap-4 mb-4 hidden">
-        <div className="flex items-center space-x-2">
-          <button
-            type="button"
-            onClick={handleTogglePolling}
+  // Bulk delete users
+  const handleBulkDelete = useCallback((selected) => {
+    if (!selected || selected.length === 0) return;
+
+    if (confirm(`Are you sure you want to delete ${selected.length} selected users?`)) {
+      router.delete(route("app.users.bulk-delete"), {
+        data: { ids: selected },
+        preserveScroll: true,
+        onSuccess: () => {
+          toast({
+            title: "Success",
+            description: `${selected.length} users deleted successfully`,
+          });
+          handleSelectionChange([]);
+          handleRefresh();
+        },
+        onError: (error) => {
+          toast({
+            title: "Error",
+            description: error?.message || "Failed to delete users",
+            variant: "destructive",
+          });
+        },
+      });
+    }
+  }, [handleSelectionChange, handleRefresh, toast]);
+
+  // Bulk status change
+  const handleBulkStatusChange = useCallback((selected, status) => {
+    if (!selected || selected.length === 0) return;
+
+    const actionText = status === 'active' ? 'activate' : 'deactivate';
+
+    if (confirm(`Are you sure you want to ${actionText} ${selected.length} selected users?`)) {
+      router.put(route("app.users.bulk-status"), {
+        data: {
+          ids: selected,
+          status: status
+        },
+        preserveScroll: true,
+        onSuccess: () => {
+          toast({
+            title: "Success",
+            description: `${selected.length} users ${actionText}d successfully`,
+          });
+          handleSelectionChange([]);
+          handleRefresh();
+        },
+        onError: (error) => {
+          toast({
+            title: "Error",
+            description: error?.message || `Failed to ${actionText} users`,
+            variant: "destructive",
+          });
+        },
+      });
+    }
+  }, [handleSelectionChange, handleRefresh, toast]);
+
+  // ====================================
+  // FILTER COMPONENT RENDERER
+  // ====================================
+
+  const renderFilters = useCallback(() => (
+    <div className="flex flex-col sm:flex-row gap-4 mb-4 hidden">
+      <div className="flex items-center space-x-2">
+        <button
+          type="button"
+          onClick={handleTogglePolling}
+          className={cn(
+            "flex items-center space-x-1 px-3 py-1 rounded-md text-sm",
+            enablePolling
+              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+              : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+          )}
+        >
+          <RefreshCw
             className={cn(
-              "flex items-center space-x-1 px-3 py-1 rounded-md text-sm",
-              enablePolling
-                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+              "h-4 w-4",
+              enablePolling && "animate-spin"
             )}
-          >
-            <RefreshCw
-              className={cn(
-                "h-4 w-4",
-                enablePolling && "animate-spin"
-              )}
-            />
-            <span>{enablePolling ? "Polling Active" : "Enable Polling"}</span>
-          </button>
-        </div>
+          />
+          <span>{enablePolling ? "Polling Active" : "Enable Polling"}</span>
+        </button>
       </div>
-    );
-  };
+    </div>
+  ), [enablePolling, handleTogglePolling]);
+
+  // ====================================
+  // MAIN RENDER
+  // ====================================
 
   // Render the data table with all the configurations
   return (
@@ -483,7 +574,7 @@ export default function ListUsers({ users, roles, meta }) {
         onFilterChange={handleFilterChange}
         selectedItems={selectedItems}
         onSelectionChange={handleSelectionChange}
-        bulkActions={bulkActions}
+        bulkActions={BULK_ACTIONS}
         onBulkAction={handleBulkAction}
         isLoading={isLoading}
         isLoadingMore={isLoadingMore}
