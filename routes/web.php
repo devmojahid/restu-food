@@ -558,6 +558,7 @@ Route::middleware(['auth', 'role:Admin|Restaurant|Kitchen|Delivery|Customer'])->
 Route::group(['prefix' => 'app/restaurants', 'as' => 'app.restaurants.'], function () {
     Route::get('/', [RestaurantController::class, 'index'])->name('index');
     Route::get('/create', [RestaurantController::class, 'create'])->name('create'); 
+    Route::post('/', [RestaurantController::class, 'store'])->name('store');
     Route::get('{restaurant}', [RestaurantController::class, 'show'])->name('show');
     Route::get('{restaurant}/edit', [RestaurantController::class, 'edit'])->name('edit');
     Route::put('{restaurant}', [RestaurantController::class, 'update'])->name('update');

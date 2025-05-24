@@ -9,7 +9,7 @@ export const loadGoogleMaps = () => {
             version: 'weekly',
             libraries: ['places', 'geometry']
         });
-        
+
         googleMapsPromise = loader.load();
     }
     return googleMapsPromise;

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "@inertiajs/react";
 import { Button } from "@/Components/ui/button";
 import { Input } from "@/Components/ui/input";
@@ -48,6 +48,7 @@ const ErrorAlert = ({ errors }) => {
 
 export default function RestaurantForm({ restaurant = null }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [autoUpdateSlug, setAutoUpdateSlug] = useState(true);
   const isEditing = !!restaurant;
 
   const { data, setData, post, put, processing, errors } = useForm({
@@ -73,15 +74,23 @@ export default function RestaurantForm({ restaurant = null }) {
     gallery: restaurant?.gallery ?? [],
   });
 
+  // Auto-generate slug from title
+  useEffect(() => {
+    if (data.name && autoUpdateSlug) {
+      const slug = data.name
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      setData('slug', slug);
+    }
+  }, [data.name]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const action = isEditing
-      ? put(route("app.restaurants.update", restaurant.id))
-      : post(route("app.restaurants.store"));
-
-    action({
+    const options = {
       preserveState: true,
       preserveScroll: true,
       onSuccess: () => {
@@ -90,8 +99,16 @@ export default function RestaurantForm({ restaurant = null }) {
       onError: () => {
         setIsSubmitting(false);
       },
-    });
+    };
+
+    if (isEditing) {
+      put(route("app.restaurants.update", restaurant.id), data, options);
+    } else {
+      post(route("app.restaurants.store"), data, options);
+    }
   };
+
+
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
@@ -151,6 +168,28 @@ export default function RestaurantForm({ restaurant = null }) {
                 {errors.name && (
                   <p className="text-sm text-red-500">{errors.name}</p>
                 )}
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="slug" error={errors.slug}>Slug</Label>
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="autoUpdateSlug">Auto Update</Label>
+                    <Switch
+                      id="autoUpdateSlug"
+                      checked={autoUpdateSlug}
+                      onCheckedChange={setAutoUpdateSlug}
+                    />
+                  </div>
+                </div>
+                <Input
+                  id="slug"
+                  value={data.slug}
+                  onChange={(e) => setData("slug", e.target.value)}
+                  placeholder="restaurant-slug"
+                  error={errors.slug}
+                  disabled={autoUpdateSlug}
+                />
               </div>
 
               {/* Description Field */}

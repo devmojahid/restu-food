@@ -1,6 +1,6 @@
 export const getMapsConfig = () => {
   return window.googleMapsConfig || {
-    key: '',
+    key: import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? '', // Fixed typo: was VITE_GOOGLE_MAPS_API_KE
     libraries: 'places,geometry',
     defaultCenter: { lat: 0, lng: 0 },
     defaultZoom: 12
@@ -15,15 +15,15 @@ export const loadGoogleMaps = () => {
     }
 
     const config = getMapsConfig();
-    
+
     if (!config.key) {
       reject(new Error('Google Maps API key is missing'));
       return;
     }
 
     const script = document.createElement('script');
-    // script.src = `https://maps.googleapis.com/maps/api/js?key=${config.key}&libraries=${config.libraries}&callback=initGoogleMaps`;
-    script.src = `https://maps.gomaps.pro/maps/api/js?sensor=false&callback=initGoogleMaps&libraries=places`;
+    // Use the official Google Maps API with your API key
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${config.key}&libraries=${config.libraries}&callback=initGoogleMaps`;
     script.async = true;
     script.defer = true;
 
@@ -37,4 +37,4 @@ export const loadGoogleMaps = () => {
 
     document.head.appendChild(script);
   });
-}; 
+};
