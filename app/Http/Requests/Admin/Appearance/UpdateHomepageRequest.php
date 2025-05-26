@@ -17,23 +17,27 @@ class UpdateHomepageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Hero Section - Single
+            // Hero Section - General
             'hero_enabled' => 'boolean',
             'hero_type' => 'nullable|string|in:single,slider',
+            'hero_background_overlay' => 'nullable|numeric|between:0,1',
+            'hero_text_alignment' => 'nullable|string|in:left,center,right',
+            
+            // Hero Section - Single
             'hero_title' => 'nullable|string|max:200',
             'hero_subtitle' => 'nullable|string|max:500',
             'hero_image' => 'nullable|image|max:2048',
             'hero_cta_text' => 'nullable|string|max:50',
             'hero_cta_link' => 'nullable|string|max:200',
-            'hero_background_overlay' => 'nullable|numeric|between:0,1',
-            'hero_text_alignment' => 'nullable|string|in:left,center,right',
             
-            // Hero Section - Slider
+            // Hero Section - Slider (Fixed validation rules)
             'hero_slides' => 'nullable|array',
+            'hero_slides.*' => 'array', // Each slide must be an array
             'hero_slides.*.id' => 'nullable',
-            'hero_slides.*.title' => 'required_with:hero_slides|string|max:200',
+            'hero_slides.*.title' => 'nullable|string|max:200',
             'hero_slides.*.description' => 'nullable|string|max:500',
-            'hero_slides.*.image' => 'nullable',
+            'hero_slides.*.image' => 'nullable', // Can be file or URL
+            'hero_slides.*.cta' => 'nullable|array',
             'hero_slides.*.cta.text' => 'nullable|string|max:50',
             'hero_slides.*.cta.link' => 'nullable|string|max:200',
 
@@ -88,8 +92,14 @@ class UpdateHomepageRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'hero_image.image' => 'Hero image must be a valid image file',
-            'hero_image.max' => 'Hero image must not exceed 2MB',
+            'hero_slides.array' => 'Hero slides must be a valid array format.',
+            'hero_slides.*.array' => 'Each hero slide must be properly formatted.',
+            'hero_slides.*.title.max' => 'Hero slide title cannot exceed 200 characters.',
+            'hero_slides.*.description.max' => 'Hero slide description cannot exceed 500 characters.',
+            'hero_slides.*.cta.text.max' => 'CTA text cannot exceed 50 characters.',
+            'hero_slides.*.cta.link.max' => 'CTA link cannot exceed 200 characters.',
+            'hero_background_overlay.between' => 'Background overlay must be between 0 and 1.',
+            'hero_text_alignment.in' => 'Text alignment must be left, center, or right.',
             'feedbacks.*.rating.between' => 'Rating must be between 1 and 5',
             'primary_color.regex' => 'Invalid color format. Use hex color code (e.g., #FF0000)',
             'secondary_color.regex' => 'Invalid color format. Use hex color code (e.g., #00FF00)',
@@ -97,29 +107,54 @@ class UpdateHomepageRequest extends FormRequest
         ];
     }
     
-    protected function prepareForValidation(): void
+    protected function prepareForValidation()
     {
-        if ($this->has('hero_enabled')) {
+        // Clean up hero_slides data if it exists
+        if ($this->has('hero_slides') && is_array($this->hero_slides)) {
+            $cleanedSlides = [];
+            
+            foreach ($this->hero_slides as $slide) {
+                if (is_array($slide)) {
+                    // Ensure CTA is properly structured
+                    if (isset($slide['cta']) && is_array($slide['cta'])) {
+                        $slide['cta'] = [
+                            'text' => $slide['cta']['text'] ?? '',
+                            'link' => $slide['cta']['link'] ?? ''
+                        ];
+                    }
+                    
+                    $cleanedSlides[] = $slide;
+                }
+            }
+            
             $this->merge([
-                'hero_enabled' => filter_var($this->hero_enabled, FILTER_VALIDATE_BOOLEAN),
+                'hero_slides' => $cleanedSlides
             ]);
         }
-        
-        if ($this->has('why_choose_us_enabled')) {
-            $this->merge([
-                'why_choose_us_enabled' => filter_var($this->why_choose_us_enabled, FILTER_VALIDATE_BOOLEAN),
-            ]);
+
+        // Convert string boolean values to actual booleans
+        $booleanFields = [
+            'hero_enabled',
+            'top_categories_enabled', 
+            'why_choose_us_enabled',
+            'client_feedback_enabled'
+        ];
+
+        foreach ($booleanFields as $field) {
+            if ($this->has($field)) {
+                $value = $this->input($field);
+                if (is_string($value)) {
+                    $this->merge([
+                        $field => filter_var($value, FILTER_VALIDATE_BOOLEAN)
+                    ]);
+                }
+            }
         }
-        
-        if ($this->has('top_categories_enabled')) {
+
+        // Ensure numeric fields are properly typed
+        if ($this->has('hero_background_overlay')) {
             $this->merge([
-                'top_categories_enabled' => filter_var($this->top_categories_enabled, FILTER_VALIDATE_BOOLEAN),
-            ]);
-        }
-        
-        if ($this->has('client_feedback_enabled')) {
-            $this->merge([
-                'client_feedback_enabled' => filter_var($this->client_feedback_enabled, FILTER_VALIDATE_BOOLEAN),
+                'hero_background_overlay' => (float) $this->input('hero_background_overlay')
             ]);
         }
     }

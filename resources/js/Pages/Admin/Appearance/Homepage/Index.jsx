@@ -279,7 +279,7 @@ const HomepageEditor = ({ homepageOptions = {}, defaults = {}, dynamicData = {},
           </div>
 
           {/* Hero Preview */}
-          <div className="mb-8 overflow-hidden rounded-lg border">
+          <div className="mb-8 overflow-hidden rounded-lg border hidden">
             <div className="bg-muted p-2 border-b flex justify-between items-center">
               <div className="text-sm font-medium flex items-center">
                 <Eye className="h-4 w-4 mr-2 text-muted-foreground" />

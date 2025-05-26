@@ -115,9 +115,6 @@ const ClientFeedbackSection = () => {
                 onChange={e => updateFormData('client_feedback_title', e.target.value)}
                 placeholder="What Our Customers Say"
               />
-              <p className="text-xs text-muted-foreground">
-                *Add your text in [text here] to make it colorful
-              </p>
             </div>
 
             {/* Section Subtitle */}

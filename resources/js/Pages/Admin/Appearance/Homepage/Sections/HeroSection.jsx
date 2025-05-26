@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import { usePageEditor } from '@/Components/Admin/PageBuilder/PageEditorContext';
 import { Input } from "@/Components/ui/input";
 import { Label } from "@/Components/ui/label";
@@ -13,86 +13,129 @@ import { cn } from '@/lib/utils';
 import { ErrorBoundary } from '@/Components/ui/error-boundary';
 import { Alert, AlertDescription } from '@/Components/ui/alert';
 
+// Constants for better maintainability
+const HERO_TYPES = {
+  SINGLE: 'single',
+  SLIDER: 'slider'
+};
+
+const TEXT_ALIGNMENTS = [
+  { value: 'left', label: 'Left' },
+  { value: 'center', label: 'Center' },
+  { value: 'right', label: 'Right' }
+];
+
+const DEFAULT_SLIDE = {
+  id: null,
+  title: '',
+  description: '',
+  image: null,
+  cta: {
+    text: '',
+    link: ''
+  }
+};
+
 const HeroSection = () => {
-  // Get context values
   const {
     formData,
     updateFormData,
-    updateNestedFormData,
     addFile,
     isSaving,
     handleSubmit,
     errors
   } = usePageEditor();
 
+  // Memoized values for better performance
+  const heroType = useMemo(() => formData.hero_type || HERO_TYPES.SINGLE, [formData.hero_type]);
+  const heroSlides = useMemo(() => Array.isArray(formData.hero_slides) ? formData.hero_slides : [], [formData.hero_slides]);
+  const overlayValue = useMemo(() => formData.hero_background_overlay || 0.5, [formData.hero_background_overlay]);
+
   // Set default tab based on hero_type
-  const [activeTab, setActiveTab] = React.useState(formData.hero_type || 'single');
+  const [activeTab, setActiveTab] = React.useState(heroType);
 
   // Update tab when hero_type changes
   useEffect(() => {
-    if (formData.hero_type) {
-      setActiveTab(formData.hero_type);
-    }
-  }, [formData.hero_type]);
+    setActiveTab(heroType);
+  }, [heroType]);
 
-  const handleFileUpload = (field, files) => {
+  // File upload handler
+  const handleFileUpload = useCallback((field, files) => {
     if (files && files.length > 0) {
       addFile(field, files[0]);
     }
-  };
+  }, [addFile]);
 
-  const addSlide = () => {
-    // Ensure hero_slides is an array
-    const slides = Array.isArray(formData.hero_slides) ? [...formData.hero_slides] : [];
+  // Slide management functions
+  const addSlide = useCallback(() => {
+    const newSlide = {
+      ...DEFAULT_SLIDE,
+      id: Date.now()
+    };
 
-    slides.push({
-      id: Date.now(),
-      title: '',
-      description: '',
-      image: null,
-      cta: {
-        text: '',
-        link: ''
-      }
-    });
+    const updatedSlides = [...heroSlides, newSlide];
+    updateFormData('hero_slides', updatedSlides);
+  }, [heroSlides, updateFormData]);
 
-    updateFormData('hero_slides', slides);
-  };
+  const removeSlide = useCallback((index) => {
+    if (index < 0 || index >= heroSlides.length) return;
 
-  const removeSlide = (index) => {
-    const slides = Array.isArray(formData.hero_slides) ? [...formData.hero_slides] : [];
-    slides.splice(index, 1);
-    updateFormData('hero_slides', slides);
-  };
+    const updatedSlides = heroSlides.filter((_, i) => i !== index);
+    updateFormData('hero_slides', updatedSlides);
+  }, [heroSlides, updateFormData]);
 
-  const moveSlide = (index, direction) => {
-    const slides = Array.isArray(formData.hero_slides) ? [...formData.hero_slides] : [];
+  const moveSlide = useCallback((index, direction) => {
     const newIndex = direction === 'up' ? index - 1 : index + 1;
 
-    if (newIndex >= 0 && newIndex < slides.length) {
-      [slides[index], slides[newIndex]] = [slides[newIndex], slides[index]];
-      updateFormData('hero_slides', slides);
-    }
-  };
+    if (newIndex < 0 || newIndex >= heroSlides.length) return;
 
-  const updateSlide = (index, field, value) => {
-    if (field.startsWith('cta.')) {
-      const ctaField = field.split('.')[1];
-      updateNestedFormData(`hero_slides.${index}.cta.${ctaField}`, value);
-    } else {
-      updateNestedFormData(`hero_slides.${index}.${field}`, value);
-    }
-  };
+    const updatedSlides = [...heroSlides];
+    [updatedSlides[index], updatedSlides[newIndex]] = [updatedSlides[newIndex], updatedSlides[index]];
 
-  // Add this function to ensure hero_slides is an array when accessing it
-  const getHeroSlides = () => {
-    return Array.isArray(formData.hero_slides) ? formData.hero_slides : [];
-  };
+    updateFormData('hero_slides', updatedSlides);
+  }, [heroSlides, updateFormData]);
 
-  // Check if there are any slide-related errors
-  const hasSlideErrors = () => {
+  // Fixed updateSlide function - this was the main issue
+  const updateSlide = useCallback((index, field, value) => {
+    if (index < 0 || index >= heroSlides.length) return;
+
+    const updatedSlides = heroSlides.map((slide, i) => {
+      if (i !== index) return slide;
+
+      const updatedSlide = { ...slide };
+
+      if (field.startsWith('cta.')) {
+        const ctaField = field.split('.')[1];
+        updatedSlide.cta = { ...updatedSlide.cta, [ctaField]: value };
+      } else {
+        updatedSlide[field] = value;
+      }
+
+      return updatedSlide;
+    });
+
+    updateFormData('hero_slides', updatedSlides);
+  }, [heroSlides, updateFormData]);
+
+  // Error checking functions
+  const hasSlideErrors = useCallback(() => {
     return Object.keys(errors || {}).some(key => key.startsWith('hero_slides'));
-  };
+  }, [errors]);
+
+  const getFieldError = useCallback((fieldName) => {
+    return errors?.[fieldName];
+  }, [errors]);
+
+  // Handle hero type change
+  const handleHeroTypeChange = useCallback((value) => {
+    updateFormData('hero_type', value);
+    setActiveTab(value);
+  }, [updateFormData]);
+
+  // Handle overlay change
+  const handleOverlayChange = useCallback((e) => {
+    updateFormData('hero_background_overlay', parseFloat(e.target.value));
+  }, [updateFormData]);
 
   return (
     <ErrorBoundary>
@@ -102,7 +145,7 @@ const HeroSection = () => {
           <Label htmlFor="hero_enabled">Enable Hero Section</Label>
           <Switch
             id="hero_enabled"
-            checked={formData.hero_enabled}
+            checked={!!formData.hero_enabled}
             onCheckedChange={(checked) => updateFormData('hero_enabled', checked)}
           />
         </div>
@@ -111,30 +154,27 @@ const HeroSection = () => {
         <div className="space-y-2">
           <Label htmlFor="hero_type">Hero Type</Label>
           <Select
-            value={formData.hero_type || 'single'}
-            onValueChange={(value) => {
-              updateFormData('hero_type', value);
-              setActiveTab(value);
-            }}
+            value={heroType}
+            onValueChange={handleHeroTypeChange}
           >
             <SelectTrigger id="hero_type">
               <SelectValue placeholder="Select Hero Type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="single">Single Hero</SelectItem>
-              <SelectItem value="slider">Slider Hero</SelectItem>
+              <SelectItem value={HERO_TYPES.SINGLE}>Single Hero</SelectItem>
+              <SelectItem value={HERO_TYPES.SLIDER}>Slider Hero</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="single">Single Hero</TabsTrigger>
-            <TabsTrigger value="slider">Slider Hero</TabsTrigger>
+            <TabsTrigger value={HERO_TYPES.SINGLE}>Single Hero</TabsTrigger>
+            <TabsTrigger value={HERO_TYPES.SLIDER}>Slider Hero</TabsTrigger>
           </TabsList>
 
           {/* Single Hero Content */}
-          <TabsContent value="single" className="space-y-6">
+          <TabsContent value={HERO_TYPES.SINGLE} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="hero_title">Title</Label>
               <Input
@@ -142,10 +182,11 @@ const HeroSection = () => {
                 value={formData.hero_title || ''}
                 onChange={e => updateFormData('hero_title', e.target.value)}
                 placeholder="Type your hero title"
+                className={cn(getFieldError('hero_title') && 'border-red-500')}
               />
-              <p className="text-xs text-muted-foreground">
-                *Add your text in [text here] to make it colorful
-              </p>
+              {getFieldError('hero_title') && (
+                <p className="text-xs text-red-500">{getFieldError('hero_title')}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -155,7 +196,11 @@ const HeroSection = () => {
                 value={formData.hero_subtitle || ''}
                 onChange={e => updateFormData('hero_subtitle', e.target.value)}
                 placeholder="Type your hero subtitle"
+                className={cn(getFieldError('hero_subtitle') && 'border-red-500')}
               />
+              {getFieldError('hero_subtitle') && (
+                <p className="text-xs text-red-500">{getFieldError('hero_subtitle')}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -164,9 +209,11 @@ const HeroSection = () => {
                 maxFiles={1}
                 onUpload={(files) => handleFileUpload('hero_image', files)}
                 className="min-h-[200px]"
-                // Show existing image if available
                 value={formData.hero_image}
               />
+              {getFieldError('hero_image') && (
+                <p className="text-xs text-red-500">{getFieldError('hero_image')}</p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -200,9 +247,11 @@ const HeroSection = () => {
                   <SelectValue placeholder="Select text alignment" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="left">Left</SelectItem>
-                  <SelectItem value="center">Center</SelectItem>
-                  <SelectItem value="right">Right</SelectItem>
+                  {TEXT_ALIGNMENTS.map(alignment => (
+                    <SelectItem key={alignment.value} value={alignment.value}>
+                      {alignment.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -215,20 +264,20 @@ const HeroSection = () => {
                 min="0"
                 max="1"
                 step="0.1"
-                value={formData.hero_background_overlay || 0.5}
-                onChange={e => updateFormData('hero_background_overlay', parseFloat(e.target.value))}
+                value={overlayValue}
+                onChange={handleOverlayChange}
                 className="w-full"
               />
               <div className="text-xs text-muted-foreground">
-                Current value: {formData.hero_background_overlay || 0.5}
+                Current value: {overlayValue}
               </div>
             </div>
           </TabsContent>
 
           {/* Slider Hero Content */}
-          <TabsContent value="slider" className="space-y-6">
+          <TabsContent value={HERO_TYPES.SLIDER} className="space-y-6">
             <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold">Slides</h3>
+              <h3 className="text-lg font-semibold">Slider Slides</h3>
               <Button
                 type="button"
                 variant="outline"
@@ -251,7 +300,7 @@ const HeroSection = () => {
             )}
 
             <div className="space-y-6">
-              {(getHeroSlides() || []).map((slide, index) => (
+              {heroSlides.map((slide, index) => (
                 <Card key={slide.id || index} className="p-6">
                   <div className="flex justify-between items-start mb-4">
                     <h4 className="font-medium">Slide {index + 1}</h4>
@@ -270,7 +319,7 @@ const HeroSection = () => {
                         variant="ghost"
                         size="icon"
                         onClick={() => moveSlide(index, 'down')}
-                        disabled={index === (getHeroSlides()?.length || 0) - 1}
+                        disabled={index === heroSlides.length - 1}
                       >
                         <MoveDown className="w-4 h-4" />
                       </Button>
@@ -294,11 +343,11 @@ const HeroSection = () => {
                         value={slide.title || ''}
                         onChange={e => updateSlide(index, 'title', e.target.value)}
                         placeholder="Slide title"
-                        className={cn(errors?.[`hero_slides.${index}.title`] && 'border-red-500')}
+                        className={cn(getFieldError(`hero_slides.${index}.title`) && 'border-red-500')}
                       />
-                      {errors?.[`hero_slides.${index}.title`] && (
-                        <p className="text-xs text-red-500 mt-1">
-                          {errors[`hero_slides.${index}.title`]}
+                      {getFieldError(`hero_slides.${index}.title`) && (
+                        <p className="text-xs text-red-500">
+                          {getFieldError(`hero_slides.${index}.title`)}
                         </p>
                       )}
                     </div>
@@ -352,7 +401,7 @@ const HeroSection = () => {
                 </Card>
               ))}
 
-              {(!getHeroSlides() || getHeroSlides().length === 0) && (
+              {heroSlides.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
                   No slides added yet. Click "Add Slide" to create your first slide.
                 </div>

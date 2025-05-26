@@ -1,8 +1,156 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useReducer } from 'react';
 import { useToast } from "@/Components/ui/use-toast";
 import { router } from '@inertiajs/react';
 
 const PageEditorContext = createContext();
+
+// Action types for reducer
+const ACTIONS = {
+  SET_FORM_DATA: 'SET_FORM_DATA',
+  UPDATE_FIELD: 'UPDATE_FIELD',
+  UPDATE_NESTED_FIELD: 'UPDATE_NESTED_FIELD',
+  CLEAR_ERRORS: 'CLEAR_ERRORS',
+  SET_ERRORS: 'SET_ERRORS',
+  RESET_FORM: 'RESET_FORM',
+  SET_DIRTY: 'SET_DIRTY'
+};
+
+// Utility functions
+const deepClone = (obj) => {
+  if (obj === null || typeof obj !== 'object') return obj;
+  if (obj instanceof Date) return new Date(obj);
+  if (Array.isArray(obj)) return obj.map(deepClone);
+
+  const cloned = {};
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      cloned[key] = deepClone(obj[key]);
+    }
+  }
+  return cloned;
+};
+
+const setNestedValue = (obj, path, value) => {
+  const keys = path.split('.');
+  let current = obj;
+
+  // Navigate to the parent of the target property
+  for (let i = 0; i < keys.length - 1; i++) {
+    const key = keys[i];
+
+    if (key.match(/^\d+$/)) {
+      // Handle array indices
+      const index = parseInt(key);
+      const arrayKey = keys[i - 1];
+
+      if (!Array.isArray(current[arrayKey])) {
+        current[arrayKey] = [];
+      }
+
+      // Ensure array is long enough
+      while (current[arrayKey].length <= index) {
+        current[arrayKey].push({});
+      }
+
+      current = current[arrayKey][index];
+    } else {
+      // Handle object properties
+      if (!current[key] || typeof current[key] !== 'object' || Array.isArray(current[key])) {
+        current[key] = {};
+      }
+      current = current[key];
+    }
+  }
+
+  // Set the final value
+  const finalKey = keys[keys.length - 1];
+  current[finalKey] = value;
+};
+
+// Form state reducer
+const formReducer = (state, action) => {
+  switch (action.type) {
+    case ACTIONS.SET_FORM_DATA:
+      return {
+        ...state,
+        formData: action.payload,
+        isDirty: false,
+        errors: {}
+      };
+
+    case ACTIONS.UPDATE_FIELD:
+      const newFormData = {
+        ...state.formData,
+        [action.field]: action.value
+      };
+
+      const newErrors = { ...state.errors };
+      delete newErrors[action.field];
+
+      return {
+        ...state,
+        formData: newFormData,
+        errors: newErrors,
+        isDirty: true
+      };
+
+    case ACTIONS.UPDATE_NESTED_FIELD:
+      const clonedData = deepClone(state.formData);
+      try {
+        setNestedValue(clonedData, action.path, action.value);
+
+        const clearedErrors = { ...state.errors };
+        delete clearedErrors[action.path];
+
+        return {
+          ...state,
+          formData: clonedData,
+          errors: clearedErrors,
+          isDirty: true
+        };
+      } catch (error) {
+        console.error(`Error updating nested field ${action.path}:`, error);
+        return {
+          ...state,
+          errors: {
+            ...state.errors,
+            [action.path]: `Failed to update field: ${error.message}`
+          }
+        };
+      }
+
+    case ACTIONS.CLEAR_ERRORS:
+      return {
+        ...state,
+        errors: action.field ?
+          { ...state.errors, [action.field]: undefined } :
+          {}
+      };
+
+    case ACTIONS.SET_ERRORS:
+      return {
+        ...state,
+        errors: action.payload
+      };
+
+    case ACTIONS.RESET_FORM:
+      return {
+        ...state,
+        formData: action.payload,
+        isDirty: false,
+        errors: {}
+      };
+
+    case ACTIONS.SET_DIRTY:
+      return {
+        ...state,
+        isDirty: action.payload
+      };
+
+    default:
+      return state;
+  }
+};
 
 export const usePageEditor = () => {
   const context = useContext(PageEditorContext);
@@ -12,14 +160,24 @@ export const usePageEditor = () => {
   return context;
 };
 
-export const PageEditorProvider = ({ children, initialData = {}, onSave, saveUrl }) => {
+export const PageEditorProvider = ({
+  children,
+  initialData = {},
+  onSave,
+  saveUrl,
+  validationRules = {}
+}) => {
   const { toast } = useToast();
   const [activeSection, setActiveSection] = useState(null);
-  const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [formData, setFormData] = useState(initialData || {});
   const [files, setFiles] = useState({});
-  const [errors, setErrors] = useState({});
+
+  // Use reducer for complex form state management
+  const [state, dispatch] = useReducer(formReducer, {
+    formData: initialData || {},
+    isDirty: false,
+    errors: {}
+  });
 
   // Set the first section as active by default if none is set
   useEffect(() => {
@@ -29,177 +187,172 @@ export const PageEditorProvider = ({ children, initialData = {}, onSave, saveUrl
     }
   }, [activeSection, children]);
 
-  // Reset form state when initialData changes (like after a successful save)
+  // Reset form state when initialData changes
   useEffect(() => {
-    setFormData(initialData || {});
-    setIsDirty(false);
-    setErrors({});
+    dispatch({ type: ACTIONS.SET_FORM_DATA, payload: initialData || {} });
+    setFiles({});
   }, [initialData]);
 
-  // Update form data with error handling
+  // Validation function
+  const validateField = useCallback((field, value) => {
+    const rules = validationRules[field];
+    if (!rules) return null;
+
+    if (rules.required && (!value || (typeof value === 'string' && !value.trim()))) {
+      return `${field} is required`;
+    }
+
+    if (rules.minLength && typeof value === 'string' && value.length < rules.minLength) {
+      return `${field} must be at least ${rules.minLength} characters`;
+    }
+
+    if (rules.maxLength && typeof value === 'string' && value.length > rules.maxLength) {
+      return `${field} cannot exceed ${rules.maxLength} characters`;
+    }
+
+    if (rules.pattern && typeof value === 'string' && !rules.pattern.test(value)) {
+      return rules.patternMessage || `${field} format is invalid`;
+    }
+
+    return null;
+  }, [validationRules]);
+
+  // Update form data - simplified and more reliable
   const updateFormData = useCallback((field, value) => {
-    try {
-      setFormData(prev => {
-        const updated = { ...prev, [field]: value };
-        setIsDirty(true);
-
-        // Clear any error for this field
-        if (errors[field]) {
-          setErrors(prevErrors => {
-            const newErrors = { ...prevErrors };
-            delete newErrors[field];
-            return newErrors;
-          });
-        }
-
-        return updated;
-      });
-    } catch (error) {
-      console.error(`Error updating field ${field}:`, error);
-      setErrors(prev => ({ ...prev, [field]: 'Failed to update field' }));
+    // Validate if rules exist
+    const error = validateField(field, value);
+    if (error) {
+      dispatch({ type: ACTIONS.SET_ERRORS, payload: { ...state.errors, [field]: error } });
+      return;
     }
-  }, [errors]);
 
-  // Update nested form data with error handling
+    dispatch({
+      type: ACTIONS.UPDATE_FIELD,
+      field,
+      value
+    });
+  }, [validateField, state.errors]);
+
+  // Update nested form data - improved reliability
   const updateNestedFormData = useCallback((path, value) => {
-    try {
-      setFormData(prev => {
-        const keys = path.split('.');
-        const newData = { ...prev };
-        let current = newData;
-
-        // Track the full path for each level
-        let currentPath = '';
-
-        // Navigate to the last object in the path
-        for (let i = 0; i < keys.length - 1; i++) {
-          const key = keys[i];
-          currentPath = currentPath ? `${currentPath}.${key}` : key;
-
-          if (key.match(/^\d+$/)) {
-            // If the key is a number, treat it as an array index
-            const index = parseInt(key);
-            const arrayKey = keys[i - 1];
-
-            // Make sure the array exists
-            if (!Array.isArray(current[arrayKey])) {
-              current[arrayKey] = [];
-            }
-
-            // Make sure the array is long enough
-            while (current[arrayKey].length <= index) {
-              current[arrayKey].push({});
-            }
-
-            // Move to the array item
-            current = current[arrayKey][index];
-          } else {
-            // Handle object properties
-            if (!current[key] || typeof current[key] !== 'object' || Array.isArray(current[key])) {
-              current[key] = {};
-            }
-            current = current[key];
-          }
-        }
-
-        // Set the value at the final key
-        const finalKey = keys[keys.length - 1];
-        current[finalKey] = value;
-
-        setIsDirty(true);
-
-        // Clear any error for this path
-        if (errors[path]) {
-          setErrors(prevErrors => {
-            const newErrors = { ...prevErrors };
-            delete newErrors[path];
-            return newErrors;
-          });
-        }
-
-        return newData;
-      });
-    } catch (error) {
-      console.error(`Error updating nested field ${path}:`, error);
-      setErrors(prev => ({ ...prev, [path]: `Failed to update nested field: ${error.message}` }));
-
-      // Try a simpler approach as fallback
-      try {
-        const keys = path.split('.');
-        const lastKey = keys.pop();
-        const parentPath = keys.join('.');
-
-        setFormData(prev => {
-          const newData = { ...prev };
-          if (!parentPath) {
-            newData[lastKey] = value;
-          } else {
-            const parent = keys.reduce((obj, key) => {
-              if (!obj[key]) obj[key] = {};
-              return obj[key];
-            }, newData);
-            parent[lastKey] = value;
-          }
-          return newData;
-        });
-
-        setIsDirty(true);
-      } catch (fallbackError) {
-        console.error('Fallback also failed:', fallbackError);
-      }
-    }
-  }, [errors]);
+    dispatch({
+      type: ACTIONS.UPDATE_NESTED_FIELD,
+      path,
+      value
+    });
+  }, []);
 
   // Add file to be uploaded
   const addFile = useCallback((field, file) => {
     if (!file) return;
 
-    setFiles(prev => {
-      const newFiles = { ...prev, [field]: file };
-      setIsDirty(true);
-      return newFiles;
+    setFiles(prev => ({
+      ...prev,
+      [field]: file
+    }));
+
+    dispatch({ type: ACTIONS.SET_DIRTY, payload: true });
+    dispatch({ type: ACTIONS.CLEAR_ERRORS, field });
+  }, []);
+
+  // Validate entire form
+  const validateForm = useCallback(() => {
+    const errors = {};
+
+    Object.entries(validationRules).forEach(([field, rules]) => {
+      const value = state.formData[field];
+      const error = validateField(field, value);
+      if (error) {
+        errors[field] = error;
+      }
     });
 
-    // Clear any error for this field
-    if (errors[field]) {
-      setErrors(prevErrors => {
-        const newErrors = { ...prevErrors };
-        delete newErrors[field];
-        return newErrors;
-      });
-    }
-  }, [errors]);
+    return errors;
+  }, [state.formData, validationRules, validateField]);
 
-  // Handle form submission
+  // FIXED: Properly serialize complex data for FormData
+  const serializeForFormData = useCallback((obj, prefix = '') => {
+    const formData = new FormData();
+
+    const appendToFormData = (value, key) => {
+      if (value === null || value === undefined) {
+        return;
+      }
+
+      if (value instanceof File) {
+        formData.append(key, value);
+      } else if (Array.isArray(value)) {
+        // Handle arrays properly - Laravel expects array notation
+        value.forEach((item, index) => {
+          if (typeof item === 'object' && item !== null) {
+            // For complex objects in arrays
+            Object.keys(item).forEach(subKey => {
+              const arrayKey = `${key}[${index}][${subKey}]`;
+              if (typeof item[subKey] === 'object' && item[subKey] !== null && !Array.isArray(item[subKey])) {
+                // Handle nested objects (like cta.text, cta.link)
+                Object.keys(item[subKey]).forEach(nestedKey => {
+                  formData.append(`${arrayKey}[${nestedKey}]`, item[subKey][nestedKey] || '');
+                });
+              } else {
+                formData.append(arrayKey, item[subKey] || '');
+              }
+            });
+          } else {
+            formData.append(`${key}[${index}]`, item);
+          }
+        });
+      } else if (typeof value === 'object') {
+        // Handle nested objects
+        Object.keys(value).forEach(nestedKey => {
+          appendToFormData(value[nestedKey], `${key}[${nestedKey}]`);
+        });
+      } else {
+        formData.append(key, String(value));
+      }
+    };
+
+    Object.entries(obj).forEach(([key, value]) => {
+      const finalKey = prefix ? `${prefix}[${key}]` : key;
+      appendToFormData(value, finalKey);
+    });
+
+    return formData;
+  }, []);
+
+  // Handle form submission with better error handling
   const handleSubmit = useCallback(async (e) => {
     if (e) e.preventDefault();
 
     try {
       setIsSaving(true);
-      setErrors({});
+
+      // Validate form
+      const validationErrors = validateForm();
+      if (Object.keys(validationErrors).length > 0) {
+        dispatch({ type: ACTIONS.SET_ERRORS, payload: validationErrors });
+        toast({
+          title: "Validation Error",
+          description: "Please fix the form errors before saving",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      dispatch({ type: ACTIONS.CLEAR_ERRORS });
 
       if (typeof onSave === 'function') {
         // Use custom save handler if provided
-        await onSave(formData, files);
-      } else if (saveUrl) {
-        // Default to using Inertia router
-        const formDataObj = new FormData();
-
-        // Add all form data to FormData
-        Object.entries(formData).forEach(([key, value]) => {
-          if (value !== null && value !== undefined) {
-            if (typeof value === 'object' && !Array.isArray(value)) {
-              // For non-array objects, stringify
-              formDataObj.append(key, JSON.stringify(value));
-            } else if (Array.isArray(value)) {
-              // For arrays, we need special handling
-              formDataObj.append(key, JSON.stringify(value));
-            } else {
-              // For primitive values
-              formDataObj.append(key, value);
-            }
-          }
+        await onSave(state.formData, files);
+        toast({
+          title: "Success",
+          description: "Changes saved successfully",
+          variant: "success",
         });
+        dispatch({ type: ACTIONS.SET_DIRTY, payload: false });
+        setFiles({});
+      } else if (saveUrl) {
+        // FIXED: Use proper serialization for FormData
+        const formDataObj = serializeForFormData(state.formData);
 
         // Add files to FormData
         Object.entries(files).forEach(([key, file]) => {
@@ -216,16 +369,16 @@ export const PageEditorProvider = ({ children, initialData = {}, onSave, saveUrl
               description: "Changes saved successfully",
               variant: "success",
             });
-            setIsDirty(false);
+            dispatch({ type: ACTIONS.SET_DIRTY, payload: false });
             setFiles({});
           },
           onError: (errors) => {
             console.error('Validation errors:', errors);
-            setErrors(errors);
+            dispatch({ type: ACTIONS.SET_ERRORS, payload: errors });
 
             toast({
               title: "Error",
-              description: Object.values(errors).join(', ') || "Failed to save changes",
+              description: Object.values(errors).flat().join(', ') || "Failed to save changes",
               variant: "destructive",
             });
           },
@@ -243,31 +396,27 @@ export const PageEditorProvider = ({ children, initialData = {}, onSave, saveUrl
         variant: "destructive",
       });
 
-      setErrors(prev => ({
-        ...prev,
-        general: error.message || "Failed to save changes"
-      }));
+      dispatch({
+        type: ACTIONS.SET_ERRORS,
+        payload: { general: error.message || "Failed to save changes" }
+      });
     } finally {
       setIsSaving(false);
     }
-  }, [onSave, saveUrl, formData, files, toast]);
+  }, [onSave, saveUrl, state.formData, files, toast, validateForm, serializeForFormData]);
 
-  // Check if a field has an error
+  // Utility functions
   const hasError = useCallback((fieldName) => {
-    return !!errors[fieldName];
-  }, [errors]);
+    return !!state.errors[fieldName];
+  }, [state.errors]);
 
-  // Get error message for a field
   const getErrorMessage = useCallback((fieldName) => {
-    return errors[fieldName];
-  }, [errors]);
+    return state.errors[fieldName];
+  }, [state.errors]);
 
-  // Reset form to initial data
   const resetForm = useCallback(() => {
-    setFormData(initialData || {});
+    dispatch({ type: ACTIONS.RESET_FORM, payload: initialData || {} });
     setFiles({});
-    setIsDirty(false);
-    setErrors({});
 
     toast({
       title: "Form Reset",
@@ -276,25 +425,45 @@ export const PageEditorProvider = ({ children, initialData = {}, onSave, saveUrl
     });
   }, [initialData, toast]);
 
+  // Bulk update function for complex operations
+  const bulkUpdateFormData = useCallback((updates) => {
+    const newFormData = { ...state.formData };
+
+    Object.entries(updates).forEach(([key, value]) => {
+      newFormData[key] = value;
+    });
+
+    dispatch({ type: ACTIONS.UPDATE_FIELD, field: '_bulk', value: newFormData });
+  }, [state.formData]);
+
+  const contextValue = {
+    // State
+    activeSection,
+    setActiveSection,
+    isDirty: state.isDirty,
+    setIsDirty: (value) => dispatch({ type: ACTIONS.SET_DIRTY, payload: value }),
+    isSaving,
+    formData: state.formData,
+    files,
+    errors: state.errors,
+
+    // Actions
+    updateFormData,
+    updateNestedFormData,
+    bulkUpdateFormData,
+    addFile,
+    handleSubmit,
+
+    // Utilities
+    hasError,
+    getErrorMessage,
+    resetForm,
+    validateForm,
+  };
+
   return (
-    <PageEditorContext.Provider value={{
-      activeSection,
-      setActiveSection,
-      isDirty,
-      setIsDirty,
-      isSaving,
-      formData,
-      updateFormData,
-      updateNestedFormData,
-      addFile,
-      files,
-      handleSubmit,
-      errors,
-      hasError,
-      getErrorMessage,
-      resetForm,
-    }}>
+    <PageEditorContext.Provider value={contextValue}>
       {children}
     </PageEditorContext.Provider>
   );
-}; 
+};
