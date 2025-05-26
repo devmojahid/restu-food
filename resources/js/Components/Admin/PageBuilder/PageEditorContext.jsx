@@ -362,25 +362,18 @@ export const PageEditorProvider = ({
         });
 
         // Submit with Inertia
+        console.log(formDataObj, 'formDataObj');
+        console.log(saveUrl, 'saveUrl');
+        console.log(files, 'files');
+        console.log(state.formData, 'state.formData');
         router.post(saveUrl, formDataObj, {
           onSuccess: () => {
-            toast({
-              title: "Success",
-              description: "Changes saved successfully",
-              variant: "success",
-            });
             dispatch({ type: ACTIONS.SET_DIRTY, payload: false });
             setFiles({});
           },
           onError: (errors) => {
             console.error('Validation errors:', errors);
             dispatch({ type: ACTIONS.SET_ERRORS, payload: errors });
-
-            toast({
-              title: "Error",
-              description: Object.values(errors).flat().join(', ') || "Failed to save changes",
-              variant: "destructive",
-            });
           },
           preserveState: true,
         });

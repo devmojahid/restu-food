@@ -61,6 +61,8 @@ const HeroSection = () => {
 
   // File upload handler
   const handleFileUpload = useCallback((field, files) => {
+    console.log(field, 'field');
+    console.log(files, 'files');
     if (files && files.length > 0) {
       addFile(field, files[0]);
     }

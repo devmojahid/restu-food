@@ -29,6 +29,8 @@ const HeroSlider = ({ slides = [], type = 'slider', className }) => {
     // Ensure slides is an array
     const safeSlides = ensureArray(slides);
 
+    console.log(safeSlides);
+
     // Safety check for null/undefined or empty slides
     if (isEmpty(safeSlides)) {
         return (
