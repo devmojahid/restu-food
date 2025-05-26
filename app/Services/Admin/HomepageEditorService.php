@@ -669,39 +669,63 @@ final class HomepageEditorService
             
             // Files array to store any file uploads
             $files = [];
+
+            // $data['files'] = [
+            //     'hero_image' => $data['hero_image'] ?? null,
+            // ];
+
+            // // Remove avatar from data to avoid duplicate processing
+            // if (isset($data['hero_image'])) {
+            //     unset($data['hero_image']);
+            // }
             
             // Process hero_image and why_choose_us_image if they exist in the request
-            $expectedFileFields = ['hero_image', 'why_choose_us_image'];
-            foreach ($expectedFileFields as $fieldName) {
-                if ($request->hasFile($fieldName) && $request->file($fieldName)->isValid()) {
-                    $files[$fieldName] = $request->file($fieldName);
-                }
-            }
+            // $expectedFileFields = ['hero_image', 'why_choose_us_image'];
+            // foreach ($expectedFileFields as $fieldName) {
+            //     if ($request->hasFile($fieldName) && $request->file($fieldName)->isValid()) {
+            //         $files[$fieldName] = $request->file($fieldName);
+            //     }
+            // }
             
-            // Handle any files in the 'feedbacks' array if it exists
-            if (isset($data['feedbacks']) && is_array($data['feedbacks'])) {
-                foreach ($data['feedbacks'] as $index => $feedback) {
-                    $avatarFieldName = "feedbacks.{$index}.avatar";
-                    // Check if we have a file with this field name in the request
-                    if ($request->hasFile($avatarFieldName)) {
-                        $files[$avatarFieldName] = $request->file($avatarFieldName);
-                    }
-                }
-            }
+            // // Handle any files in the 'feedbacks' array if it exists
+            // if (isset($data['feedbacks']) && is_array($data['feedbacks'])) {
+            //     foreach ($data['feedbacks'] as $index => $feedback) {
+            //         $avatarFieldName = "feedbacks.{$index}.avatar";
+            //         // Check if we have a file with this field name in the request
+            //         if ($request->hasFile($avatarFieldName)) {
+            //             $files[$avatarFieldName] = $request->file($avatarFieldName);
+            //         }
+            //     }
+            // }
             
-            // Handle any files in the 'hero_slides' array if it exists and hero_type is 'slider'
-            if (isset($data['hero_type']) && $data['hero_type'] === 'slider' && 
-                isset($data['hero_slides']) && is_array($data['hero_slides'])) {
+            // // Handle any files in the 'hero_slides' array if it exists and hero_type is 'slider'
+            // if (isset($data['hero_type']) && $data['hero_type'] === 'slider' && 
+            //     isset($data['hero_slides']) && is_array($data['hero_slides'])) {
+            //     foreach ($data['hero_slides'] as $index => $slide) {
+            //         $slideImageField = "hero_slides.{$index}.image";
+            //         if ($request->hasFile($slideImageField)) {
+            //             $files[$slideImageField] = $request->file($slideImageField);
+            //         }
+            //     }
+            // }
+
+            
+            // Handle avatar update
+            if (isset($data['hero_image'])) {
+                $this->syncFileCollections(Option::where('key', self::HOMEPAGE_OPTION_KEY)->first(), $data['hero_image']);
+            }
+
+            if (isset($data['hero_slides'])) {
                 foreach ($data['hero_slides'] as $index => $slide) {
-                    $slideImageField = "hero_slides.{$index}.image";
-                    if ($request->hasFile($slideImageField)) {
-                        $files[$slideImageField] = $request->file($slideImageField);
+                    if (isset($slide['image'])) {
+                        $this->syncFileCollections(Option::where('key', self::HOMEPAGE_OPTION_KEY)->first(), $slide['image']);
                     }
                 }
             }
             
             // Validate and sanitize all data regardless of source
             $data = $this->sanitizeData($data);
+
             
             // Call the existing method to save everything
             $this->updateSettings($data, $files);
@@ -724,6 +748,18 @@ final class HomepageEditorService
             throw new \Exception('Failed to update homepage settings: ' . $e->getMessage());
         }
     }
+
+    protected function syncFileCollections(Option $option, array $files): void
+    {
+        if (isset($files['hero_image'])) {
+            if (empty($files['hero_image'])) {
+                $option->removeFiles('hero_image');
+            } else {
+                $option->syncFiles([$files['hero_image']], 'hero_image');
+            }
+        }
+    }
+
 
     /**
      * Verify that all required database tables and columns exist for the homepage editor

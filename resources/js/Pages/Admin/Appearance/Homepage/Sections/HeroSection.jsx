@@ -59,14 +59,55 @@ const HeroSection = () => {
     setActiveTab(heroType);
   }, [heroType]);
 
+  // Fixed updateSlide function - this was the main issue
+  const updateSlide = useCallback((index, field, value) => {
+    if (index < 0 || index >= heroSlides.length) return;
+
+    const updatedSlides = heroSlides.map((slide, i) => {
+      if (i !== index) return slide;
+
+      const updatedSlide = { ...slide };
+
+      if (field.startsWith('cta.')) {
+        const ctaField = field.split('.')[1];
+        updatedSlide.cta = { ...updatedSlide.cta, [ctaField]: value };
+      } else {
+        updatedSlide[field] = value;
+      }
+
+      return updatedSlide;
+    });
+
+    updateFormData('hero_slides', updatedSlides);
+  }, [heroSlides, updateFormData]);
+
   // File upload handler
   const handleFileUpload = useCallback((field, files) => {
-    console.log(field, 'field');
-    console.log(files, 'files');
-    if (files && files.length > 0) {
-      addFile(field, files[0]);
+    if (files) {
+      // If files is an array and has items
+      if (Array.isArray(files) && files.length > 0) {
+        addFile(field, files[0]);
+      }
+      // If files is a single file object
+      else if (!Array.isArray(files) && typeof files === 'object') {
+        addFile(field, files);
+      }
     }
   }, [addFile]);
+
+  // NEW: Special file upload handler for slider images
+  const handleSliderImageUpload = useCallback((slideIndex, files) => {
+    if (!files) return;
+
+    const file = Array.isArray(files) ? files[0] : files;
+    if (!file) return;
+
+    // First, add to files for upload (using the nested path for backend processing)
+    addFile(`hero_slides.${slideIndex}.image`, file);
+
+    // Then update the slide with the image file - this ensures the nested update works properly
+    updateSlide(slideIndex, 'image', file);
+  }, [addFile, updateSlide]);
 
   // Slide management functions
   const addSlide = useCallback(() => {
@@ -97,27 +138,7 @@ const HeroSection = () => {
     updateFormData('hero_slides', updatedSlides);
   }, [heroSlides, updateFormData]);
 
-  // Fixed updateSlide function - this was the main issue
-  const updateSlide = useCallback((index, field, value) => {
-    if (index < 0 || index >= heroSlides.length) return;
 
-    const updatedSlides = heroSlides.map((slide, i) => {
-      if (i !== index) return slide;
-
-      const updatedSlide = { ...slide };
-
-      if (field.startsWith('cta.')) {
-        const ctaField = field.split('.')[1];
-        updatedSlide.cta = { ...updatedSlide.cta, [ctaField]: value };
-      } else {
-        updatedSlide[field] = value;
-      }
-
-      return updatedSlide;
-    });
-
-    updateFormData('hero_slides', updatedSlides);
-  }, [heroSlides, updateFormData]);
 
   // Error checking functions
   const hasSlideErrors = useCallback(() => {
@@ -209,6 +230,7 @@ const HeroSection = () => {
               <Label>Background Image</Label>
               <FileUploader
                 maxFiles={1}
+                collection="hero_image"
                 onUpload={(files) => handleFileUpload('hero_image', files)}
                 className="min-h-[200px]"
                 value={formData.hero_image}
@@ -368,12 +390,8 @@ const HeroSection = () => {
                       <Label>Background Image</Label>
                       <FileUploader
                         maxFiles={1}
-                        onUpload={(files) => {
-                          if (files && files.length > 0) {
-                            addFile(`hero_slides.${index}.image`, files[0]);
-                            updateSlide(index, 'image', URL.createObjectURL(files[0]));
-                          }
-                        }}
+                        onUpload={(files) => handleSliderImageUpload(index, files)}
+                        collection={`hero_slides.${index}.image`}
                         value={slide.image}
                         className="min-h-[200px]"
                       />

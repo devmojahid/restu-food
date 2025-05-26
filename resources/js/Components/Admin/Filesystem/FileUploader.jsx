@@ -88,6 +88,7 @@ const FILE_TYPES = {
 
 // Get icon for file type
 const getFileTypeIcon = (mimeType) => {
+  if (!mimeType) return FileIcon; // Added this check
   if (mimeType.startsWith("image/")) return ImageIcon;
   if (mimeType.startsWith("video/")) return VideoIcon;
   if (mimeType.startsWith("audio/")) return AudioIcon;
@@ -443,8 +444,8 @@ const FileUploader = forwardRef(({
             previews.length === 1
               ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3"
               : previews.length === 2
-              ? "grid-cols-2 sm:grid-cols-2 md:grid-cols-3"
-              : "grid-cols-2 sm:grid-cols-3 md:grid-cols-3", // Maximum 3 columns
+                ? "grid-cols-2 sm:grid-cols-2 md:grid-cols-3"
+                : "grid-cols-2 sm:grid-cols-3 md:grid-cols-3", // Maximum 3 columns
             "auto-rows-fr"
           )}
         >
@@ -476,7 +477,7 @@ const FileUploader = forwardRef(({
               {isDragActive
                 ? `Drop your ${fileType} here`
                 : description ||
-                  `Drag & drop ${fileType}s here, or click to select`}
+                `Drag & drop ${fileType}s here, or click to select`}
             </p>
             <div className="mt-1 text-xs text-muted-foreground space-y-1">
               <p>

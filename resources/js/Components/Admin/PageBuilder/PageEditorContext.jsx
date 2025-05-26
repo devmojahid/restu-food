@@ -120,11 +120,19 @@ const formReducer = (state, action) => {
       }
 
     case ACTIONS.CLEAR_ERRORS:
-      return {
-        ...state,
-        errors: action.field ?
-          { ...state.errors, [action.field]: undefined } :
-          {}
+      if (action.field) {
+        // Remove specific field error completely
+        const { [action.field]: removedError, ...restErrors } = state.errors;
+        return {
+          ...state,
+          errors: restErrors
+        };
+      } else {
+        // Clear all errors
+        return {
+          ...state,
+          errors: {}
+        };
       };
 
     case ACTIONS.SET_ERRORS:
@@ -178,6 +186,8 @@ export const PageEditorProvider = ({
     isDirty: false,
     errors: {}
   });
+
+  console.log(state, 'state');
 
   // Set the first section as active by default if none is set
   useEffect(() => {
@@ -242,8 +252,10 @@ export const PageEditorProvider = ({
     });
   }, []);
 
+
   // Add file to be uploaded
   const addFile = useCallback((field, file) => {
+    console.log(field, file, 'field, file');
     if (!file) return;
 
     setFiles(prev => ({
@@ -251,7 +263,13 @@ export const PageEditorProvider = ({
       [field]: file
     }));
 
-    dispatch({ type: ACTIONS.SET_DIRTY, payload: true });
+    // Also update formData to include the file reference
+    dispatch({
+      type: ACTIONS.UPDATE_FIELD,
+      field,
+      value: file
+    });
+
     dispatch({ type: ACTIONS.CLEAR_ERRORS, field });
   }, []);
 

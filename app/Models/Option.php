@@ -6,9 +6,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
-
+use App\Traits\HasFiles;
+use App\Traits\HandlesFiles;
 final class Option extends Model
 {
+    use HasFiles, HandlesFiles;
     protected $fillable = [
         'key',
         'value',

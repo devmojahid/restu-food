@@ -26,7 +26,15 @@ class UpdateHomepageRequest extends FormRequest
             // Hero Section - Single
             'hero_title' => 'nullable|string|max:200',
             'hero_subtitle' => 'nullable|string|max:500',
-            'hero_image' => 'nullable|image|max:2048',
+            'hero_image' => ['nullable', 'array'],
+            'hero_image.uuid' => ['nullable', 'string', 'exists:files,uuid'],
+            'hero_image.id' => ['nullable', 'integer', 'exists:files,id'],
+            'hero_image.collection' => ['nullable', 'string'],
+            'hero_image.filename' => ['nullable', 'string', 'exists:files,filename'],
+            'hero_image.url' => ['nullable', 'string', 'url'],
+            'hero_image.size' => ['nullable', 'integer', 'min:0'],
+            'hero_image.mime_type' => ['nullable', 'string', 'in:image/jpeg,image/png,image/gif'],
+            'hero_image.original_name' => ['nullable', 'string', 'max:255'],
             'hero_cta_text' => 'nullable|string|max:50',
             'hero_cta_link' => 'nullable|string|max:200',
             

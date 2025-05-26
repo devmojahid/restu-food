@@ -56,6 +56,8 @@ const UserForm = ({ user = null, roles = [], mode = "create" }) => {
         avatar: user?.avatar || null,
     });
 
+    console.log(data, 'data');
+
     const handleSubmit = (e) => {
         e.preventDefault();
         setIsSubmitting(true);

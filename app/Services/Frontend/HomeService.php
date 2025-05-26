@@ -79,70 +79,88 @@ final class HomeService extends BaseService
      * Get hero slides from settings or defaults
      */
     private function getHeroSlides(array $settings): array
-    {
-        // Check if hero slides exist and are properly formatted
-        if (isset($settings['hero_type']) && $settings['hero_type'] === 'slider' && !empty($settings['hero_slides']) && is_array($settings['hero_slides'])) {
-            return array_map(function ($slide) {
-                // Make sure image is a full URL
-                $image = !empty($slide['image']) ? $slide['image'] : '/images/hero/slide1.jpg';
-                
-                if (!empty($image) && !Str::startsWith($image, ['http://', 'https://'])) {
-                    $image = asset($image);
-                }
-                
-                // Ensure cta is properly structured
-                $cta = !empty($slide['cta']) && is_array($slide['cta']) ? $slide['cta'] : ['text' => 'Order Now', 'link' => '/menu'];
-                
-                return [
-                    'id' => $slide['id'] ?? rand(1000, 9999),
-                    'title' => $slide['title'] ?? '',
-                    'description' => $slide['description'] ?? '',
-                    'image' => $image,
-                    'cta' => [
-                        'text' => $cta['text'] ?? 'Order Now',
-                        'link' => $cta['link'] ?? '/menu'
-                    ]
-                ];
-            }, $settings['hero_slides']);
-        }
-        
-        // Use single hero as a slide if it's specified as single type or type is not set
-        if (!isset($settings['hero_type']) || $settings['hero_type'] === 'single') {
-            $heroImage = !empty($settings['hero_image']) ? $settings['hero_image'] : '/images/hero/slide1.jpg';
+{
+    // Check if hero slides exist and are properly formatted
+    if (isset($settings['hero_type']) && $settings['hero_type'] === 'slider' && !empty($settings['hero_slides']) && is_array($settings['hero_slides'])) {
+        return array_map(function ($slide) {
+            // Handle image - can be string, array, or null
+            $image = '/images/hero/slide1.jpg'; // default fallback
             
-            // Make sure image is a full URL
-            if (!empty($heroImage) && !Str::startsWith($heroImage, ['http://', 'https://'])) {
-                $heroImage = asset($heroImage);
+            if (!empty($slide['image'])) {
+                if (is_string($slide['image'])) {
+                    $image = $slide['image'];
+                } elseif (is_array($slide['image']) && isset($slide['image']['url'])) {
+                    $image = $slide['image']['url'];
+                }
             }
             
+            // Make sure image is a full URL only if it's a string and not already a full URL
+            if (is_string($image) && !empty($image) && !Str::startsWith($image, ['http://', 'https://'])) {
+                $image = asset($image);
+            }
+            
+            // Ensure cta is properly structured
+            $cta = !empty($slide['cta']) && is_array($slide['cta']) ? $slide['cta'] : ['text' => 'Order Now', 'link' => '/menu'];
+            
             return [
-                [
-                    'id' => 1,
-                    'title' => $settings['hero_title'] ?? 'Delicious Food Delivered To Your Doorstep',
-                    'description' => $settings['hero_subtitle'] ?? 'Choose from thousands of restaurants and get your food delivered fast',
-                    'image' => $heroImage,
-                    'cta' => [
-                        'text' => $settings['hero_cta_text'] ?? 'Order Now',
-                        'link' => $settings['hero_cta_link'] ?? '/menu'
-                    ]
+                'id' => $slide['id'] ?? rand(1000, 9999),
+                'title' => $slide['title'] ?? '',
+                'description' => $slide['description'] ?? '',
+                'image' => $image,
+                'cta' => [
+                    'text' => $cta['text'] ?? 'Order Now',
+                    'link' => $cta['link'] ?? '/menu'
                 ]
             ];
+        }, $settings['hero_slides']);
+    }
+    
+    // Use single hero as a slide if it's specified as single type or type is not set
+    if (!isset($settings['hero_type']) || $settings['hero_type'] === 'single') {
+        // Handle hero_image - can be string, array, or null
+        $heroImage = '/images/hero/slide1.jpg'; // default fallback
+        
+        if (!empty($settings['hero_image'])) {
+            if (is_string($settings['hero_image'])) {
+                $heroImage = $settings['hero_image'];
+            } elseif (is_array($settings['hero_image']) && isset($settings['hero_image']['url'])) {
+                $heroImage = $settings['hero_image']['url'];
+            }
         }
         
-        // Fallback to default slides
+        // Make sure image is a full URL only if it's a string and not already a full URL
+        if (is_string($heroImage) && !empty($heroImage) && !Str::startsWith($heroImage, ['http://', 'https://'])) {
+            $heroImage = asset($heroImage);
+        }
+        
         return [
             [
                 'id' => 1,
-                'title' => 'Delicious Food Delivered To Your Doorstep',
-                'description' => 'Choose from thousands of restaurants and get your food delivered fast',
-                'image' => '/images/hero/slide1.jpg',
+                'title' => $settings['hero_title'] ?? 'Delicious Food Delivered To Your Doorstep',
+                'description' => $settings['hero_subtitle'] ?? 'Choose from thousands of restaurants and get your food delivered fast',
+                'image' => $heroImage,
                 'cta' => [
-                    'text' => 'Order Now',
-                    'link' => '/menu'
+                    'text' => $settings['hero_cta_text'] ?? 'Order Now',
+                    'link' => $settings['hero_cta_link'] ?? '/menu'
                 ]
             ]
         ];
     }
+    
+    // Fallback to default slides
+    return [
+        [
+            'id' => 1,
+            'title' => 'Delicious Food Delivered To Your Doorstep',
+            'description' => 'Choose from thousands of restaurants and get your food delivered fast',
+            'image' => asset('/images/hero/slide1.jpg'),
+            'cta' => [
+                'text' => 'Order Now',
+                'link' => '/menu'
+            ]
+        ]
+    ];
+}
 
     /**
      * Get popular categories from database with settings applied
