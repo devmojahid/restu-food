@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
 import { Label } from "@/Components/ui/label";
 import { Switch } from "@/Components/ui/switch";
@@ -21,44 +22,58 @@ const DAYS = [
   { id: "sunday", label: "Sunday" },
 ];
 
-const TIME_SLOTS = Array.from({ length: 48 }, (_, i) => {
-  const hour = Math.floor(i / 2);
-  const minute = i % 2 === 0 ? "00" : "30";
-  const time = `${hour.toString().padStart(2, "0")}:${minute}`;
-  return {
-    value: time,
-    label: time,
-  };
-});
+// Memoized time slots generation for better performance
+const generateTimeSlots = () => {
+  return Array.from({ length: 48 }, (_, i) => {
+    const hour = Math.floor(i / 2);
+    const minute = i % 2 === 0 ? "00" : "30";
+    const time = `${hour.toString().padStart(2, "0")}:${minute}`;
+    return {
+      value: time,
+      label: time,
+    };
+  });
+};
 
 const OperatingHours = ({
-  value,
+  value = {},
   onChange,
-  openingTime,
-  closingTime,
+  openingTime = "09:00",
+  closingTime = "22:00",
   onTimeChange,
   errors = {},
 }) => {
+  // Memoize time slots to prevent regeneration on every render
+  const timeSlots = useMemo(() => generateTimeSlots(), []);
+
   const handleDayToggle = (day, isOpen) => {
-    onChange({
+    const newValue = {
       ...value,
       [day]: isOpen
         ? {
-            open: openingTime,
-            close: closingTime,
-          }
+          open: openingTime,
+          close: closingTime,
+        }
         : null,
-    });
+    };
+    onChange(newValue);
   };
 
   const handleTimeChange = (day, type, time) => {
-    onChange({
+    const newValue = {
       ...value,
       [day]: {
         ...value[day],
         [type]: time,
       },
-    });
+    };
+    onChange(newValue);
+  };
+
+  // Validation helper
+  const isTimeValid = (openTime, closeTime) => {
+    if (!openTime || !closeTime) return true;
+    return openTime < closeTime;
   };
 
   return (
@@ -81,7 +96,7 @@ const OperatingHours = ({
                 <SelectValue placeholder="Select opening time" />
               </SelectTrigger>
               <SelectContent>
-                {TIME_SLOTS.map((slot) => (
+                {timeSlots.map((slot) => (
                   <SelectItem key={slot.value} value={slot.value}>
                     {slot.label}
                   </SelectItem>
@@ -105,7 +120,7 @@ const OperatingHours = ({
                 <SelectValue placeholder="Select closing time" />
               </SelectTrigger>
               <SelectContent>
-                {TIME_SLOTS.map((slot) => (
+                {timeSlots.map((slot) => (
                   <SelectItem key={slot.value} value={slot.value}>
                     {slot.label}
                   </SelectItem>
@@ -152,7 +167,7 @@ const OperatingHours = ({
                         <SelectValue placeholder="Opening time" />
                       </SelectTrigger>
                       <SelectContent>
-                        {TIME_SLOTS.map((slot) => (
+                        {timeSlots.map((slot) => (
                           <SelectItem key={slot.value} value={slot.value}>
                             {slot.label}
                           </SelectItem>
@@ -170,7 +185,7 @@ const OperatingHours = ({
                         <SelectValue placeholder="Closing time" />
                       </SelectTrigger>
                       <SelectContent>
-                        {TIME_SLOTS.map((slot) => (
+                        {timeSlots.map((slot) => (
                           <SelectItem key={slot.value} value={slot.value}>
                             {slot.label}
                           </SelectItem>

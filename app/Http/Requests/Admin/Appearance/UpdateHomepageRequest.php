@@ -49,6 +49,14 @@ class UpdateHomepageRequest extends FormRequest
             'hero_slides.*.cta.text' => 'nullable|string|max:50',
             'hero_slides.*.cta.link' => 'nullable|string|max:200',
 
+            // Featured Restaurants Section
+            'top_restaurants_enabled' => 'boolean',
+            'top_restaurants_title' => 'nullable|string|max:200',
+            'top_restaurants_count' => 'nullable|integer|min:1|max:20',
+            'top_restaurants_layout' => 'nullable|string|in:grid,carousel',
+            'top_restaurants_columns' => 'nullable|integer',
+            'top_restaurants_show_description' => 'boolean',
+
             // Why Choose Us Section
             'why_choose_us_enabled' => 'boolean',
             'why_choose_us_title' => 'nullable|string|max:200',

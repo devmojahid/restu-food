@@ -51,6 +51,29 @@ export default function RestaurantForm({ restaurant = null }) {
   const [autoUpdateSlug, setAutoUpdateSlug] = useState(true);
   const isEditing = !!restaurant;
 
+  const logoFile = restaurant?.files?.find(file => file.collection === "logo") ?? null;
+  const bannerFile = restaurant?.files?.find(file => file.collection === "banner") ?? null;
+  const galleryFiles = restaurant?.files?.filter(file => file.collection === "gallery") ?? [];
+
+  console.log(restaurant);
+
+
+  // Utility function to convert time formats
+  const formatTimeForDisplay = (timeString) => {
+    if (!timeString) return "";
+    // Convert "HH:MM:SS" to "HH:MM" or keep "HH:MM" as is
+    return timeString.split(':').slice(0, 2).join(':');
+  };
+
+  const formatTimeForDatabase = (timeString) => {
+    if (!timeString) return "";
+    // Convert "HH:MM" to "HH:MM:SS"
+    return timeString.includes(':') && timeString.split(':').length === 2
+      ? `${timeString}:00`
+      : timeString;
+  };
+
+
   const { data, setData, post, put, processing, errors } = useForm({
     name: restaurant?.name ?? "",
     slug: restaurant?.slug ?? "",
@@ -63,15 +86,15 @@ export default function RestaurantForm({ restaurant = null }) {
     status: restaurant?.status ?? "pending",
     is_featured: restaurant?.is_featured ?? false,
     opening_hours: restaurant?.opening_hours ?? {},
-    opening_time: restaurant?.opening_time ?? "09:00",
-    closing_time: restaurant?.closing_time ?? "22:00",
+    opening_time: formatTimeForDisplay(restaurant?.opening_time) || "09:00",
+    closing_time: formatTimeForDisplay(restaurant?.closing_time) || "22:00",
     delivery_radius: restaurant?.delivery_radius ?? 5,
     minimum_order: restaurant?.minimum_order ?? 0,
     delivery_fee: restaurant?.delivery_fee ?? 0,
     commission_rate: restaurant?.commission_rate ?? 10,
-    logo: restaurant?.logo ?? null,
-    banner: restaurant?.banner ?? null,
-    gallery: restaurant?.gallery ?? [],
+    logo: logoFile ?? null,
+    banner: bannerFile ?? null,
+    gallery: galleryFiles ?? [],
   });
 
   // Auto-generate slug from title
@@ -86,25 +109,47 @@ export default function RestaurantForm({ restaurant = null }) {
     }
   }, [data.name]);
 
+  useEffect(() => {
+    if (!processing) {
+      setIsSubmitting(false);
+    }
+  }, [processing]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
+    // Prepare data for submission - convert times back to database format
+    const submissionData = {
+      ...data,
+      opening_time: formatTimeForDatabase(data.opening_time),
+      closing_time: formatTimeForDatabase(data.closing_time),
+    };
+
     const options = {
       preserveState: true,
       preserveScroll: true,
+      data: submissionData,
       onSuccess: () => {
         setIsSubmitting(false);
       },
-      onError: () => {
+      onError: (errors) => {
+        setIsSubmitting(false);
+      },
+      onFinish: () => {
         setIsSubmitting(false);
       },
     };
 
-    if (isEditing) {
-      put(route("app.restaurants.update", restaurant.id), data, options);
-    } else {
-      post(route("app.restaurants.store"), data, options);
+    try {
+      if (isEditing) {
+        put(route("app.restaurants.update", restaurant.id), options);
+      } else {
+        post(route("app.restaurants.store"), options);
+      }
+    } catch (error) {
+      console.error('Form submission error:', error);
+      setIsSubmitting(false);
     }
   };
 
@@ -137,7 +182,7 @@ export default function RestaurantForm({ restaurant = null }) {
             className="flex items-center"
           >
             <Save className="w-4 h-4 mr-2" />
-            {processing || isSubmitting ? "Saving..." : "Save Restaurant"}
+            {processing || isSubmitting ? isEditing ? "Updating..." : "Creating..." : isEditing ? "Update Restaurant" : "Create Restaurant"}
           </Button>
         </div>
       </div>

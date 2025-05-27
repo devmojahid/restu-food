@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-    Star, 
-    Clock, 
-    MapPin, 
-    ChevronRight, 
-    Grid, 
+import {
+    Star,
+    Clock,
+    MapPin,
+    ChevronRight,
+    Grid,
     LayoutList,
     Heart,
     Utensils,
@@ -28,15 +28,15 @@ const ViewToggle = ({ view, onViewChange }) => (
                 className={cn(
                     "relative flex items-center justify-center p-2 rounded-md transition-all duration-200",
                     "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-                    view === 'grid' 
-                        ? "text-primary bg-primary/10 dark:bg-primary/20" 
+                    view === 'grid'
+                        ? "text-primary bg-primary/10 dark:bg-primary/20"
                         : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50"
                 )}
                 whileTap={{ scale: 0.95 }}
             >
                 <Grid className="w-4 h-4" />
                 <span className="sr-only">Grid View</span>
-                
+
                 {/* Tooltip - Only show when button is not active */}
                 {view !== 'grid' && (
                     <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 
@@ -56,15 +56,15 @@ const ViewToggle = ({ view, onViewChange }) => (
                 className={cn(
                     "relative flex items-center justify-center p-2 rounded-md transition-all duration-200",
                     "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-                    view === 'list' 
-                        ? "text-primary bg-primary/10 dark:bg-primary/20" 
+                    view === 'list'
+                        ? "text-primary bg-primary/10 dark:bg-primary/20"
                         : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50"
                 )}
                 whileTap={{ scale: 0.95 }}
             >
                 <LayoutList className="w-4 h-4" />
                 <span className="sr-only">List View</span>
-                
+
                 {/* Tooltip - Only show when button is not active */}
                 {view !== 'list' && (
                     <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 
@@ -145,7 +145,7 @@ const RestaurantCard = ({ restaurant, view = 'grid', index }) => {
                     <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t 
                                 from-black/60 to-transparent" />
                 </div>
-                
+
                 <div className="p-6">
                     <div className="flex items-start justify-between mb-4">
                         <div>
@@ -206,7 +206,7 @@ const RestaurantCard = ({ restaurant, view = 'grid', index }) => {
             className="group bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-lg 
                      transition-all duration-300 overflow-hidden"
         >
-            <Link 
+            <Link
                 href={`/restaurants/${restaurant.slug}`}
                 className="flex items-center space-x-4 p-4"
             >
@@ -276,14 +276,14 @@ const RestaurantCard = ({ restaurant, view = 'grid', index }) => {
 };
 
 const EmptyState = () => (
-    <motion.div 
+    <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="text-center py-16 px-4 max-w-2xl mx-auto"
     >
         <div className="relative mb-8">
             <div className="absolute inset-0 flex items-center justify-center">
-                <motion.div 
+                <motion.div
                     className="w-32 h-32 bg-primary/5 rounded-full"
                     animate={{ scale: [1, 1.1, 1] }}
                     transition={{ duration: 2, repeat: Infinity }}
@@ -291,15 +291,15 @@ const EmptyState = () => (
             </div>
             <Utensils className="w-16 h-16 mx-auto text-primary relative z-10" />
         </div>
-        
+
         <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
             No Restaurants Found
         </h3>
         <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto">
-            We're currently expanding our restaurant network in your area. 
+            We're currently expanding our restaurant network in your area.
             Check back soon for exciting dining options!
         </p>
-        
+
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
                 href="/restaurants"
@@ -321,8 +321,9 @@ const EmptyState = () => (
     </motion.div>
 );
 
-const FeaturedRestaurants = ({ restaurants }) => {
-    const [view, setView] = useState('grid');
+const FeaturedRestaurants = ({ data }) => {
+    const { title, layout, columns, restaurants } = data;
+    const [view, setView] = useState(layout);
     const isMobile = useMediaQuery('(max-width: 768px)');
     const [isViewChanging, setIsViewChanging] = useState(false);
 
@@ -348,14 +349,14 @@ const FeaturedRestaurants = ({ restaurants }) => {
                             transition={{ duration: 0.5 }}
                         >
                             <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900 dark:text-white">
-                                Featured Restaurants
+                                {title}
                             </h2>
                             <p className="text-gray-600 dark:text-gray-400 max-w-2xl">
                                 Discover the best restaurants in your area with amazing food and exceptional service
                             </p>
                         </motion.div>
                     </div>
-                    
+
                     <div className="flex items-center space-x-4 mt-6 md:mt-0">
                         {!isMobile && (
                             <motion.div
@@ -366,7 +367,7 @@ const FeaturedRestaurants = ({ restaurants }) => {
                                 <ViewToggle view={view} onViewChange={handleViewChange} />
                             </motion.div>
                         )}
-                        <Link 
+                        <Link
                             href="/restaurants"
                             className="inline-flex items-center space-x-2 text-primary hover:text-primary/90 
                                    font-semibold transition-colors group"
@@ -381,7 +382,7 @@ const FeaturedRestaurants = ({ restaurants }) => {
                     <ViewTransition view={view}>
                         <div className={cn(
                             "min-h-[200px]",
-                            view === 'grid' 
+                            view === 'grid'
                                 ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
                                 : "space-y-6",
                             isViewChanging && "opacity-0"
@@ -398,7 +399,7 @@ const FeaturedRestaurants = ({ restaurants }) => {
                     </ViewTransition>
                 </AnimatePresence>
 
-                <motion.div 
+                <motion.div
                     className="text-center mt-12"
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}

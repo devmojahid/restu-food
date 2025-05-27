@@ -9,6 +9,7 @@ import TopCategoriesSection from "./Sections/TopCategoriesSection";
 import WhyChooseUsSection from "./Sections/WhyChooseUsSection";
 import HeroSection from "./Sections/HeroSection";
 import GlobalSettingsSection from "./Sections/GlobalSettingsSection";
+import FeaturedRestaurantsSection from "./Sections/FeaturedRestaurantsSection";
 import GuideModal from "./Partials/GuideModal";
 import { Alert, AlertDescription, AlertTitle } from "@/Components/ui/alert";
 import { AlertCircle, CheckCircle2, RefreshCw, LayoutTemplate, Eye, Settings, Brush, Clock, HelpCircle } from "lucide-react";
@@ -17,6 +18,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 
 const SECTIONS = [
   { id: 'hero', label: 'Hero Section', default: true },
+  { id: 'featured_restaurants', label: 'Featured Restaurants' },
   { id: 'top_categories', label: 'Top Categories' },
   { id: 'why_choose_us', label: 'Why Choose Us' },
   { id: 'client_feedback', label: 'Client Feedback' },
@@ -57,6 +59,7 @@ const HomepageEditor = ({ homepageOptions = {}, defaults = {}, dynamicData = {},
 
   // Initialize form data with existing options or defaults
   const initialData = Object.keys(homepageOptions).length > 0 ? homepageOptions : defaults;
+  const defaultSection = SECTIONS.find(section => section.default)?.id || 'hero';
 
   // Handle critical error state
   if (error && !Object.keys(homepageOptions).length) {
@@ -168,6 +171,7 @@ const HomepageEditor = ({ homepageOptions = {}, defaults = {}, dynamicData = {},
       <PageEditorProvider
         initialData={initialData}
         saveUrl={route('app.appearance.homepage.update')}
+        defaultActiveSection={defaultSection} // Pass the default section to the provider
       >
         <div className="container mx-auto py-6">
           <div className="flex justify-between items-center mb-6">
@@ -323,6 +327,9 @@ const HomepageEditor = ({ homepageOptions = {}, defaults = {}, dynamicData = {},
                 <SectionContent key={section.id} section={section}>
                   {section.id === 'hero' && (
                     <HeroSection />
+                  )}
+                  {section.id === 'featured_restaurants' && (
+                    <FeaturedRestaurantsSection />
                   )}
                   {section.id === 'client_feedback' && (
                     <ClientFeedbackSection />

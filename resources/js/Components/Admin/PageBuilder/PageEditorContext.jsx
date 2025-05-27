@@ -173,10 +173,11 @@ export const PageEditorProvider = ({
   initialData = {},
   onSave,
   saveUrl,
-  validationRules = {}
+  validationRules = {},
+  defaultActiveSection = 'hero'
 }) => {
   const { toast } = useToast();
-  const [activeSection, setActiveSection] = useState(null);
+  const [activeSection, setActiveSection] = useState(defaultActiveSection); // Use the prop here
   const [isSaving, setIsSaving] = useState(false);
   const [files, setFiles] = useState({});
 

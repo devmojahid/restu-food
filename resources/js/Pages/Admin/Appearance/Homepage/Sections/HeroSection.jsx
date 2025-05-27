@@ -52,7 +52,7 @@ const HeroSection = () => {
   const overlayValue = useMemo(() => formData.hero_background_overlay || 0.5, [formData.hero_background_overlay]);
 
   // Set default tab based on hero_type
-  const [activeTab, setActiveTab] = React.useState(heroType);
+  const [activeTab, setActiveTab] = React.useState(heroType || HERO_TYPES.SINGLE);
 
   // Update tab when hero_type changes
   useEffect(() => {

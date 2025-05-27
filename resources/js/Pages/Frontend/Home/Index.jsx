@@ -23,6 +23,7 @@ const Index = ({
     nearbyRestaurants = [],
     error
 }) => {
+    console.log(featuredRestaurants);
     return (
         <Layout>
             <Head title="Home" />
@@ -42,8 +43,8 @@ const Index = ({
             )}
 
             <div className="space-y-0">
-                {featuredRestaurants?.length > 0 && (
-                    <FeaturedRestaurants restaurants={featuredRestaurants} />
+                {featuredRestaurants?.restaurants?.length > 0 && (
+                    <FeaturedRestaurants data={featuredRestaurants} />
                 )}
 
                 {featuredDishes?.length > 0 && (

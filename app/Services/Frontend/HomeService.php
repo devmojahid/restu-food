@@ -30,37 +30,37 @@ final class HomeService extends BaseService
 
         // Cache the data for 1 hour in production
         $cacheTtl = app()->environment('production') ? 3600 : 5;
-        
+
         // return Cache::remember('home_page_data', $cacheTtl, function () use ($homepageSettings) {
-            return [
-                'heroSlides' => $this->getHeroSlides($homepageSettings),
-                'featuredRestaurants' => $this->getFeaturedRestaurants(),
-                'featuredDishes' => $this->getFeaturedDishes(),
-                'popularDishes' => $this->getPopularDishes(),
-                'specialOffers' => $this->getSpecialOffers(),
-                'popularCategories' => $this->getPopularCategories($homepageSettings),
-                'stats' => $this->getStats(),
-                'nearbyRestaurants' => $this->getNearbyRestaurants(),
-                'testimonials' => $this->getTestimonials($homepageSettings),
-                'siteSettings' => [
-                    'layout_width' => $homepageSettings['layout_width'] ?? 'contained',
-                    'color_scheme' => $homepageSettings['color_scheme'] ?? 'system',
-                    'primary_color' => $homepageSettings['primary_color'] ?? '#22C55E',
-                    'secondary_color' => $homepageSettings['secondary_color'] ?? '#0EA5E9',
-                    'font_heading' => $homepageSettings['font_heading'] ?? 'inter',
-                    'font_body' => $homepageSettings['font_body'] ?? 'inter',
-                    'animations_enabled' => $homepageSettings['animations_enabled'] ?? true,
-                ],
-                'whyChooseUs' => [
-                    'enabled' => $homepageSettings['why_choose_us_enabled'] ?? true,
-                    'title' => $homepageSettings['why_choose_us_title'] ?? 'Why Choose Us',
-                    'text' => $homepageSettings['why_choose_us_text'] ?? 'We offer the best food delivery service',
-                    'image' => $homepageSettings['why_choose_us_image'] ?? null,
-                    'layout' => $homepageSettings['why_choose_us_layout'] ?? 'side-by-side',
-                    'image_position' => $homepageSettings['why_choose_us_image_position'] ?? 'right',
-                    'features' => $homepageSettings['why_choose_us_features'] ?? $this->getDefaultWhyChooseUsFeatures(),
-                ],
-            ];
+        return [
+            'heroSlides' => $this->getHeroSlides($homepageSettings),
+            'featuredRestaurants' => $this->getFeaturedRestaurants(),
+            'featuredDishes' => $this->getFeaturedDishes(),
+            'popularDishes' => $this->getPopularDishes(),
+            'specialOffers' => $this->getSpecialOffers(),
+            'popularCategories' => $this->getPopularCategories($homepageSettings),
+            'stats' => $this->getStats(),
+            'nearbyRestaurants' => $this->getNearbyRestaurants(),
+            'testimonials' => $this->getTestimonials($homepageSettings),
+            'siteSettings' => [
+                'layout_width' => $homepageSettings['layout_width'] ?? 'contained',
+                'color_scheme' => $homepageSettings['color_scheme'] ?? 'system',
+                'primary_color' => $homepageSettings['primary_color'] ?? '#22C55E',
+                'secondary_color' => $homepageSettings['secondary_color'] ?? '#0EA5E9',
+                'font_heading' => $homepageSettings['font_heading'] ?? 'inter',
+                'font_body' => $homepageSettings['font_body'] ?? 'inter',
+                'animations_enabled' => $homepageSettings['animations_enabled'] ?? true,
+            ],
+            'whyChooseUs' => [
+                'enabled' => $homepageSettings['why_choose_us_enabled'] ?? true,
+                'title' => $homepageSettings['why_choose_us_title'] ?? 'Why Choose Us',
+                'text' => $homepageSettings['why_choose_us_text'] ?? 'We offer the best food delivery service',
+                'image' => $homepageSettings['why_choose_us_image'] ?? null,
+                'layout' => $homepageSettings['why_choose_us_layout'] ?? 'side-by-side',
+                'image_position' => $homepageSettings['why_choose_us_image_position'] ?? 'right',
+                'features' => $homepageSettings['why_choose_us_features'] ?? $this->getDefaultWhyChooseUsFeatures(),
+            ],
+        ];
         // });
     }
 
@@ -70,8 +70,8 @@ final class HomeService extends BaseService
     private function getHomepageSettings(): array
     {
         // return Cache::remember('homepage_settings_frontend', 3600, function () {
-            $settings = Option::where('key', self::HOMEPAGE_OPTION_KEY)->first()?->value;
-            return $settings ?: [];
+        $settings = Option::where('key', self::HOMEPAGE_OPTION_KEY)->first()?->value;
+        return $settings ?: [];
         // });
     }
 
@@ -79,88 +79,152 @@ final class HomeService extends BaseService
      * Get hero slides from settings or defaults
      */
     private function getHeroSlides(array $settings): array
-{
-    // Check if hero slides exist and are properly formatted
-    if (isset($settings['hero_type']) && $settings['hero_type'] === 'slider' && !empty($settings['hero_slides']) && is_array($settings['hero_slides'])) {
-        return array_map(function ($slide) {
-            // Handle image - can be string, array, or null
-            $image = '/images/hero/slide1.jpg'; // default fallback
-            
-            if (!empty($slide['image'])) {
-                if (is_string($slide['image'])) {
-                    $image = $slide['image'];
-                } elseif (is_array($slide['image']) && isset($slide['image']['url'])) {
-                    $image = $slide['image']['url'];
+    {
+        // Check if hero slides exist and are properly formatted
+        if (isset($settings['hero_type']) && $settings['hero_type'] === 'slider' && !empty($settings['hero_slides']) && is_array($settings['hero_slides'])) {
+            return array_map(function ($slide) {
+                // Handle image - can be string, array, or null
+                $image = '/images/hero/slide1.jpg'; // default fallback
+
+                if (!empty($slide['image'])) {
+                    if (is_string($slide['image'])) {
+                        $image = $slide['image'];
+                    } elseif (is_array($slide['image']) && isset($slide['image']['url'])) {
+                        $image = $slide['image']['url'];
+                    }
+                }
+
+                // Make sure image is a full URL only if it's a string and not already a full URL
+                if (is_string($image) && !empty($image) && !Str::startsWith($image, ['http://', 'https://'])) {
+                    $image = asset($image);
+                }
+
+                // Ensure cta is properly structured
+                $cta = !empty($slide['cta']) && is_array($slide['cta']) ? $slide['cta'] : ['text' => 'Order Now', 'link' => '/menu'];
+
+                return [
+                    'id' => $slide['id'] ?? rand(1000, 9999),
+                    'title' => $slide['title'] ?? '',
+                    'description' => $slide['description'] ?? '',
+                    'image' => $image,
+                    'cta' => [
+                        'text' => $cta['text'] ?? 'Order Now',
+                        'link' => $cta['link'] ?? '/menu'
+                    ]
+                ];
+            }, $settings['hero_slides']);
+        }
+
+        // Use single hero as a slide if it's specified as single type or type is not set
+        if (!isset($settings['hero_type']) || $settings['hero_type'] === 'single') {
+            // Handle hero_image - can be string, array, or null
+            $heroImage = '/images/hero/slide1.jpg'; // default fallback
+
+            if (!empty($settings['hero_image'])) {
+                if (is_string($settings['hero_image'])) {
+                    $heroImage = $settings['hero_image'];
+                } elseif (is_array($settings['hero_image']) && isset($settings['hero_image']['url'])) {
+                    $heroImage = $settings['hero_image']['url'];
                 }
             }
-            
+
             // Make sure image is a full URL only if it's a string and not already a full URL
-            if (is_string($image) && !empty($image) && !Str::startsWith($image, ['http://', 'https://'])) {
-                $image = asset($image);
+            if (is_string($heroImage) && !empty($heroImage) && !Str::startsWith($heroImage, ['http://', 'https://'])) {
+                $heroImage = asset($heroImage);
             }
-            
-            // Ensure cta is properly structured
-            $cta = !empty($slide['cta']) && is_array($slide['cta']) ? $slide['cta'] : ['text' => 'Order Now', 'link' => '/menu'];
-            
+
             return [
-                'id' => $slide['id'] ?? rand(1000, 9999),
-                'title' => $slide['title'] ?? '',
-                'description' => $slide['description'] ?? '',
-                'image' => $image,
-                'cta' => [
-                    'text' => $cta['text'] ?? 'Order Now',
-                    'link' => $cta['link'] ?? '/menu'
+                [
+                    'id' => 1,
+                    'title' => $settings['hero_title'] ?? 'Delicious Food Delivered To Your Doorstep',
+                    'description' => $settings['hero_subtitle'] ?? 'Choose from thousands of restaurants and get your food delivered fast',
+                    'image' => $heroImage,
+                    'cta' => [
+                        'text' => $settings['hero_cta_text'] ?? 'Order Now',
+                        'link' => $settings['hero_cta_link'] ?? '/menu'
+                    ]
                 ]
             ];
-        }, $settings['hero_slides']);
-    }
-    
-    // Use single hero as a slide if it's specified as single type or type is not set
-    if (!isset($settings['hero_type']) || $settings['hero_type'] === 'single') {
-        // Handle hero_image - can be string, array, or null
-        $heroImage = '/images/hero/slide1.jpg'; // default fallback
-        
-        if (!empty($settings['hero_image'])) {
-            if (is_string($settings['hero_image'])) {
-                $heroImage = $settings['hero_image'];
-            } elseif (is_array($settings['hero_image']) && isset($settings['hero_image']['url'])) {
-                $heroImage = $settings['hero_image']['url'];
-            }
         }
-        
-        // Make sure image is a full URL only if it's a string and not already a full URL
-        if (is_string($heroImage) && !empty($heroImage) && !Str::startsWith($heroImage, ['http://', 'https://'])) {
-            $heroImage = asset($heroImage);
-        }
-        
+
+        // Fallback to default slides
         return [
             [
                 'id' => 1,
-                'title' => $settings['hero_title'] ?? 'Delicious Food Delivered To Your Doorstep',
-                'description' => $settings['hero_subtitle'] ?? 'Choose from thousands of restaurants and get your food delivered fast',
-                'image' => $heroImage,
+                'title' => 'Delicious Food Delivered To Your Doorstep',
+                'description' => 'Choose from thousands of restaurants and get your food delivered fast',
+                'image' => asset('/images/hero/slide1.jpg'),
                 'cta' => [
-                    'text' => $settings['hero_cta_text'] ?? 'Order Now',
-                    'link' => $settings['hero_cta_link'] ?? '/menu'
+                    'text' => 'Order Now',
+                    'link' => '/menu'
                 ]
             ]
         ];
     }
-    
-    // Fallback to default slides
-    return [
-        [
-            'id' => 1,
-            'title' => 'Delicious Food Delivered To Your Doorstep',
-            'description' => 'Choose from thousands of restaurants and get your food delivered fast',
-            'image' => asset('/images/hero/slide1.jpg'),
-            'cta' => [
-                'text' => 'Order Now',
-                'link' => '/menu'
-            ]
-        ]
-    ];
-}
+
+    /**
+     * Get featured restaurants from settings or defaults
+     * @return array
+     */
+    private function getFeaturedRestaurants(): array
+    {
+        // Cache key for settings
+        $cacheKey = 'featured_restaurants_' . auth()->id();
+        
+        // return cache()->remember($cacheKey, 300, function () { 
+            $settings = $this->getHomepageSettings();
+
+            if (isset($settings['top_restaurants_enabled']) && !$settings['top_restaurants_enabled']) {
+                return [];
+            }
+
+            $limit = $settings['top_restaurants_count'] ?? 8;
+            $title = $settings['top_restaurants_title'] ?? 'Featured Restaurants';
+            $layout = $settings['top_restaurants_layout'] ?? 'grid';
+            $columns = $settings['top_restaurants_columns'] ?? 4;
+
+            $restaurants = Restaurant::select([
+                    'id', 'name', 'slug', 'delivery_fee', 
+                    'is_featured', 'created_at'
+                ])
+                ->with(['files'])
+                ->where('status', 'active')
+                ->where('is_featured', true)
+                ->orderBy('created_at', 'desc')
+                ->take($limit)
+                ->get();
+
+            $restaurantsData = $restaurants->map(function ($restaurant) {
+                $files = $restaurant->files->keyBy('collection');
+                
+                return [
+                    'id' => $restaurant->id,
+                    'name' => $restaurant->name,
+                    'slug' => $restaurant->slug,
+                    'rating' => $restaurant->rating ?? 0,
+                    'total_reviews' => $restaurant->total_reviews ?? 0,
+                    'delivery_time' => $restaurant->delivery_time ?? 0,
+                    'categories' => $restaurant->categories ?? [],
+                    'is_featured' => $restaurant->is_featured ?? false,
+                    'distance' => $restaurant->distance ?? 0,
+                    'logo' => $files->get('logo') ? asset('storage/' . $files->get('logo')->path) : '/images/restaurants/default.jpg',
+                    'image' => $files->get('banner') ? asset('storage/' . $files->get('banner')->path) : '/images/restaurants/default.jpg',
+                    'gallery' => $restaurant->files->where('collection', 'gallery')
+                        ->map(fn($file) => asset('storage/' . $file->path))
+                        ->toArray(),
+                ];
+            })->toArray();
+
+            $data = [
+                'title' => $title,
+                'layout' => $layout,
+                'columns' => $columns,
+                'restaurants' => $restaurantsData,
+            ];
+
+            return $data;
+        // });
+    }
 
     /**
      * Get popular categories from database with settings applied
@@ -223,7 +287,7 @@ final class HomeService extends BaseService
                 if (!empty($feedback['avatar']) && !Str::startsWith($feedback['avatar'], ['http://', 'https://'])) {
                     $feedback['avatar'] = asset($feedback['avatar']);
                 }
-                
+
                 return [
                     'id' => $feedback['id'] ?? rand(1000, 9999),
                     'name' => $feedback['name'] ?? 'Anonymous',
@@ -237,7 +301,7 @@ final class HomeService extends BaseService
                 ];
             }, $settings['feedbacks']);
         }
-        
+
         // Return default testimonials
         return $this->getDefaultTestimonials();
     }
@@ -415,8 +479,9 @@ final class HomeService extends BaseService
         ];
     }
 
+
     // Keep the other methods as they are for now
-    private function getFeaturedRestaurants(): array
+    private function getFeaturedRestaurantsOld(): array
     {
         // Test data for featured restaurants
         return [
@@ -582,7 +647,7 @@ final class HomeService extends BaseService
             // Add more dishes as needed
         ];
     }
-    
+
     private function getPopularDishes(): array
     {
         return [
@@ -740,7 +805,7 @@ final class HomeService extends BaseService
             ]
         ];
     }
-    
+
     private function getSpecialOffers(): array
     {
         return [
@@ -764,7 +829,7 @@ final class HomeService extends BaseService
             ]
         ];
     }
-    
+
     private function getStats(): array
     {
         return [
