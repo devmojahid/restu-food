@@ -32,125 +32,100 @@ const TopCategoriesSection = () => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
-      {/* Basic Section Settings */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex justify-between items-center">
-            <CardTitle>Section Settings</CardTitle>
-            {isDirty && (
-              <Badge variant="outline" className="bg-yellow-50 text-yellow-800 border-yellow-300">
-                Unsaved Changes
-              </Badge>
-            )}
+
+      <div>
+        <div className="space-y-6">
+          {/* Enable/Disable Section */}
+          <div className="flex items-center justify-between">
+            <Label htmlFor="top_categories_enabled" className="flex flex-col">
+              <span className="text-sm">Enable Categories Section</span>
+              <span className="text-xs text-muted-foreground">Show the categories section on the homepage</span>
+            </Label>
+            <Switch
+              id="top_categories_enabled"
+              checked={formData.top_categories_enabled ?? true}
+              onCheckedChange={(checked) => updateFormData('top_categories_enabled', checked)}
+            />
           </div>
-          <CardDescription>
-            Configure how the categories section is displayed
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            {/* Enable/Disable Section */}
-            <div className="flex items-center justify-between">
-              <Label htmlFor="top_categories_enabled" className="flex flex-col">
-                <span className="text-sm">Enable Categories Section</span>
-                <span className="text-xs text-muted-foreground">Show the categories section on the homepage</span>
-              </Label>
-              <Switch
-                id="top_categories_enabled"
-                checked={formData.top_categories_enabled ?? true}
-                onCheckedChange={(checked) => updateFormData('top_categories_enabled', checked)}
-              />
-            </div>
 
-            {/* Section Title */}
-            <div className="space-y-2">
-              <Label htmlFor="top_categories_title">Section Title</Label>
-              <Input
-                id="top_categories_title"
-                value={formData.top_categories_title || ''}
-                onChange={e => updateFormData('top_categories_title', e.target.value)}
-                placeholder="Popular Food Categories"
-              />
-              <p className="text-xs text-muted-foreground">
-                *Add your text in [text here] to make it colorful
-              </p>
-            </div>
-
-            {/* Number of Categories */}
-            <div className="space-y-2">
-              <Label className="flex justify-between">
-                <span>Number of Categories</span>
-                <span className="text-primary">{formData.top_categories_count || 8}</span>
-              </Label>
-              <Slider
-                defaultValue={[formData.top_categories_count || 8]}
-                min={4}
-                max={12}
-                step={1}
-                onValueChange={([value]) => updateFormData('top_categories_count', value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                Determines how many categories to display in this section
-              </p>
-            </div>
-
-            {/* Layout Selection */}
-            <div className="space-y-2">
-              <Label htmlFor="top_categories_layout">Layout Style</Label>
-              <Select
-                value={formData.top_categories_layout || 'grid'}
-                onValueChange={value => updateFormData('top_categories_layout', value)}
-              >
-                <SelectTrigger id="top_categories_layout">
-                  <SelectValue placeholder="Select a layout" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="grid">Grid</SelectItem>
-                  <SelectItem value="carousel">Carousel</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                Grid shows all categories at once, carousel allows scrolling through categories
-              </p>
-            </div>
-
-            {/* Columns Count */}
-            <div className="space-y-2">
-              <Label htmlFor="top_categories_columns">Number of Columns</Label>
-              <Select
-                value={formData.top_categories_columns?.toString() || "4"}
-                onValueChange={value => updateFormData('top_categories_columns', parseInt(value))}
-              >
-                <SelectTrigger id="top_categories_columns">
-                  <SelectValue placeholder="Select number of columns" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="3">3 Columns</SelectItem>
-                  <SelectItem value="4">4 Columns</SelectItem>
-                  <SelectItem value="5">5 Columns</SelectItem>
-                  <SelectItem value="6">6 Columns</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                Number of columns to display in grid mode (on large screens)
-              </p>
-            </div>
-
-            {/* Show Descriptions */}
-            <div className="flex items-center justify-between">
-              <Label htmlFor="top_categories_show_description" className="flex flex-col">
-                <span className="text-sm">Show Category Descriptions</span>
-                <span className="text-xs text-muted-foreground">Display descriptions for each category</span>
-              </Label>
-              <Switch
-                id="top_categories_show_description"
-                checked={formData.top_categories_show_description ?? true}
-                onCheckedChange={(checked) => updateFormData('top_categories_show_description', checked)}
-              />
-            </div>
+          {/* Section Title */}
+          <div className="space-y-2">
+            <Label htmlFor="top_categories_title">Section Title</Label>
+            <Input
+              id="top_categories_title"
+              value={formData.top_categories_title || ''}
+              onChange={e => updateFormData('top_categories_title', e.target.value)}
+              placeholder="Popular Food Categories"
+            />
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Number of Categories */}
+          <div className="space-y-2">
+            <Label className="flex justify-between">
+              <span>Number of Categories</span>
+              <span className="text-primary">{formData.top_categories_count || 8}</span>
+            </Label>
+            <Slider
+              defaultValue={[formData.top_categories_count || 8]}
+              min={4}
+              max={12}
+              step={1}
+              onValueChange={([value]) => updateFormData('top_categories_count', value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Determines how many categories to display in this section
+            </p>
+          </div>
+
+          {/* Enable Filter */}
+          <div className="flex items-center justify-between">
+            <Label htmlFor="top_categories_show_filter" className="flex flex-col">
+              <span className="text-sm">Show Filter?</span>
+              <span className="text-xs text-muted-foreground">Show filter on the top of the categories section</span>
+            </Label>
+            <Switch
+              id="top_categories_show_filter"
+              checked={formData.top_categories_show_filter ?? true}
+              onCheckedChange={(checked) => updateFormData('top_categories_show_filter', checked)}
+            />
+          </div>
+
+          {/* Show Descriptions */}
+          <div className="flex items-center justify-between">
+            <Label htmlFor="top_categories_show_description" className="flex flex-col">
+              <span className="text-sm">Show Category Descriptions</span>
+              <span className="text-xs text-muted-foreground">Display descriptions for each category</span>
+            </Label>
+            <Switch
+              id="top_categories_show_description"
+              checked={formData.top_categories_show_description ?? true}
+              onCheckedChange={(checked) => updateFormData('top_categories_show_description', checked)}
+            />
+          </div>
+
+          {/* Columns Count */}
+          <div className="space-y-2">
+            <Label htmlFor="top_categories_columns">Number of Columns</Label>
+            <Select
+              value={formData.top_categories_columns?.toString() || "4"}
+              onValueChange={value => updateFormData('top_categories_columns', parseInt(value))}
+            >
+              <SelectTrigger id="top_categories_columns">
+                <SelectValue placeholder="Select number of columns" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="3">3 Columns</SelectItem>
+                <SelectItem value="4">4 Columns</SelectItem>
+                <SelectItem value="5">5 Columns</SelectItem>
+                <SelectItem value="6">6 Columns</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Number of columns to display in grid mode (on large screens)
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* Preview Card */}
       <Card className="bg-muted/50">

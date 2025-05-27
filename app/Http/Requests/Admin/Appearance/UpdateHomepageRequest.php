@@ -57,6 +57,14 @@ class UpdateHomepageRequest extends FormRequest
             'top_restaurants_columns' => 'nullable|integer',
             'top_restaurants_show_description' => 'boolean',
 
+            // Top Categories Section
+            'top_categories_enabled' => 'boolean',
+            'top_categories_title' => 'nullable|string|max:200',
+            'top_categories_count' => 'nullable|integer|min:1|max:20',
+            'top_categories_show_filter' => 'boolean',
+            'top_categories_show_description' => 'boolean',
+            'top_categories_columns' => 'nullable|integer',
+
             // Why Choose Us Section
             'why_choose_us_enabled' => 'boolean',
             'why_choose_us_title' => 'nullable|string|max:200',
@@ -69,13 +77,6 @@ class UpdateHomepageRequest extends FormRequest
             'why_choose_us_features.*.text' => 'nullable|string|max:500',
             'why_choose_us_features.*.icon' => 'nullable|string|max:50',
 
-            // Top Categories Section
-            'top_categories_enabled' => 'boolean',
-            'top_categories_title' => 'nullable|string|max:200',
-            'top_categories_count' => 'nullable|integer|min:1|max:20',
-            'top_categories_layout' => 'nullable|string|in:grid,carousel',
-            'top_categories_columns' => 'nullable|integer|in:3,4,5,6',
-            'top_categories_show_description' => 'boolean',
 
             // Client Feedback Section
             'client_feedback_enabled' => 'boolean',

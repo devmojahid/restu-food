@@ -260,14 +260,6 @@ final class HomepageEditorService
             'hero_text_alignment' => 'center',
             'hero_slides' => [],
 
-            // Top Categories Section
-            'top_categories_enabled' => true,
-            'top_categories_title' => 'Popular [Food] Categories',
-            'top_categories_count' => 8,
-            'top_categories_layout' => 'grid',
-            'top_categories_columns' => 4,
-            'top_categories_show_description' => true,
-
             // Why Choose Us Section
             'why_choose_us_enabled' => true,
             'why_choose_us_title' => 'Why [Choose] Us',
@@ -666,49 +658,10 @@ final class HomepageEditorService
         try {
             // Get validated data from the request
             $data = $request->validated();
+            dd($data);
             
             // Files array to store any file uploads
             $files = [];
-
-            // $data['files'] = [
-            //     'hero_image' => $data['hero_image'] ?? null,
-            // ];
-
-            // // Remove avatar from data to avoid duplicate processing
-            // if (isset($data['hero_image'])) {
-            //     unset($data['hero_image']);
-            // }
-            
-            // Process hero_image and why_choose_us_image if they exist in the request
-            // $expectedFileFields = ['hero_image', 'why_choose_us_image'];
-            // foreach ($expectedFileFields as $fieldName) {
-            //     if ($request->hasFile($fieldName) && $request->file($fieldName)->isValid()) {
-            //         $files[$fieldName] = $request->file($fieldName);
-            //     }
-            // }
-            
-            // // Handle any files in the 'feedbacks' array if it exists
-            // if (isset($data['feedbacks']) && is_array($data['feedbacks'])) {
-            //     foreach ($data['feedbacks'] as $index => $feedback) {
-            //         $avatarFieldName = "feedbacks.{$index}.avatar";
-            //         // Check if we have a file with this field name in the request
-            //         if ($request->hasFile($avatarFieldName)) {
-            //             $files[$avatarFieldName] = $request->file($avatarFieldName);
-            //         }
-            //     }
-            // }
-            
-            // // Handle any files in the 'hero_slides' array if it exists and hero_type is 'slider'
-            // if (isset($data['hero_type']) && $data['hero_type'] === 'slider' && 
-            //     isset($data['hero_slides']) && is_array($data['hero_slides'])) {
-            //     foreach ($data['hero_slides'] as $index => $slide) {
-            //         $slideImageField = "hero_slides.{$index}.image";
-            //         if ($request->hasFile($slideImageField)) {
-            //             $files[$slideImageField] = $request->file($slideImageField);
-            //         }
-            //     }
-            // }
-
             
             // Handle avatar update
             if (isset($data['hero_image'])) {
