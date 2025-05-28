@@ -58,7 +58,7 @@ return Application::configure(basePath: dirname(__DIR__))
 - In Laravel 11+ commands created in `app\Console\Commands\` are automatically registered and available to use.
 - Add environment variables to config files and avoid using env variables directly in the code. For example `config('app.name')` instead of `env('APP_NAME')`.
 - Avoid N+1 queries by using eager loading or batch loading. Examples:
-
+- Note Use Null check for every single where null check need
 ## Technology Stack
 - Laravel 11 with streamlined application structure
 - Inertia.js with React (avoiding Blade templates)
