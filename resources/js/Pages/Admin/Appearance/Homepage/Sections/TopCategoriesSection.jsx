@@ -20,6 +20,7 @@ import {
 } from "@/Components/ui/card";
 import { Badge } from "@/Components/ui/badge";
 import { Slider } from "@/Components/ui/slider";
+import MultiSelect from "@/Components/ui/multi-select";
 
 const TopCategoriesSection = () => {
   const {
@@ -27,8 +28,11 @@ const TopCategoriesSection = () => {
     updateFormData,
     isSaving,
     handleSubmit,
-    isDirty
+    isDirty,
+    dynamicData
   } = usePageEditor();
+
+  console.log(dynamicData, 'dynamicData');
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
@@ -123,6 +127,29 @@ const TopCategoriesSection = () => {
             <p className="text-xs text-muted-foreground">
               Number of columns to display in grid mode (on large screens)
             </p>
+          </div>
+
+          {/* select categories */}
+          <div className="space-y-2">
+            <Label htmlFor="categories">
+              Select Categories
+              <span className="text-xs text-muted-foreground ml-2">
+                (You can select multiple)
+              </span>
+            </Label>
+
+            <MultiSelect
+              options={dynamicData?.productCategories?.map(category => ({
+                value: category.id.toString(),
+                label: category.name,
+                ...(category.parent && {
+                  parent: category.parent
+                })
+              }))}
+              selected={formData.selected_top_categories || []}
+              onChange={(values) => updateFormData("selected_top_categories", values)}
+              placeholder="Select categories"
+            />
           </div>
         </div>
       </div>

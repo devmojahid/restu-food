@@ -310,6 +310,7 @@ final class HomepageEditorService
     {
         return [
             'categories' => $this->getCategories(),
+            'productCategories' => $this->getProductCategories(), // New method
             'featured_restaurants' => $this->getFeaturedRestaurants(),
             'popular_products' => $this->getPopularProducts(),
             'layout_options' => $this->getLayoutOptions(),
@@ -321,74 +322,120 @@ final class HomepageEditorService
     }
 
     /**
-     * Get categories for the editor
+     * Get product categories with hierarchical structure and counts
+     */
+    private function getProductCategories(): Collection
+    {
+        try {
+            return Category::with([
+                'files',
+                'children' => function ($query) {
+                    $query->where('is_active', true)
+                        ->where('type', 'product')
+                        ->orderBy('sort_order');
+                }
+            ])
+            ->where('type', 'product')
+            ->where('is_active', true)
+            ->whereNull('parent_id') // Only root categories
+            ->orderBy('sort_order')
+            ->get()
+            ->map(function ($category) {
+                // Count products for this category
+                $productsCount = DB::table('products')
+                    ->join('categorizables', 'products.id', '=', 'categorizables.categorizable_id')
+                    ->where('categorizables.category_id', $category->id)
+                    ->where('categorizables.categorizable_type', 'App\\Models\\Product')
+                    ->whereNull('products.deleted_at')
+                    ->count();
+
+                // Count products for children
+                $childrenProductsCount = 0;
+                if ($category->children->isNotEmpty()) {
+                    foreach ($category->children as $child) {
+                        $childrenProductsCount += DB::table('products')
+                            ->join('categorizables', 'products.id', '=', 'categorizables.categorizable_id')
+                            ->where('categorizables.category_id', $child->id)
+                            ->where('categorizables.categorizable_type', 'App\\Models\\Product')
+                            ->whereNull('products.deleted_at')
+                            ->count();
+                    }
+                }
+
+                return [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                    'slug' => $category->slug,
+                    'description' => $category->description,
+                    'icon_url' => $category->icon_url,
+                    'thumbnail_url' => $category->thumbnail_url,
+                    'path' => $category->getPathAttribute(),
+                    'products_count' => $productsCount,
+                    'total_products' => $productsCount + $childrenProductsCount,
+                    'has_children' => $category->children->isNotEmpty(),
+                    'children' => $category->children->map(function ($child) {
+                        // Count products for child category
+                        $childProductsCount = DB::table('products')
+                            ->join('categorizables', 'products.id', '=', 'categorizables.categorizable_id')
+                            ->where('categorizables.category_id', $child->id)
+                            ->where('categorizables.categorizable_type', 'App\\Models\\Product')
+                            ->whereNull('products.deleted_at')
+                            ->count();
+
+                        return [
+                            'id' => $child->id,
+                            'name' => $child->name,
+                            'slug' => $child->slug,
+                            'description' => $child->description,
+                            'icon_url' => $child->icon_url,
+                            'thumbnail_url' => $child->thumbnail_url,
+                            'products_count' => $childProductsCount,
+                            'path' => $child->getPathAttribute(),
+                        ];
+                    }),
+                    'settings' => $category->settings ?? [],
+                ];
+            });
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch product categories for homepage editor', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return collect([]);
+        }
+    }
+    /**
+     * Simplified general categories method (for backward compatibility)
      */
     private function getCategories(): Collection
     {
         return Cache::remember('homepage_editor_categories', 3600, function () {
             try {
-                // First check which columns exist in the table
-                $columns = Schema::getColumnListing('categories');
-                
-                // Build select array with only existing columns
-                $selectColumns = ['id', 'name', 'slug'];
-                
-                // Add optional columns if they exist
-                if (in_array('icon', $columns)) {
-                    $selectColumns[] = 'icon';
-                } else {
-                    // If icon column doesn't exist, we'll add a default value
-                    $selectColumns[] = DB::raw("NULL as icon");
-                }
-                
-                if (in_array('description', $columns)) {
-                    $selectColumns[] = 'description';
-                } else {
-                    $selectColumns[] = DB::raw("NULL as description");
-                }
-                
-                if (in_array('image', $columns)) {
-                    $selectColumns[] = 'image';
-                } else {
-                    $selectColumns[] = DB::raw("NULL as image");
-                }
-                
-                // Check if position column exists for ordering
-                $orderColumn = in_array('position', $columns) ? 'position' : 'id';
-                
-                // Check for the products relationship using categorizables table
-                $hasCategorizablesTable = Schema::hasTable('categorizables');
-                
-                if ($hasCategorizablesTable) {
-                    // Add the products_count as a subquery
-                    $selectColumns[] = DB::raw("(select count(*) from `products` 
-                        inner join `categorizables` on `products`.`id` = `categorizables`.`categorizable_id` 
-                        where `categories`.`id` = `categorizables`.`category_id` 
-                        and `categorizables`.`categorizable_type` = 'App\\Models\\Product'
-                        and `products`.`deleted_at` is null) as `products_count`");
-                } else {
-                    // Fallback for products_count if no categorizables table
-                    $selectColumns[] = DB::raw("0 as products_count");
-                }
-                
-                $query = Category::select($selectColumns)
-                    ->whereNull('deleted_at');
-                    
-                // Add is_active condition if the column exists
-                if (in_array('is_active', $columns)) {
-                    $query->where('is_active', true);
-                }
-                
-                // Order by the appropriate column
-                $query->orderBy($orderColumn);
-                
-                return $query->get();
+                return Category::with(['files'])
+                    ->active()
+                    ->withCount(['products'])
+                    ->orderBy('sort_order')
+                    ->get()
+                    ->map(function ($category) {
+                        return [
+                            'id' => $category->id,
+                            'name' => $category->name,
+                            'slug' => $category->slug,
+                            'type' => $category->type,
+                            'description' => $category->description,
+                            'icon_url' => $category->icon_url,
+                            'thumbnail_url' => $category->thumbnail_url,
+                            'products_count' => $category->products_count,
+                            'path' => $category->path,
+                            'has_children' => $category->hasChildren(),
+                        ];
+                    });
             } catch (\Exception $e) {
                 Log::error('Failed to fetch categories for homepage editor', [
                     'error' => $e->getMessage(),
                     'trace' => $e->getTraceAsString()
                 ]);
-                return collect([]); // Return empty collection on error
+                return collect([]);
             }
         });
     }
@@ -658,7 +705,6 @@ final class HomepageEditorService
         try {
             // Get validated data from the request
             $data = $request->validated();
-            dd($data);
             
             // Files array to store any file uploads
             $files = [];

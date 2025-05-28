@@ -227,47 +227,63 @@ final class HomeService extends BaseService
     }
 
     /**
-     * Get popular categories from database with settings applied
+     * Get popular categories for homepage display
      */
     private function getPopularCategories(array $settings): array
     {
-        // If categories section is disabled, return empty array
-        if (isset($settings['top_categories_enabled']) && !$settings['top_categories_enabled']) {
+        // Check if categories section is enabled
+        if (!($settings['top_categories_enabled'] ?? true)) {
             return [];
         }
 
-        // Number of categories to show
-        $limit = $settings['top_categories_count'] ?? 8;
+        $limit = isset($settings['top_categories_count']) ? (int)$settings['top_categories_count'] : 8;
+        $selectedCategoryIds = $settings['selected_top_categories'] ?? [];
 
-        // Try to get categories from DB
         try {
-            $categories = Category::where('is_active', true)
-                ->orderBy('position')
-                ->take($limit)
+            $query = Category::where('is_active', true)
+                ->where('type', 'product');
+                // ->with(['restaurants' => function($query) {
+                //     $query->where('is_active', true)->where('is_open', true);
+                // }]);
+
+            // If admin has selected specific categories, prioritize them
+            if (!empty($selectedCategoryIds)) {
+                $query->whereIn('id', $selectedCategoryIds)
+                      ->orderByRaw('FIELD(id, ' . implode(',', $selectedCategoryIds) . ')');
+            } else {
+                // Otherwise, get latest active categories
+                $query->orderBy('created_at', 'desc')
+                      ->orderBy('sort_order', 'asc');
+            }
+
+            $categories = $query->take($limit)
                 ->get()
                 ->map(function ($category) {
                     return [
                         'id' => $category->id,
                         'name' => $category->name,
                         'slug' => $category->slug,
-                        'restaurants' => $category->products_count ?? 0,
-                        'image' => $category->image ? asset($category->image) : '/images/categories/default.jpg',
-                        'description' => $category->description,
+                        // 'restaurants' => $category->restaurants->count(),
+                        'image' => $category->image 
+                            ? asset('storage/' . $category->image)
+                            : asset('images/categories/default.jpg'),
+                        'description' => $category->description ?? '',
+                        'is_popular' => $category->is_popular ?? false,
                     ];
                 })
                 ->toArray();
 
-            if (!empty($categories)) {
-                return $categories;
-            }
-        } catch (\Exception $e) {
-            Log::error('Failed to fetch categories for homepage', [
-                'error' => $e->getMessage()
-            ]);
-        }
+            return $categories;
 
-        // Return default categories as fallback
-        return $this->getDefaultCategories($limit);
+        } catch (\Exception $e) {
+            Log::error('Categories fetch failed', [
+                'error' => $e->getMessage(),
+                'settings' => $settings
+            ]);
+            
+            // return $this->getDefaultCategories($limit);
+            return [];
+        }
     }
 
     /**

@@ -207,11 +207,6 @@ export const routes = {
                 name: "Homepage",
                 path: "/app/appearance/homepage",
                 icon: "Home"
-            },
-            themeOptions: {
-                name: "Theme Options",
-                path: "/app/theme-options/general",
-                icon: "Settings2"
             }
         }
     },
@@ -248,8 +243,10 @@ export const routes = {
                 icon: "Package"
             }
         }
+    },
+    themeOptions: {
+        name: "Theme Options",
+        icon: "Settings2",
+        role: ["Admin"]
     }
-
-
-    // Add other menu items similarly...
 };

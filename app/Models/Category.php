@@ -180,4 +180,14 @@ final class Category extends Model
     {
         return $query->where('type', 'addon');
     }
+
+    public function scopeProductCategories($query)
+    {
+        return $query->where('type', 'product');
+    }
+
+    public function scopeBlogCategories($query)
+    {
+        return $query->where('type', 'blog');
+    }
 }

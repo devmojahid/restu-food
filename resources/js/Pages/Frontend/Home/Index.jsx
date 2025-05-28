@@ -23,7 +23,6 @@ const Index = ({
     nearbyRestaurants = [],
     error
 }) => {
-    console.log(featuredRestaurants);
     return (
         <Layout>
             <Head title="Home" />

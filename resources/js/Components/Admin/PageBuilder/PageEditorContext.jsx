@@ -174,8 +174,10 @@ export const PageEditorProvider = ({
   onSave,
   saveUrl,
   validationRules = {},
-  defaultActiveSection = 'hero'
+  defaultActiveSection = 'hero',
+  dynamicData = {}
 }) => {
+
   const { toast } = useToast();
   const [activeSection, setActiveSection] = useState(defaultActiveSection); // Use the prop here
   const [isSaving, setIsSaving] = useState(false);
@@ -188,7 +190,7 @@ export const PageEditorProvider = ({
     errors: {}
   });
 
-  console.log(state, 'state');
+  console.log(state, 'state in context');
 
   // Set the first section as active by default if none is set
   useEffect(() => {
@@ -381,10 +383,6 @@ export const PageEditorProvider = ({
         });
 
         // Submit with Inertia
-        console.log(formDataObj, 'formDataObj');
-        console.log(saveUrl, 'saveUrl');
-        console.log(files, 'files');
-        console.log(state.formData, 'state.formData');
         router.post(saveUrl, formDataObj, {
           onSuccess: () => {
             dispatch({ type: ACTIONS.SET_DIRTY, payload: false });
@@ -471,6 +469,7 @@ export const PageEditorProvider = ({
     getErrorMessage,
     resetForm,
     validateForm,
+    dynamicData: dynamicData
   };
 
   return (

@@ -64,6 +64,8 @@ class UpdateHomepageRequest extends FormRequest
             'top_categories_show_filter' => 'boolean',
             'top_categories_show_description' => 'boolean',
             'top_categories_columns' => 'nullable|integer',
+            'selected_top_categories' => 'nullable|array',
+            'selected_top_categories.*' => 'exists:categories,id',
 
             // Why Choose Us Section
             'why_choose_us_enabled' => 'boolean',
@@ -154,7 +156,14 @@ class UpdateHomepageRequest extends FormRequest
             'hero_enabled',
             'top_categories_enabled', 
             'why_choose_us_enabled',
-            'client_feedback_enabled'
+            'client_feedback_enabled',
+            'top_restaurants_enabled',
+            'top_restaurants_show_description',
+            'top_categories_show_filter',
+            'top_categories_show_description',
+            'why_choose_us_enabled',
+            'why_choose_us_show_description',
+            'client_feedback_enabled',
         ];
 
         foreach ($booleanFields as $field) {

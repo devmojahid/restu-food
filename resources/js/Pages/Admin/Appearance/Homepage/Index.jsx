@@ -172,6 +172,7 @@ const HomepageEditor = ({ homepageOptions = {}, defaults = {}, dynamicData = {},
         initialData={initialData}
         saveUrl={route('app.appearance.homepage.update')}
         defaultActiveSection={defaultSection} // Pass the default section to the provider
+        dynamicData={dynamicData}
       >
         <div className="container mx-auto py-6">
           <div className="flex justify-between items-center mb-6">
