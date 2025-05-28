@@ -200,3 +200,57 @@ resources\js\Components\Table\TableFilters.jsx
 resources\js\Components\Table\TableHeader.jsx
 resources\js\Components\Table\TablePagination.jsx
 resources\js\Components\Table\TableSkeleton.jsx
+
+
+
+
+
+brand new page or section add prompt 
+
+ use context7 @laravel.mdc @plan-and-modules.mdc  
+
+Our home page 
+resources\js\Pages\Frontend\Home\Index.jsx
+resources\js\Pages\Frontend\Home\Partials\HeroSlider.jsx
+resources\js\Pages\Frontend\Home\Partials\FeaturedRestaurants.jsx
+resources\js\Pages\Frontend\Home\Partials\FeaturedDishes.jsx
+resources\js\Pages\Frontend\Home\Partials\PopularCategories.jsx
+resources\js\Pages\Frontend\Home\Partials\CustomerTestimonials.jsx
+resources\js\Pages\Frontend\Home\Partials\LocationBasedSuggestions.jsx
+resources\js\Pages\Frontend\Home\Partials\PopularDishes.jsx
+resources\js\Pages\Frontend\Home\Partials\SpecialOffers.jsx
+
+Restaurants page 
+resources\js\Pages\Frontend\Restaurants\Index.jsx
+resources\js\Pages\Frontend\Restaurants\Show.jsx
+resources\js\Pages\Frontend\Restaurants\Partials\Cart.jsx
+resources\js\Pages\Frontend\Restaurants\Partials\FeaturedRestaurants.jsx
+resources\js\Pages\Frontend\Restaurants\Partials\Hero.jsx
+etc. 
+Products
+resources\js\Pages\Products\Index.jsx
+Contact
+resources\js\Pages\Frontend\Contact\Index.jsx
+resources\js\Pages\Frontend\Contact\Partials\Hero.jsx
+resources\js\Pages\Frontend\Contact\Partials\ContactForm.jsx
+
+data sourche in witch place the demo data and dynamic data comes in hom page already spom, section we made it completely dynamic but here need many more impormenet 
+routes inside routes\web.php
+Route::name('frontend.')->group(function () { inside this 
+and data come from there 
+app\Http\Controllers\Frontend\HomeController.php
+app\Services\Frontend\HomeService.php
+app\Http\Controllers\Frontend\PageController.php
+app\Services\Frontend\AboutService.php
+app\Services\Frontend\ContactService.php
+and there for every section there made dummy data [Note: in future your given section should also add dymmay data like others] 
+
+
+Note: read all files and folders do not distrube anything from previus code your task add new importent page and new sections as like previus code previus pettern previus system with new and better section with fully functional cullor full and match with curent typography and color and outhers ui/ux. and follow and use best ui/ux with parfect user reasearch and null also developer friendly codebased. and parfect design system with mobile first design. 
+Note: mind it you should make this all section and new all sections fully responsive and mobile first design with all device response and looking attractive design and parfect system. and follow best prectises code with developer friendly system
+use proper null safe operation with proper error state for every section where need. 
+
+Note: your first page need to create and complete the page name is offers as like others parfectly working pages like. about,contact,restaurants and others and every page we use a common hero with beautifull and good looking as like others make sure add it also hear. and make sure add in controller like others page with add service class wit fully working dummy data like others without distrube anything. and also route adding without distrube, 
+
+Note: i need best error free codebased with null check and null safe and parfect system solve all error and make this better way and complete the system with better. 
+Note: do not distrube anything carefully handle this system and make this parfect. i need error free system and organazied and robust and scalable system.
