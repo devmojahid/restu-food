@@ -36,7 +36,8 @@ use App\Http\Controllers\Frontend\{
     MenuController,
     OfferController,
     PageController,
-    CartController
+    CartController,
+    Cart2Controller
 };
 use App\Http\Controllers\Admin\KitchenController;
 use Illuminate\Foundation\Application;
@@ -642,6 +643,15 @@ Route::name('frontend.')->group(function () {
     Route::put('/cart/items/{itemId}', [CartController::class, 'updateQuantity'])->name('cart.update');
     Route::delete('/cart/items/{itemId}', [CartController::class, 'removeItem'])->name('cart.remove');
     Route::post('/cart/promo-code', [CartController::class, 'applyPromoCode'])->name('cart.promo');
+    
+    // Enhanced Cart2 Routes
+    Route::get('/cart2', [Cart2Controller::class, 'index'])->name('cart2');
+    Route::post('/cart2/promo-code', [Cart2Controller::class, 'applyPromoCode'])->name('cart2.promo');
+    Route::put('/cart2/items/update-quantity', [Cart2Controller::class, 'updateQuantity'])->name('cart2.update-quantity');
+    Route::delete('/cart2/items/remove', [Cart2Controller::class, 'removeItem'])->name('cart2.remove-item');
+    Route::post('/cart2/items/save-for-later', [Cart2Controller::class, 'saveForLater'])->name('cart2.save-for-later');
+    Route::post('/cart2/items/move-to-cart', [Cart2Controller::class, 'moveToCart'])->name('cart2.move-to-cart');
+    Route::post('/cart2/checkout', [Cart2Controller::class, 'checkout'])->name('cart2.checkout');
     
     // Menu Routes
     Route::prefix('menu')->name('menu.')->group(function () {
