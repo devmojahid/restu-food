@@ -40,7 +40,8 @@ use App\Http\Controllers\Frontend\{
     Cart2Controller,
     WishlistController,
     CheckoutController,
-    Checkout2Controller
+    Checkout2Controller,
+    Checkout3Controller
 };
 use App\Http\Controllers\Admin\KitchenController;
 use Illuminate\Foundation\Application;
@@ -671,6 +672,12 @@ Route::name('frontend.')->group(function () {
     Route::put('/checkout2/payment', [Checkout2Controller::class, 'updatePayment'])->name('checkout2.payment');
     Route::post('/checkout2/promo', [Checkout2Controller::class, 'applyPromoCode'])->name('checkout2.promo');
     Route::get('/checkout2/success', [Checkout2Controller::class, 'success'])->name('checkout2.success');
+    
+    // Checkout3 Routes - Express Single-Page Checkout
+    Route::get('/checkout3', [Checkout3Controller::class, 'index'])->name('checkout3');
+    Route::post('/checkout3/process', [Checkout3Controller::class, 'processCheckout'])->name('checkout3.process');
+    Route::post('/checkout3/promo', [Checkout3Controller::class, 'applyPromoCode'])->name('checkout3.promo');
+    Route::get('/checkout3/success', [Checkout3Controller::class, 'success'])->name('checkout3.success');
     
     // Menu Routes
     Route::prefix('menu')->name('menu.')->group(function () {
