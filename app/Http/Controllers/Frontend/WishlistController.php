@@ -6,175 +6,300 @@ namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
 use App\Services\Frontend\WishlistService;
+use App\Services\Frontend\Wishlist2Service;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inertia\Response;
 use Inertia\Inertia;
+use Inertia\Response;
 
 /**
- * Controller for managing wishlist page and operations
+ * Controller for wishlist and wishlist2 functionality
  */
 final class WishlistController extends Controller
 {
     public function __construct(
-        private readonly WishlistService $wishlistService
+        private readonly WishlistService $wishlistService,
+        private readonly Wishlist2Service $wishlist2Service
     ) {}
-
+    
     /**
-     * Display the wishlist page
+     * Display the wishlist page with items
      */
     public function index(): Response
     {
-        try {
-            $data = $this->wishlistService->getWishlistPageData();
-            
-            // Check if there's an error in the data
-            if (isset($data['error'])) {
-                return Inertia::render('Frontend/Wishlist/Index', [
-                    'error' => $data['error']
-                ]);
-            }
-            
-            return Inertia::render('Frontend/Wishlist/Index', $data);
-        } catch (\Throwable $e) {
-            report($e);
-            
-            return Inertia::render('Frontend/Wishlist/Index', [
-                'error' => 'An error occurred while loading the wishlist page.'
-            ]);
-        }
+        $data = $this->wishlistService->getWishlistPageData();
+        
+        return Inertia::render('Frontend/Wishlist/Index', $data);
     }
-
+    
     /**
-     * Add an item to the wishlist
+     * Display the enhanced wishlist2 page with items
      */
-    public function addToWishlist(Request $request)
+    public function showWishlist2(): Response
     {
-        try {
-            $validated = $request->validate([
-                'item_id' => 'required|integer',
-                'type' => 'required|string|in:dish,restaurant',
-            ]);
-            
-            // Here you would typically handle the logic to add an item to wishlist
-            // For now, we'll just return a success response
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Item added to wishlist successfully'
-            ]);
-        } catch (\Throwable $e) {
-            report($e);
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to add item to wishlist: ' . $e->getMessage()
-            ], 500);
-        }
+        $data = $this->wishlist2Service->getWishlist2PageData();
+        
+        return Inertia::render('Frontend/Wishlist2/Index', $data);
     }
-
+    
     /**
-     * Remove an item from the wishlist
+     * Add an item to wishlist
      */
-    public function removeFromWishlist(Request $request)
+    public function addToWishlist(Request $request): JsonResponse|RedirectResponse
     {
-        try {
-            $validated = $request->validate([
-                'item_id' => 'required|integer',
-            ]);
-            
-            // Here you would typically handle the logic to remove an item from wishlist
-            
+        $validated = $request->validate([
+            'dish_id' => 'required|integer',
+            'collection_id' => 'nullable|integer',
+        ]);
+        
+        $result = $this->wishlistService->addItemToWishlist(
+            $validated['dish_id'],
+            $validated['collection_id'] ?? null
+        );
+        
+        if ($request->wantsJson()) {
             return response()->json([
-                'success' => true,
-                'message' => 'Item removed from wishlist successfully'
+                'success' => $result,
+                'message' => $result ? 'Item added to wishlist' : 'Failed to add item to wishlist',
             ]);
-        } catch (\Throwable $e) {
-            report($e);
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to remove item from wishlist: ' . $e->getMessage()
-            ], 500);
         }
+        
+        return redirect()->back()->with(
+            $result ? 'success' : 'error',
+            $result ? 'Item added to wishlist' : 'Failed to add item to wishlist'
+        );
     }
-
+    
+    /**
+     * Add an item to wishlist2
+     */
+    public function addToWishlist2(Request $request): JsonResponse|RedirectResponse
+    {
+        $validated = $request->validate([
+            'dish_id' => 'required|integer',
+            'collection_id' => 'nullable|integer',
+        ]);
+        
+        $result = $this->wishlist2Service->addItemToWishlist(
+            $validated['dish_id'],
+            $validated['collection_id'] ?? null
+        );
+        
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => $result,
+                'message' => $result ? 'Item added to wishlist' : 'Failed to add item to wishlist',
+            ]);
+        }
+        
+        return redirect()->back()->with(
+            $result ? 'success' : 'error',
+            $result ? 'Item added to wishlist' : 'Failed to add item to wishlist'
+        );
+    }
+    
+    /**
+     * Remove an item from wishlist
+     */
+    public function removeFromWishlist(Request $request): JsonResponse|RedirectResponse
+    {
+        $validated = $request->validate([
+            'item_id' => 'required|integer',
+        ]);
+        
+        $result = $this->wishlistService->removeItemFromWishlist($validated['item_id']);
+        
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => $result,
+                'message' => $result ? 'Item removed from wishlist' : 'Failed to remove item from wishlist',
+            ]);
+        }
+        
+        return redirect()->back()->with(
+            $result ? 'success' : 'error',
+            $result ? 'Item removed from wishlist' : 'Failed to remove item from wishlist'
+        );
+    }
+    
+    /**
+     * Remove an item from wishlist2
+     */
+    public function removeFromWishlist2(Request $request): JsonResponse|RedirectResponse
+    {
+        $validated = $request->validate([
+            'item_id' => 'required|integer',
+        ]);
+        
+        $result = $this->wishlist2Service->removeItemFromWishlist($validated['item_id']);
+        
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => $result,
+                'message' => $result ? 'Item removed from wishlist' : 'Failed to remove item from wishlist',
+            ]);
+        }
+        
+        return redirect()->back()->with(
+            $result ? 'success' : 'error',
+            $result ? 'Item removed from wishlist' : 'Failed to remove item from wishlist'
+        );
+    }
+    
     /**
      * Move an item from wishlist to cart
      */
-    public function moveToCart(Request $request)
+    public function moveToCart(Request $request): JsonResponse|RedirectResponse
     {
-        try {
-            $validated = $request->validate([
-                'item_id' => 'required|integer',
-                'quantity' => 'sometimes|integer|min:1',
-            ]);
-            
-            $quantity = $validated['quantity'] ?? 1;
-            
-            // Here you would typically handle the logic to move an item to cart
-            
+        $validated = $request->validate([
+            'item_id' => 'required|integer',
+            'quantity' => 'nullable|integer|min:1',
+        ]);
+        
+        $result = $this->wishlistService->moveItemToCart(
+            $validated['item_id'],
+            $validated['quantity'] ?? 1
+        );
+        
+        if ($request->wantsJson()) {
             return response()->json([
-                'success' => true,
-                'message' => 'Item moved to cart successfully'
+                'success' => $result,
+                'message' => $result ? 'Item moved to cart' : 'Failed to move item to cart',
             ]);
-        } catch (\Throwable $e) {
-            report($e);
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to move item to cart: ' . $e->getMessage()
-            ], 500);
         }
+        
+        return redirect()->back()->with(
+            $result ? 'success' : 'error',
+            $result ? 'Item moved to cart' : 'Failed to move item to cart'
+        );
     }
-
+    
     /**
-     * Create or update a collection
+     * Move an item from wishlist2 to cart
      */
-    public function manageCollection(Request $request)
+    public function moveToCart2(Request $request): JsonResponse|RedirectResponse
     {
-        try {
-            $validated = $request->validate([
-                'collection_id' => 'sometimes|integer',
-                'name' => 'required|string|max:50',
-                'icon' => 'sometimes|string',
-                'color' => 'sometimes|string',
-            ]);
-            
-            // Here you would typically handle the logic to create or update a collection
-            
+        $validated = $request->validate([
+            'item_id' => 'required|integer',
+            'quantity' => 'nullable|integer|min:1',
+        ]);
+        
+        $result = $this->wishlist2Service->moveItemToCart(
+            $validated['item_id'],
+            $validated['quantity'] ?? 1
+        );
+        
+        if ($request->wantsJson()) {
             return response()->json([
-                'success' => true,
-                'message' => 'Collection ' . (isset($validated['collection_id']) ? 'updated' : 'created') . ' successfully'
+                'success' => $result,
+                'message' => $result ? 'Item moved to cart' : 'Failed to move item to cart',
             ]);
-        } catch (\Throwable $e) {
-            report($e);
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to manage collection: ' . $e->getMessage()
-            ], 500);
         }
+        
+        return redirect()->back()->with(
+            $result ? 'success' : 'error',
+            $result ? 'Item moved to cart' : 'Failed to move item to cart'
+        );
     }
-
+    
+    /**
+     * Manage collection (create, update, delete)
+     */
+    public function manageCollection(Request $request): JsonResponse|RedirectResponse
+    {
+        $validated = $request->validate([
+            'action' => 'required|string|in:create,update,delete',
+            'collection_id' => 'nullable|required_if:action,update,delete|integer',
+            'name' => 'nullable|required_if:action,create,update|string|max:255',
+        ]);
+        
+        $result = $this->wishlistService->manageCollection(
+            $validated['action'],
+            $validated['collection_id'] ?? null,
+            $validated['name'] ?? null
+        );
+        
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => $result,
+                'message' => $result ? 'Collection updated successfully' : 'Failed to update collection',
+            ]);
+        }
+        
+        return redirect()->back()->with(
+            $result ? 'success' : 'error',
+            $result ? 'Collection updated successfully' : 'Failed to update collection'
+        );
+    }
+    
+    /**
+     * Manage wishlist2 collection (create, update, delete)
+     */
+    public function manageCollection2(Request $request): JsonResponse|RedirectResponse
+    {
+        $validated = $request->validate([
+            'action' => 'required|string|in:create,update,delete',
+            'collection_id' => 'nullable|required_if:action,update,delete|integer',
+            'name' => 'nullable|required_if:action,create,update|string|max:255',
+        ]);
+        
+        $result = $this->wishlist2Service->manageCollection(
+            $validated['action'],
+            $validated['collection_id'] ?? null,
+            $validated['name'] ?? null
+        );
+        
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => $result,
+                'message' => $result ? 'Collection updated successfully' : 'Failed to update collection',
+            ]);
+        }
+        
+        return redirect()->back()->with(
+            $result ? 'success' : 'error',
+            $result ? 'Collection updated successfully' : 'Failed to update collection'
+        );
+    }
+    
     /**
      * Clear all items from wishlist
      */
-    public function clearWishlist()
+    public function clearWishlist(Request $request): JsonResponse|RedirectResponse
     {
-        try {
-            // Here you would typically handle the logic to clear the wishlist
-            
+        $result = $this->wishlistService->clearWishlist();
+        
+        if ($request->wantsJson()) {
             return response()->json([
-                'success' => true,
-                'message' => 'Wishlist cleared successfully'
+                'success' => $result,
+                'message' => $result ? 'Wishlist cleared' : 'Failed to clear wishlist',
             ]);
-        } catch (\Throwable $e) {
-            report($e);
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to clear wishlist: ' . $e->getMessage()
-            ], 500);
         }
+        
+        return redirect()->back()->with(
+            $result ? 'success' : 'error',
+            $result ? 'Wishlist cleared' : 'Failed to clear wishlist'
+        );
+    }
+    
+    /**
+     * Clear all items from wishlist2
+     */
+    public function clearWishlist2(Request $request): JsonResponse|RedirectResponse
+    {
+        $result = $this->wishlist2Service->clearWishlist();
+        
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => $result,
+                'message' => $result ? 'Wishlist cleared' : 'Failed to clear wishlist',
+            ]);
+        }
+        
+        return redirect()->back()->with(
+            $result ? 'success' : 'error',
+            $result ? 'Wishlist cleared' : 'Failed to clear wishlist'
+        );
     }
 } 

@@ -668,6 +668,14 @@ Route::name('frontend.')->group(function () {
     Route::post('/wishlist/move-to-cart', [WishlistController::class, 'moveToCart'])->name('wishlist.move_to_cart');
     Route::post('/wishlist/collection', [WishlistController::class, 'manageCollection'])->name('wishlist.collection');
     Route::post('/wishlist/clear', [WishlistController::class, 'clearWishlist'])->name('wishlist.clear');
+
+    // Wishlist2 Routes
+    Route::get('/wishlist2', [WishlistController::class, 'showWishlist2'])->name('wishlist2');
+    Route::post('/wishlist2/add', [WishlistController::class, 'addToWishlist2'])->name('wishlist2.add');
+    Route::delete('/wishlist2/remove', [WishlistController::class, 'removeFromWishlist2'])->name('wishlist2.remove');
+    Route::post('/wishlist2/move-to-cart', [WishlistController::class, 'moveToCart2'])->name('wishlist2.move_to_cart');
+    Route::post('/wishlist2/manage-collection', [WishlistController::class, 'manageCollection2'])->name('wishlist2.manage_collection');
+    Route::delete('/wishlist2/clear', [WishlistController::class, 'clearWishlist2'])->name('wishlist2.clear');
 });
 
 // Add these routes inside your auth middleware group
