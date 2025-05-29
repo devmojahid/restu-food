@@ -47,6 +47,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\Admin\DeliveryLocationController;
 use App\Http\Controllers\DeliveryTrackingController;
 use App\Http\Controllers\Frontend\RestaurantController as FrontendRestaurantController;
+use App\Http\Controllers\Frontend\CheckoutController;
 
 /*
 |--------------------------------------------------------------------------
@@ -653,6 +654,14 @@ Route::name('frontend.')->group(function () {
     Route::post('/cart2/items/save-for-later', [Cart2Controller::class, 'saveForLater'])->name('cart2.save-for-later');
     Route::post('/cart2/items/move-to-cart', [Cart2Controller::class, 'moveToCart'])->name('cart2.move-to-cart');
     Route::post('/cart2/checkout', [Cart2Controller::class, 'checkout'])->name('cart2.checkout');
+    
+    // Checkout Routes
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+    Route::post('/checkout/process', [CheckoutController::class, 'processCheckout'])->name('checkout.process');
+    Route::put('/checkout/address', [CheckoutController::class, 'updateShippingAddress'])->name('checkout.address');
+    Route::put('/checkout/payment', [CheckoutController::class, 'updatePaymentMethod'])->name('checkout.payment');
+    Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
+    Route::get('/tracking/{id}', [CheckoutController::class, 'tracking'])->name('tracking');
     
     // Menu Routes
     Route::prefix('menu')->name('menu.')->group(function () {
