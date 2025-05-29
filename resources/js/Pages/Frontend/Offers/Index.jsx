@@ -32,8 +32,13 @@ const Index = ({
                 offer.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 offer.restaurant?.name?.toLowerCase().includes(searchQuery.toLowerCase());
 
+            // Handle both string and object cases for activeCategory
+            const categoryName = typeof activeCategory === 'string'
+                ? activeCategory
+                : activeCategory?.name;
+
             const matchesCategory = !activeCategory ||
-                offer.category?.toLowerCase() === activeCategory.toLowerCase();
+                offer.category?.toLowerCase() === categoryName?.toLowerCase();
 
             return matchesSearch && matchesCategory;
         });

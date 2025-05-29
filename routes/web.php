@@ -35,7 +35,8 @@ use App\Http\Controllers\Frontend\{
     HomeController,
     MenuController,
     OfferController,
-    PageController
+    PageController,
+    CartController
 };
 use App\Http\Controllers\Admin\KitchenController;
 use Illuminate\Foundation\Application;
@@ -635,6 +636,13 @@ Route::name('frontend.')->group(function () {
     Route::get('/restaurant/{restaurant}', [FrontendRestaurantController::class, 'show'])->name('restaurant.single');
     Route::get('/blogs', [PageController::class, 'blogs'])->name('blogs');
     Route::get('/blog/{slug}', [PageController::class, 'blogSingle'])->name('blog.single');
+    
+    // Cart Routes
+    Route::get('/cart', [CartController::class, 'index'])->name('cart');
+    Route::put('/cart/items/{itemId}', [CartController::class, 'updateQuantity'])->name('cart.update');
+    Route::delete('/cart/items/{itemId}', [CartController::class, 'removeItem'])->name('cart.remove');
+    Route::post('/cart/promo-code', [CartController::class, 'applyPromoCode'])->name('cart.promo');
+    
     // Menu Routes
     Route::prefix('menu')->name('menu.')->group(function () {
         Route::get('/', [MenuController::class, 'index'])->name('index');

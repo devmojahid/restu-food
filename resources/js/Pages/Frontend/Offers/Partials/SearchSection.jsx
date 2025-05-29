@@ -99,7 +99,9 @@ const SearchSection = ({
                             <DropdownMenuTrigger asChild>
                                 <Button variant="outline" className="min-w-[120px]">
                                     <Filter className="w-4 h-4 mr-2" />
-                                    <span>{activeCategory || "All Categories"}</span>
+                                    <span>{typeof activeCategory === 'string'
+                                        ? activeCategory
+                                        : activeCategory?.name || "All Categories"}</span>
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-56">
@@ -151,7 +153,9 @@ const SearchSection = ({
                         <span>Active Filters:</span>
                         {activeCategory && (
                             <span className="bg-primary/10 text-primary px-2 py-1 rounded-full">
-                                Category: {activeCategory}
+                                Category: {typeof activeCategory === 'string'
+                                    ? activeCategory
+                                    : activeCategory?.name}
                             </span>
                         )}
                         {searchQuery && (
