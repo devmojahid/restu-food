@@ -38,7 +38,9 @@ use App\Http\Controllers\Frontend\{
     PageController,
     CartController,
     Cart2Controller,
-    WishlistController
+    WishlistController,
+    CheckoutController,
+    Checkout2Controller
 };
 use App\Http\Controllers\Admin\KitchenController;
 use Illuminate\Foundation\Application;
@@ -47,7 +49,6 @@ use Inertia\Inertia;
 use App\Http\Controllers\Admin\DeliveryLocationController;
 use App\Http\Controllers\DeliveryTrackingController;
 use App\Http\Controllers\Frontend\RestaurantController as FrontendRestaurantController;
-use App\Http\Controllers\Frontend\CheckoutController;
 
 /*
 |--------------------------------------------------------------------------
@@ -662,6 +663,14 @@ Route::name('frontend.')->group(function () {
     Route::put('/checkout/payment', [CheckoutController::class, 'updatePaymentMethod'])->name('checkout.payment');
     Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
     Route::get('/tracking/{id}', [CheckoutController::class, 'tracking'])->name('tracking');
+    
+    // Checkout2 Routes
+    Route::get('/checkout2', [Checkout2Controller::class, 'index'])->name('checkout2');
+    Route::post('/checkout2/process', [Checkout2Controller::class, 'processCheckout'])->name('checkout2.process');
+    Route::put('/checkout2/address', [Checkout2Controller::class, 'updateAddress'])->name('checkout2.address');
+    Route::put('/checkout2/payment', [Checkout2Controller::class, 'updatePayment'])->name('checkout2.payment');
+    Route::post('/checkout2/promo', [Checkout2Controller::class, 'applyPromoCode'])->name('checkout2.promo');
+    Route::get('/checkout2/success', [Checkout2Controller::class, 'success'])->name('checkout2.success');
     
     // Menu Routes
     Route::prefix('menu')->name('menu.')->group(function () {
