@@ -37,7 +37,8 @@ use App\Http\Controllers\Frontend\{
     OfferController,
     PageController,
     CartController,
-    Cart2Controller
+    Cart2Controller,
+    WishlistController
 };
 use App\Http\Controllers\Admin\KitchenController;
 use Illuminate\Foundation\Application;
@@ -659,6 +660,14 @@ Route::name('frontend.')->group(function () {
         Route::get('/category/{slug}', [MenuController::class, 'category'])->name('category');
         Route::get('/{slug}', [MenuController::class, 'show'])->name('show');
     });
+
+    // Wishlist Routes
+    Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist');
+    Route::post('/wishlist/add', [WishlistController::class, 'addToWishlist'])->name('wishlist.add');
+    Route::post('/wishlist/remove', [WishlistController::class, 'removeFromWishlist'])->name('wishlist.remove');
+    Route::post('/wishlist/move-to-cart', [WishlistController::class, 'moveToCart'])->name('wishlist.move_to_cart');
+    Route::post('/wishlist/collection', [WishlistController::class, 'manageCollection'])->name('wishlist.collection');
+    Route::post('/wishlist/clear', [WishlistController::class, 'clearWishlist'])->name('wishlist.clear');
 });
 
 // Add these routes inside your auth middleware group
