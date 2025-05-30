@@ -10,6 +10,7 @@ use Inertia\Inertia;
 use App\Services\Frontend\AboutService;
 use App\Services\Frontend\ContactService;
 use App\Services\Frontend\RestaurantService;
+use App\Services\Frontend\Restaurant2Service;
 use App\Services\Frontend\BlogService;
 use Illuminate\Http\Request;
 use App\Http\Requests\ContactFormRequest;
@@ -22,6 +23,7 @@ final class PageController extends Controller
         private readonly AboutService $aboutService,
         private readonly ContactService $contactService,
         private readonly RestaurantService $restaurantService,
+        private readonly Restaurant2Service $restaurant2Service,
         private readonly BlogService $blogService
     ) {}
 
@@ -54,6 +56,27 @@ final class PageController extends Controller
             'popularCuisines' => $data['popularCuisines'],
             'filters' => $data['filters'],
             'stats' => $data['stats']
+        ]);
+    }
+
+    /**
+     * Enhanced version of the restaurants page
+     */
+    public function restaurants2(): Response
+    {
+        $data = $this->restaurant2Service->getRestaurant2PageData();
+        
+        return Inertia::render('Frontend/Restaurants2/Index', [
+            'hero' => $data['hero'] ?? null,
+            'restaurants' => $data['restaurants'] ?? [],
+            'featuredRestaurants' => $data['featuredRestaurants'] ?? [],
+            'popularCuisines' => $data['popularCuisines'] ?? [],
+            'topRatedRestaurants' => $data['topRatedRestaurants'] ?? [],
+            'nearbyRestaurants' => $data['nearbyRestaurants'] ?? [],
+            'trendingRestaurants' => $data['trendingRestaurants'] ?? [],
+            'filters' => $data['filters'] ?? [],
+            'stats' => $data['stats'] ?? [],
+            'categories' => $data['categories'] ?? [],
         ]);
     }
 
