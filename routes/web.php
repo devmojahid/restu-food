@@ -41,7 +41,8 @@ use App\Http\Controllers\Frontend\{
     WishlistController,
     CheckoutController,
     Checkout2Controller,
-    Checkout3Controller
+    Checkout3Controller,
+    SupportController
 };
 use App\Http\Controllers\Admin\KitchenController;
 use Illuminate\Foundation\Application;
@@ -639,6 +640,12 @@ Route::name('frontend.')->group(function () {
     Route::get('/offers/{id}', [OfferController::class, 'show'])->name('offers.show');
     Route::post('/offers/{id}/claim', [OfferController::class, 'claim'])->name('offers.claim');
     Route::get('/contact', [PageController::class, 'contact'])->name('contact');
+    
+    // Support/Help Center Routes
+    Route::get('/support', [SupportController::class, 'index'])->name('support');
+    Route::post('/support/ticket', [SupportController::class, 'submitTicket'])->name('support.ticket');
+    Route::post('/support/chat', [SupportController::class, 'startChat'])->name('support.chat');
+    
     Route::get('/restaurant/{restaurant}', [FrontendRestaurantController::class, 'show'])->name('restaurant.single');
     Route::get('/blogs', [PageController::class, 'blogs'])->name('blogs');
     Route::get('/blog/{slug}', [PageController::class, 'blogSingle'])->name('blog.single');
