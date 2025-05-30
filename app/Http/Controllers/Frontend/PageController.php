@@ -11,6 +11,7 @@ use App\Services\Frontend\AboutService;
 use App\Services\Frontend\ContactService;
 use App\Services\Frontend\RestaurantService;
 use App\Services\Frontend\Restaurant2Service;
+use App\Services\Frontend\RestaurantDetailService;
 use App\Services\Frontend\BlogService;
 use Illuminate\Http\Request;
 use App\Http\Requests\ContactFormRequest;
@@ -24,6 +25,7 @@ final class PageController extends Controller
         private readonly ContactService $contactService,
         private readonly RestaurantService $restaurantService,
         private readonly Restaurant2Service $restaurant2Service,
+        private readonly RestaurantDetailService $restaurantDetailService,
         private readonly BlogService $blogService
     ) {}
 
@@ -131,5 +133,27 @@ final class PageController extends Controller
         $data = $this->blogService->getBlogPostData($slug);
 
         return Inertia::render('Frontend/Blog/Show', $data);
+    }
+
+    public function restaurantDetail(string $slug = null): Response
+    {
+        $data = $this->restaurantDetailService->getRestaurantDetailData($slug);
+        
+        return Inertia::render('Frontend/RestaurantDetail/Index', [
+            'hero' => $data['hero'],
+            'restaurant' => $data['restaurant'],
+            'menu' => $data['menu'],
+            'gallery' => $data['gallery'],
+            'reviews' => $data['reviews'],
+            'about' => $data['about'],
+            'location' => $data['location'],
+            'bookingInfo' => $data['bookingInfo'],
+            'schedule' => $data['schedule'],
+            'chefs' => $data['chefs'],
+            'offers' => $data['offers'],
+            'faqs' => $data['faqs'],
+            'similarRestaurants' => $data['similarRestaurants'],
+            'insights' => $data['insights'],
+        ]);
     }
 } 

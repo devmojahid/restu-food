@@ -639,6 +639,7 @@ Route::name('frontend.')->group(function () {
     Route::get('/menu/{menu}', [MenuController::class, 'show'])->name('menu.show');
     Route::get('/restaurants', [PageController::class, 'restaurants'])->name('restaurants');
     Route::get('/restaurants2', [PageController::class, 'restaurants2'])->name('restaurants2');
+    Route::get('/restaurant-detail/{slug?}', [PageController::class, 'restaurantDetail'])->name('restaurant-detail');
     Route::get('/offers', [OfferController::class, 'index'])->name('offers');
     Route::get('/offers/{id}', [OfferController::class, 'show'])->name('offers.show');
     Route::post('/offers/{id}/claim', [OfferController::class, 'claim'])->name('offers.claim');
