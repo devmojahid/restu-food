@@ -53,6 +53,7 @@ use App\Http\Controllers\DeliveryTrackingController;
 use App\Http\Controllers\Frontend\RestaurantController as FrontendRestaurantController;
 use App\Http\Controllers\Frontend\OrderTrackingController;
 use App\Http\Controllers\Frontend\LegalController;
+use App\Http\Controllers\Frontend\RewardsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -641,15 +642,22 @@ Route::name('frontend.')->group(function () {
     Route::get('/offers/{id}', [OfferController::class, 'show'])->name('offers.show');
     Route::post('/offers/{id}/claim', [OfferController::class, 'claim'])->name('offers.claim');
     Route::get('/contact', [PageController::class, 'contact'])->name('contact');
+     // Legal Pages Routes
+    //  Route::prefix('legal')->name('legal.')->group(function () {
+    //     Route::get('/terms', [LegalController::class, 'terms'])->name('terms');
+    //     Route::get('/privacy', [LegalController::class, 'privacy'])->name('privacy');
+    //     Route::get('/refund', [LegalController::class, 'refund'])->name('refund');
+    //     Route::get('/cookie', [LegalController::class, 'cookie'])->name('cookie');
+    //     Route::get('/cancellation', [LegalController::class, 'cancellation'])->name('cancellation');
+    // });
+    // Rewards/Loyalty Program Routes
+    Route::get('/rewards', [RewardsController::class, 'index'])->name('rewards');
+    Route::get('/rewards/history', [RewardsController::class, 'history'])->name('rewards.history');
+    Route::get('/rewards/my-rewards', [RewardsController::class, 'myRewards'])->name('rewards.my-rewards');
+    Route::get('/rewards/{id}', [RewardsController::class, 'showReward'])->name('rewards.show');
+    Route::post('/rewards/{id}/redeem', [RewardsController::class, 'redeemReward'])->name('rewards.redeem');
     
-    // Legal Pages Routes
-    Route::prefix('legal')->name('legal.')->group(function () {
-        Route::get('/terms', [LegalController::class, 'terms'])->name('terms');
-        Route::get('/privacy', [LegalController::class, 'privacy'])->name('privacy');
-        Route::get('/refund', [LegalController::class, 'refund'])->name('refund');
-        Route::get('/cookie', [LegalController::class, 'cookie'])->name('cookie');
-        Route::get('/cancellation', [LegalController::class, 'cancellation'])->name('cancellation');
-    });
+    Route::get('/legal/{slug}', [LegalController::class, 'index'])->name('legal');
     
     // Support/Help Center Routes
     Route::get('/support', [SupportController::class, 'index'])->name('support');
