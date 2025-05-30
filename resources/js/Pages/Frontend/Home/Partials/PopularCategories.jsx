@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-    ChevronRight, 
+import {
+    ChevronRight,
     Search,
     Pizza,
     Beef,
@@ -57,6 +57,8 @@ const PopularCategories = ({ categories }) => {
     const [sortBy, setSortBy] = useState('popular');
     const [showAll, setShowAll] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+
+    console.log(categories, 'categories');
 
     // Number of categories to show initially
     const INITIAL_DISPLAY_COUNT = 8;
@@ -126,8 +128,8 @@ const PopularCategories = ({ categories }) => {
             return (
                 <Sheet>
                     <SheetTrigger asChild>
-                        <Button 
-                            variant="outline" 
+                        <Button
+                            variant="outline"
                             className="w-full rounded-full flex items-center justify-between"
                         >
                             <span className="flex items-center">
@@ -139,8 +141,8 @@ const PopularCategories = ({ categories }) => {
                             </span>
                         </Button>
                     </SheetTrigger>
-                    <SheetContent 
-                        side="bottom" 
+                    <SheetContent
+                        side="bottom"
                         className="rounded-t-3xl"
                     >
                         <>
@@ -163,7 +165,7 @@ const PopularCategories = ({ categories }) => {
                                                 className={cn(
                                                     "w-full p-3 rounded-xl flex items-center",
                                                     "transition-all duration-200",
-                                                    sortBy === option.value 
+                                                    sortBy === option.value
                                                         ? "bg-primary/10 text-primary"
                                                         : "hover:bg-gray-100 dark:hover:bg-gray-800"
                                                 )}
@@ -185,8 +187,8 @@ const PopularCategories = ({ categories }) => {
         return (
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button 
-                        variant="outline" 
+                    <Button
+                        variant="outline"
                         className="rounded-full min-w-[140px]"
                     >
                         <Filter className="w-4 h-4 mr-2" />
@@ -198,7 +200,7 @@ const PopularCategories = ({ categories }) => {
                     {sortOptions.map((option) => {
                         const Icon = option.icon;
                         return (
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                                 key={option.value}
                                 onClick={() => {
                                     setSortBy(option.value);
@@ -222,13 +224,13 @@ const PopularCategories = ({ categories }) => {
 
     // Enhanced empty state component
     const EmptyState = () => (
-        <motion.div 
+        <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="text-center py-16 px-4"
         >
             <div className="relative mb-8 mx-auto w-24 h-24">
-                <motion.div 
+                <motion.div
                     className="absolute inset-0 bg-primary/10 rounded-full"
                     animate={{ scale: [1, 1.2, 1] }}
                     transition={{ duration: 2, repeat: Infinity }}
@@ -236,16 +238,16 @@ const PopularCategories = ({ categories }) => {
                 <Utensils className="w-12 h-12 text-primary absolute top-1/2 left-1/2 
                                  -translate-x-1/2 -translate-y-1/2" />
             </div>
-            
+
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
                 No Categories Found
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto">
-                {searchQuery 
+                {searchQuery
                     ? `No categories match "${searchQuery}". Try a different search term.`
                     : "We're currently organizing our menu categories. Check back soon!"}
             </p>
-            
+
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Button
                     variant="outline"
@@ -269,9 +271,9 @@ const PopularCategories = ({ categories }) => {
 
     // Enhanced CategoryCard with better stats display
     const CategoryCard = ({ category, index }) => {
-        const iconConfig = categoryIcons[category.name] || { 
-            icon: Pizza, 
-            gradient: 'from-gray-500 to-gray-600' 
+        const iconConfig = categoryIcons[category.name] || {
+            icon: Pizza,
+            gradient: 'from-gray-500 to-gray-600'
         };
         const Icon = iconConfig.icon;
         const isSelected = selectedCategory?.id === category.id;
@@ -311,26 +313,26 @@ const PopularCategories = ({ categories }) => {
                     "hover:border-primary dark:hover:border-primary"
                 )}
             >
-                <Link 
+                <Link
                     href={`/menu?category=${category.slug}`}
                     className="block p-6 relative"
                     onClick={() => handleCategoryClick(category)}
                 >
                     {/* Enhanced Background Pattern */}
                     <div className="absolute inset-0 opacity-5 dark:opacity-10 overflow-hidden">
-                        <motion.div 
+                        <motion.div
                             className={cn(
                                 "absolute inset-0 bg-gradient-to-br",
                                 iconConfig.gradient
                             )}
-                            animate={{ 
+                            animate={{
                                 rotate: [0, 5, 0],
                                 scale: [1, 1.05, 1],
                             }}
                             transition={{ duration: 5, repeat: Infinity }}
                         />
                         <div className="absolute right-0 bottom-0 w-32 h-32 -mr-16 -mb-16">
-                            <motion.div 
+                            <motion.div
                                 className="w-full h-full rounded-full bg-primary/10"
                                 animate={{ rotate: 360 }}
                                 transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
@@ -344,23 +346,28 @@ const PopularCategories = ({ categories }) => {
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger>
-                                    <motion.div
-                                        whileHover={{ scale: 1.1 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        className={cn(
-                                            "w-16 h-16 mb-4 rounded-xl",
-                                            "flex items-center justify-center",
-                                            "bg-gradient-to-br",
-                                            iconConfig.gradient,
-                                            "group-hover/card:shadow-lg",
-                                            "transform transition-all duration-300"
-                                        )}
-                                    >
-                                        <Icon className="w-8 h-8 text-white" />
-                                    </motion.div>
+                                    {category?.image && category?.image !== "https://restu-food.test/images/categories/default.jpg" && (
+                                        <img src={category?.image} alt={category?.name} className="w-16 h-16 mb-4 rounded-xl" />
+                                    )}
+                                    {category?.image === "https://restu-food.test/images/categories/default.jpg" && (
+                                        <motion.div
+                                            whileHover={{ scale: 1.1 }}
+                                            whileTap={{ scale: 0.95 }}
+                                            className={cn(
+                                                "w-16 h-16 mb-4 rounded-xl",
+                                                "flex items-center justify-center",
+                                                "bg-gradient-to-br",
+                                                iconConfig.gradient,
+                                                "group-hover/card:shadow-lg",
+                                                "transform transition-all duration-300"
+                                            )}
+                                        >
+                                            <Icon className="w-8 h-8 text-white" />
+                                        </motion.div>
+                                    )}
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                    <p>Browse {category.name}</p>
+                                    <p>Browse {category?.name}</p>
                                 </TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
@@ -388,9 +395,9 @@ const PopularCategories = ({ categories }) => {
                                     </Button>
                                 </div>
                             </div>
-                            
+
                             {/* Enhanced Stats */}
-                            <Stats />
+                            {/* <Stats /> */}
 
                             {/* Enhanced Footer */}
                             <div className="flex items-center justify-between pt-2 border-t dark:border-gray-800">
@@ -412,7 +419,7 @@ const PopularCategories = ({ categories }) => {
     };
 
     // Filter and process categories
-    const processedCategories = categories?.filter(category => 
+    const processedCategories = categories?.filter(category =>
         category.name.toLowerCase().includes(searchQuery.toLowerCase())
     ).sort((a, b) => {
         if (sortBy === 'popular') return b.items - a.items;
@@ -421,8 +428,8 @@ const PopularCategories = ({ categories }) => {
         return 0;
     });
 
-    const displayedCategories = showAll 
-        ? processedCategories 
+    const displayedCategories = showAll
+        ? processedCategories
         : processedCategories?.slice(0, INITIAL_DISPLAY_COUNT);
 
     const handleCategoryClick = useCallback((category) => {
@@ -483,7 +490,7 @@ const PopularCategories = ({ categories }) => {
                 {/* Enhanced grid layout for better responsiveness */}
                 {processedCategories?.length > 0 ? (
                     <>
-                        <motion.div 
+                        <motion.div
                             className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
                             layout
                         >
@@ -494,9 +501,9 @@ const PopularCategories = ({ categories }) => {
                                     </div>
                                 ) : (
                                     displayedCategories?.map((category, index) => (
-                                        <CategoryCard 
-                                            key={category.id} 
-                                            category={category} 
+                                        <CategoryCard
+                                            key={category.id}
+                                            category={category}
                                             index={index}
                                         />
                                     ))
@@ -506,7 +513,7 @@ const PopularCategories = ({ categories }) => {
 
                         {/* Enhanced View More/Less Button */}
                         {processedCategories.length > INITIAL_DISPLAY_COUNT && (
-                            <motion.div 
+                            <motion.div
                                 className="text-center mt-12"
                                 initial={{ opacity: 0, y: 20 }}
                                 whileInView={{ opacity: 1, y: 0 }}

@@ -12,6 +12,7 @@ use App\Services\Frontend\ContactService;
 use App\Services\Frontend\RestaurantService;
 use App\Services\Frontend\Restaurant2Service;
 use App\Services\Frontend\RestaurantDetailService;
+use App\Services\Frontend\RestaurantDetail2Service;
 use App\Services\Frontend\BlogService;
 use Illuminate\Http\Request;
 use App\Http\Requests\ContactFormRequest;
@@ -26,6 +27,7 @@ final class PageController extends Controller
         private readonly RestaurantService $restaurantService,
         private readonly Restaurant2Service $restaurant2Service,
         private readonly RestaurantDetailService $restaurantDetailService,
+        private readonly RestaurantDetail2Service $restaurantDetail2Service,
         private readonly BlogService $blogService
     ) {}
 
@@ -154,6 +156,35 @@ final class PageController extends Controller
             'faqs' => $data['faqs'],
             'similarRestaurants' => $data['similarRestaurants'],
             'insights' => $data['insights'],
+        ]);
+    }
+
+    /**
+     * Enhanced version of restaurant detail page
+     */
+    public function restaurantDetail2(string $slug = null): Response
+    {
+        $data = $this->restaurantDetail2Service->getRestaurantDetail2Data($slug);
+        
+        return Inertia::render('Frontend/RestaurantDetail2/Index', [
+            'hero' => $data['hero'] ?? null,
+            'restaurant' => $data['restaurant'] ?? null,
+            'highlights' => $data['highlights'] ?? null,
+            'menu' => $data['menu'] ?? null,
+            'gallery' => $data['gallery'] ?? null,
+            'reviews' => $data['reviews'] ?? null,
+            'about' => $data['about'] ?? null,
+            'location' => $data['location'] ?? null,
+            'bookingInfo' => $data['bookingInfo'] ?? null,
+            'schedule' => $data['schedule'] ?? null,
+            'chefs' => $data['chefs'] ?? null,
+            'offers' => $data['offers'] ?? null,
+            'faqs' => $data['faqs'] ?? null,
+            'similarRestaurants' => $data['similarRestaurants'] ?? null,
+            'insights' => $data['insights'] ?? null,
+            'testimonials' => $data['testimonials'] ?? null,
+            'awards' => $data['awards'] ?? null,
+            'events' => $data['events'] ?? null,
         ]);
     }
 } 

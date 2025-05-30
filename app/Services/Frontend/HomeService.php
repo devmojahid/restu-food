@@ -255,17 +255,18 @@ final class HomeService extends BaseService
                 $query->orderBy('created_at', 'desc')
                       ->orderBy('sort_order', 'asc');
             }
-
+            // dd($query->get());
             $categories = $query->take($limit)
                 ->get()
                 ->map(function ($category) {
+                    $files = $category->files->keyBy('collection');
                     return [
                         'id' => $category->id,
                         'name' => $category->name,
                         'slug' => $category->slug,
                         // 'restaurants' => $category->restaurants->count(),
-                        'image' => $category->image 
-                            ? asset('storage/' . $category->image)
+                        'image' => $files->get('icon') 
+                            ? asset('storage/' . $files->get('icon')->path)
                             : asset('images/categories/default.jpg'),
                         'description' => $category->description ?? '',
                         'is_popular' => $category->is_popular ?? false,
