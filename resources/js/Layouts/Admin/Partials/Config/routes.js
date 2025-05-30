@@ -247,6 +247,7 @@ export const routes = {
     themeOptions: {
         name: "Theme Options",
         icon: "Settings2",
-        role: ["Admin"]
+        role: ["Admin"],
+        path: "/app/theme-options/general"
     }
 };

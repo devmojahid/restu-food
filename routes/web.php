@@ -50,6 +50,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\Admin\DeliveryLocationController;
 use App\Http\Controllers\DeliveryTrackingController;
 use App\Http\Controllers\Frontend\RestaurantController as FrontendRestaurantController;
+use App\Http\Controllers\Frontend\OrderTrackingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -641,6 +642,10 @@ Route::name('frontend.')->group(function () {
     Route::get('/restaurant/{restaurant}', [FrontendRestaurantController::class, 'show'])->name('restaurant.single');
     Route::get('/blogs', [PageController::class, 'blogs'])->name('blogs');
     Route::get('/blog/{slug}', [PageController::class, 'blogSingle'])->name('blog.single');
+    
+    // Order Tracking Routes
+    Route::get('/order-tracking', [OrderTrackingController::class, 'index'])->name('order.tracking');
+    Route::get('/order-tracking/{orderNumber}', [OrderTrackingController::class, 'show'])->name('order.tracking.show');
     
     // Cart Routes
     Route::get('/cart', [CartController::class, 'index'])->name('cart');

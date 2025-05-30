@@ -162,7 +162,7 @@ const Index = ({
 
         setIsSubmitting(true);
 
-        post(route('checkout3.process'), {
+        post('/checkout3/process', {
             onSuccess: () => {
                 // Success will redirect to the success page
                 // This is handled by the controller
