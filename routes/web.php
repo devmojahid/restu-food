@@ -55,6 +55,7 @@ use App\Http\Controllers\Frontend\OrderTrackingController;
 use App\Http\Controllers\Frontend\LegalController;
 use App\Http\Controllers\Frontend\RewardsController;
 use App\Http\Controllers\Frontend\ElectronicsController;
+use App\Http\Controllers\Frontend\ShopController;
 
 /*
 |--------------------------------------------------------------------------
@@ -647,6 +648,11 @@ Route::name('frontend.')->group(function () {
     Route::get('/offers/{id}', [OfferController::class, 'show'])->name('offers.show');
     Route::post('/offers/{id}/claim', [OfferController::class, 'claim'])->name('offers.claim');
     Route::get('/contact', [PageController::class, 'contact'])->name('contact');
+    
+    // Shop Routes
+    Route::get('/shop', [ShopController::class, 'index'])->name('shop');
+    Route::get('/shop/{slug}', [ShopController::class, 'show'])->name('shop.show');
+    
      // Legal Pages Routes
     //  Route::prefix('legal')->name('legal.')->group(function () {
     //     Route::get('/terms', [LegalController::class, 'terms'])->name('terms');
