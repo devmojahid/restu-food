@@ -54,7 +54,12 @@ use App\Http\Controllers\Frontend\RestaurantController as FrontendRestaurantCont
 use App\Http\Controllers\Frontend\OrderTrackingController;
 use App\Http\Controllers\Frontend\LegalController;
 use App\Http\Controllers\Frontend\RewardsController;
+<<<<<<< HEAD
 use App\Http\Controllers\Frontend\FoodMenu2Controller;
+=======
+use App\Http\Controllers\Frontend\ElectronicsController;
+use App\Http\Controllers\Frontend\ShopController;
+>>>>>>> b17cb9d055ec9f2a66b80c1c870c33c8685ebae1
 
 /*
 |--------------------------------------------------------------------------
@@ -642,11 +647,18 @@ Route::name('frontend.')->group(function () {
     Route::get('/restaurants2', [PageController::class, 'restaurants2'])->name('restaurants2');
     Route::get('/restaurant-detail/{slug?}', [PageController::class, 'restaurantDetail'])->name('restaurant-detail');
     Route::get('/restaurant-detail2/{slug?}', [PageController::class, 'restaurantDetail2'])->name('restaurant-detail2');
+    
+    // Chef Routes
+    Route::get('/chef', [PageController::class, 'chef'])->name('chef');
+    Route::get('/chef/{slug}', [PageController::class, 'chefDetail'])->name('chef.show');
+    
+    Route::get('/electronics', [ElectronicsController::class, 'index'])->name('electronics');
     Route::get('/offers', [OfferController::class, 'index'])->name('offers');
     Route::get('/offers/{id}', [OfferController::class, 'show'])->name('offers.show');
     Route::post('/offers/{id}/claim', [OfferController::class, 'claim'])->name('offers.claim');
     Route::get('/contact', [PageController::class, 'contact'])->name('contact');
     
+<<<<<<< HEAD
     // Partner pages
     Route::get('/become-restaurant', [PageController::class, 'becomeRestaurant'])->name('become-restaurant');
     Route::get('/kitchen-staff', [PageController::class, 'kitchenStaff'])->name('kitchen-staff');
@@ -660,6 +672,12 @@ Route::name('frontend.')->group(function () {
         Route::get('/details2/{slug}', [FoodMenu2Controller::class, 'showDetails2'])->name('details2');
         Route::get('/{slug}', [FoodMenu2Controller::class, 'show'])->name('show');
     });
+=======
+    // Shop Routes
+    Route::get('/shop', [ShopController::class, 'index'])->name('shop');
+    Route::get('/shop2', [ShopController::class, 'shop2'])->name('shop2');
+    Route::get('/shop/{slug}', [ShopController::class, 'show'])->name('shop.show');
+>>>>>>> b17cb9d055ec9f2a66b80c1c870c33c8685ebae1
     
      // Legal Pages Routes
     //  Route::prefix('legal')->name('legal.')->group(function () {
