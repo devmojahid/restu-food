@@ -651,6 +651,7 @@ Route::name('frontend.')->group(function () {
     Route::prefix('food-menu')->name('food-menu.')->group(function () {
         Route::get('/', [FoodMenu2Controller::class, 'index'])->name('index');
         Route::get('/category/{slug}', [FoodMenu2Controller::class, 'category'])->name('category');
+        Route::get('/details2/{slug}', [FoodMenu2Controller::class, 'showDetails2'])->name('details2');
         Route::get('/{slug}', [FoodMenu2Controller::class, 'show'])->name('show');
     });
     

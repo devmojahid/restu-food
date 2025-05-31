@@ -845,4 +845,185 @@ final class FoodMenu2Service extends BaseService
             'filters' => $this->getFilters()
         ];
     }
+
+    /**
+     * Get the enhanced details of a specific menu item for the Details2 page.
+     *
+     * @param string $slug
+     * @return array
+     * @throws \Exception If the item is not found
+     */
+    public function getMenuItemDetails2(string $slug): array
+    {
+        // Get all menu items
+        $menuItems = $this->getMenuItems();
+        
+        // Find the requested item by slug
+        $item = null;
+        foreach ($menuItems as $menuItem) {
+            if ($menuItem['slug'] === $slug) {
+                $item = $menuItem;
+                break;
+            }
+        }
+        
+        // If item not found, throw exception
+        if (!$item) {
+            throw new \Exception("Menu item with slug '{$slug}' not found");
+        }
+        
+        // Get additional details for the enhanced view
+        $item['nutritional_info'] = [
+            'calories' => rand(200, 800) . ' cal',
+            'protein' => rand(5, 40) . 'g',
+            'carbs' => rand(10, 80) . 'g',
+            'fat' => rand(5, 30) . 'g',
+            'fiber' => rand(1, 10) . 'g',
+            'sodium' => rand(100, 1000) . 'mg',
+        ];
+        
+        // Add cooking method
+        $cookingMethods = ['Grilled', 'Baked', 'Pan-fried', 'Steamed', 'Roasted', 'Smoked', 'Fried'];
+        $item['cooking_method'] = $cookingMethods[array_rand($cookingMethods)];
+        
+        // Add origin information
+        $origins = ['Italian', 'Mediterranean', 'Asian', 'Mexican', 'American', 'French', 'Indian'];
+        $item['origin'] = $origins[array_rand($origins)];
+        
+        // Add chef's notes
+        $sideOptions = ['garlic bread', 'steamed vegetables', 'mashed potatoes', 'wild rice', 'mixed greens'];
+        $item['chefs_notes'] = "Our chef recommends pairing this dish with a side of " . 
+            $sideOptions[array_rand($sideOptions)] . 
+            " for a complete dining experience.";
+        
+        // Add pairing suggestions
+        $item['pairings'] = [
+            ['name' => 'White Wine', 'description' => 'A crisp, light white wine complements the flavors perfectly.'],
+            ['name' => 'Garden Salad', 'description' => 'Fresh greens with our house vinaigrette.'],
+            ['name' => 'Garlic Bread', 'description' => 'Freshly baked with herbs and butter.'],
+        ];
+        
+        // Add sustainability info
+        $item['sustainability'] = [
+            'locally_sourced' => (bool)rand(0, 1),
+            'organic' => (bool)rand(0, 1),
+            'sustainable_packaging' => (bool)rand(0, 1),
+            'carbon_neutral' => (bool)rand(0, 1),
+        ];
+        
+        // Enhanced preparation steps
+        $item['preparation_steps'] = [
+            ['step' => 1, 'description' => 'Prepare ingredients by washing and chopping as needed.'],
+            ['step' => 2, 'description' => 'Heat cooking surface to medium-high temperature.'],
+            ['step' => 3, 'description' => 'Cook primary ingredients until golden brown.'],
+            ['step' => 4, 'description' => 'Add seasonings and additional ingredients.'],
+            ['step' => 5, 'description' => 'Plate and garnish before serving.'],
+        ];
+        
+        // Add high-quality images (using placeholders)
+        $item['image_gallery'] = [
+            ['url' => $item['image'], 'alt' => $item['name'] . ' front view'],
+            ['url' => $item['image'], 'alt' => $item['name'] . ' side view'],
+            ['url' => $item['image'], 'alt' => $item['name'] . ' close-up'],
+            ['url' => $item['image'], 'alt' => $item['name'] . ' with garnish'],
+        ];
+        
+        // Get related items (items from the same category)
+        $relatedItems = [];
+        foreach ($menuItems as $menuItem) {
+            if ($menuItem['category']['slug'] === $item['category']['slug'] && $menuItem['id'] !== $item['id']) {
+                $relatedItems[] = $menuItem;
+                if (count($relatedItems) >= 4) {
+                    break;
+                }
+            }
+        }
+        
+        // If we don't have enough related items, add some random ones
+        if (count($relatedItems) < 4) {
+            $randomItems = array_filter($menuItems, function($menuItem) use ($item) {
+                return $menuItem['id'] !== $item['id'];
+            });
+            shuffle($randomItems);
+            while (count($relatedItems) < 4 && !empty($randomItems)) {
+                $randomItem = array_pop($randomItems);
+                if (!in_array($randomItem, $relatedItems)) {
+                    $relatedItems[] = $randomItem;
+                }
+            }
+        }
+        
+        // Generate enhanced detailed reviews
+        $reviews = $this->generateEnhancedReviews($item);
+        
+        return [
+            'item' => $item,
+            'related_items' => $relatedItems,
+            'reviews' => $reviews,
+        ];
+    }
+    
+    /**
+     * Generate enhanced reviews for the Details2 page.
+     *
+     * @param array $item
+     * @return array
+     */
+    private function generateEnhancedReviews(array $item): array
+    {
+        $reviews = $this->generateRandomReviews($item);
+        
+        // Enhance reviews with additional details
+        foreach ($reviews as &$review) {
+            // Add reviewer profile picture
+            $review['profile_image'] = "https://i.pravatar.cc/150?u=" . md5($review['user_name']);
+            
+            // Add review title
+            $reviewTitles = [
+                "Great experience with {$item['name']}",
+                "My thoughts on {$item['name']}",
+                "A delicious choice",
+                "Worth every penny",
+                "Will order again!",
+                "Mixed feelings about this dish"
+            ];
+            $review['title'] = $reviewTitles[array_rand($reviewTitles)];
+            
+            // Add review tags
+            $possibleTags = ['Flavor', 'Presentation', 'Portion Size', 'Value', 'Quality', 'Fresh', 'Authentic'];
+            shuffle($possibleTags);
+            $review['tags'] = array_slice($possibleTags, 0, rand(1, 3));
+            
+            // Add response from restaurant
+            if (rand(0, 3) === 0) { // 25% chance of having a response
+                $review['restaurant_response'] = [
+                    'text' => "Thank you for your feedback! We're glad you enjoyed our {$item['name']}. We hope to serve you again soon!",
+                    'date' => date('Y-m-d', strtotime('-' . rand(1, 5) . ' days')),
+                    'responder' => 'Restaurant Manager'
+                ];
+            }
+            
+            // Add helpful count and other metrics
+            $review['helpful_count'] = rand(0, 50);
+            $review['order_count'] = rand(1, 5); // How many times this user ordered this item
+            
+            // Add detailed ratings for specific aspects
+            $review['detailed_ratings'] = [
+                'flavor' => rand(3, 5),
+                'presentation' => rand(3, 5),
+                'value' => rand(3, 5),
+                'service' => rand(3, 5),
+            ];
+            
+            // Add images to some reviews
+            if (rand(0, 2) === 0) { // 33% chance of having images
+                $review['images'] = [
+                    ['url' => $item['image'], 'alt' => 'Customer photo 1'],
+                    ['url' => $item['image'], 'alt' => 'Customer photo 2'],
+                ];
+            }
+        }
+        
+        return $reviews;
+    }
 } 

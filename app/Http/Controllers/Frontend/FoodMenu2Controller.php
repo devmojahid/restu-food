@@ -81,6 +81,27 @@ final class FoodMenu2Controller extends Controller
     }
 
     /**
+     * Show the enhanced details page for a specific menu item.
+     *
+     * @param string $slug
+     * @return \Inertia\Response
+     */
+    public function showDetails2(string $slug): Response
+    {
+        try {
+            $itemDetails = $this->foodMenu2Service->getMenuItemDetails2($slug);
+            
+            return Inertia::render('Frontend/FoodMenu2/Details2', [
+                'item' => $itemDetails['item'] ?? null,
+                'relatedItems' => $itemDetails['related_items'] ?? [],
+                'reviews' => $itemDetails['reviews'] ?? [],
+            ]);
+        } catch (\Exception $e) {
+            return $this->renderNotFound($slug);
+        }
+    }
+
+    /**
      * Render a not found page for menu items
      */
     private function renderNotFound(string $slug): Response
