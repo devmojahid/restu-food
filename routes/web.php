@@ -54,6 +54,7 @@ use App\Http\Controllers\Frontend\RestaurantController as FrontendRestaurantCont
 use App\Http\Controllers\Frontend\OrderTrackingController;
 use App\Http\Controllers\Frontend\LegalController;
 use App\Http\Controllers\Frontend\RewardsController;
+use App\Http\Controllers\Frontend\ElectronicsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -641,6 +642,7 @@ Route::name('frontend.')->group(function () {
     Route::get('/restaurants2', [PageController::class, 'restaurants2'])->name('restaurants2');
     Route::get('/restaurant-detail/{slug?}', [PageController::class, 'restaurantDetail'])->name('restaurant-detail');
     Route::get('/restaurant-detail2/{slug?}', [PageController::class, 'restaurantDetail2'])->name('restaurant-detail2');
+    Route::get('/electronics', [ElectronicsController::class, 'index'])->name('electronics');
     Route::get('/offers', [OfferController::class, 'index'])->name('offers');
     Route::get('/offers/{id}', [OfferController::class, 'show'])->name('offers.show');
     Route::post('/offers/{id}/claim', [OfferController::class, 'claim'])->name('offers.claim');
