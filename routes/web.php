@@ -643,6 +643,11 @@ Route::name('frontend.')->group(function () {
     Route::get('/restaurants2', [PageController::class, 'restaurants2'])->name('restaurants2');
     Route::get('/restaurant-detail/{slug?}', [PageController::class, 'restaurantDetail'])->name('restaurant-detail');
     Route::get('/restaurant-detail2/{slug?}', [PageController::class, 'restaurantDetail2'])->name('restaurant-detail2');
+    
+    // Chef Routes
+    Route::get('/chef', [PageController::class, 'chef'])->name('chef');
+    Route::get('/chef/{slug}', [PageController::class, 'chefDetail'])->name('chef.detail');
+    
     Route::get('/electronics', [ElectronicsController::class, 'index'])->name('electronics');
     Route::get('/offers', [OfferController::class, 'index'])->name('offers');
     Route::get('/offers/{id}', [OfferController::class, 'show'])->name('offers.show');

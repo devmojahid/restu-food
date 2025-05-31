@@ -14,6 +14,7 @@ use App\Services\Frontend\Restaurant2Service;
 use App\Services\Frontend\RestaurantDetailService;
 use App\Services\Frontend\RestaurantDetail2Service;
 use App\Services\Frontend\BlogService;
+use App\Services\Frontend\ChefService;
 use Illuminate\Http\Request;
 use App\Http\Requests\ContactFormRequest;
 use Illuminate\Support\Facades\Mail;
@@ -28,7 +29,8 @@ final class PageController extends Controller
         private readonly Restaurant2Service $restaurant2Service,
         private readonly RestaurantDetailService $restaurantDetailService,
         private readonly RestaurantDetail2Service $restaurantDetail2Service,
-        private readonly BlogService $blogService
+        private readonly BlogService $blogService,
+        private readonly ChefService $chefService
     ) {}
 
     public function about(): Response
@@ -96,6 +98,84 @@ final class PageController extends Controller
             'social' => $data['social'],
             'support' => $data['support']
         ]);
+    }
+
+    /**
+     * Chef listing page
+     */
+    public function chef(): Response
+    {
+        try {
+            $data = $this->chefService->getChefPageData();
+            
+            return Inertia::render('Frontend/Chef/Index', [
+                'hero' => $data['hero'] ?? null,
+                'featuredChefs' => $data['featuredChefs'] ?? [],
+                'categories' => $data['categories'] ?? [],
+                'chefs' => $data['chefs'] ?? [],
+                'testimonials' => $data['testimonials'] ?? [],
+                'stats' => $data['stats'] ?? [],
+                'joinSection' => $data['joinSection'] ?? [],
+                'faqs' => $data['faqs'] ?? [],
+                'error' => null
+            ]);
+        } catch (\Throwable $e) {
+            // Log the error
+            \Log::error('Error loading chef page: ' . $e->getMessage(), ['exception' => $e]);
+            
+            return Inertia::render('Frontend/Chef/Index', [
+                'hero' => null,
+                'featuredChefs' => [],
+                'categories' => [],
+                'chefs' => [],
+                'testimonials' => [],
+                'stats' => [],
+                'joinSection' => [],
+                'faqs' => [],
+                'error' => 'There was a problem loading the chef page. Please try again later.'
+            ]);
+        }
+    }
+    
+    /**
+     * Chef detail page
+     */
+    public function chefDetail(string $slug = null): Response
+    {
+        try {
+            $data = $this->chefService->getChefDetailsData($slug);
+            
+            return Inertia::render('Frontend/Chef/Show', [
+                'chef' => $data['chef'] ?? null,
+                'specialties' => $data['specialties'] ?? [],
+                'gallery' => $data['gallery'] ?? [],
+                'experience' => $data['experience'] ?? [],
+                'awards' => $data['awards'] ?? [],
+                'testimonials' => $data['testimonials'] ?? [],
+                'relatedChefs' => $data['relatedChefs'] ?? [],
+                'bookingInfo' => $data['bookingInfo'] ?? [],
+                'recipes' => $data['recipes'] ?? [],
+                'social' => $data['social'] ?? [],
+                'error' => null
+            ]);
+        } catch (\Throwable $e) {
+            // Log the error
+            \Log::error('Error loading chef detail page: ' . $e->getMessage(), ['exception' => $e, 'slug' => $slug]);
+            
+            return Inertia::render('Frontend/Chef/Show', [
+                'chef' => null,
+                'specialties' => [],
+                'gallery' => [],
+                'experience' => [],
+                'awards' => [],
+                'testimonials' => [],
+                'relatedChefs' => [],
+                'bookingInfo' => [],
+                'recipes' => [],
+                'social' => [],
+                'error' => 'There was a problem loading the chef details. Please try again later.'
+            ]);
+        }
     }
 
     public function submitContact(ContactFormRequest $request)
