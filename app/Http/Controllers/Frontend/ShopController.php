@@ -44,6 +44,40 @@ final class ShopController extends Controller
         }
     }
 
+    public function shop2(Request $request): Response
+    {
+        try {
+            $data = $this->shopService->getShop2PageData([
+                'category' => $request->query('category'),
+                'brand' => $request->query('brand'),
+                'price' => $request->query('price'),
+                'sort' => $request->query('sort', 'popular'),
+                'discount' => $request->query('discount', false),
+                'availability' => $request->query('availability', 'all'),
+                'rating' => $request->query('rating'),
+            ]);
+            
+            return Inertia::render('Frontend/Shop2/Index', [
+                'hero' => $data['hero'] ?? null,
+                'featuredProducts' => $data['featuredProducts'] ?? [],
+                'products' => $data['products'] ?? [],
+                'categories' => $data['categories'] ?? [],
+                'brands' => $data['brands'] ?? [],
+                'filters' => $data['filters'] ?? [],
+                'popularProducts' => $data['popularProducts'] ?? [],
+                'newArrivals' => $data['newArrivals'] ?? [],
+                'dealOfTheDay' => $data['dealOfTheDay'] ?? null,
+                'testimonials' => $data['testimonials'] ?? [],
+                'banner' => $data['banner'] ?? null,
+                'trendingProducts' => $data['trendingProducts'] ?? [],
+                'recentlyViewed' => $data['recentlyViewed'] ?? [],
+                'stats' => $data['stats'] ?? [],
+            ]);
+        } catch (\Throwable $e) {
+            return $this->renderFallbackShop2Page($this->getSafeErrorMessage($e));
+        }
+    }
+
     public function show(string $slug): Response
     {
         try {
@@ -77,6 +111,23 @@ final class ShopController extends Controller
             'hero' => [
                 'title' => 'Our Shop',
                 'subtitle' => 'Browse our products',
+                'description' => 'Discover our carefully selected food products and ingredients.',
+                'image' => '/images/shop/hero-fallback.jpg',
+            ],
+            'products' => [],
+            'categories' => [],
+            'brands' => [],
+            'filters' => [],
+        ]);
+    }
+
+    private function renderFallbackShop2Page(string $errorMessage = null): Response
+    {
+        return Inertia::render('Frontend/Shop2/Index', [
+            'error' => $errorMessage,
+            'hero' => [
+                'title' => 'Food Market',
+                'subtitle' => 'Quality Ingredients',
                 'description' => 'Discover our carefully selected food products and ingredients.',
                 'image' => '/images/shop/hero-fallback.jpg',
             ],

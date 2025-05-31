@@ -651,6 +651,7 @@ Route::name('frontend.')->group(function () {
     
     // Shop Routes
     Route::get('/shop', [ShopController::class, 'index'])->name('shop');
+    Route::get('/shop2', [ShopController::class, 'shop2'])->name('shop2');
     Route::get('/shop/{slug}', [ShopController::class, 'show'])->name('shop.show');
     
      // Legal Pages Routes

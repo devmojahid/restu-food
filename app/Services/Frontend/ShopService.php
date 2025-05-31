@@ -25,6 +25,26 @@ final class ShopService extends BaseService
         ];
     }
 
+    public function getShop2PageData(array $filters = []): array
+    {
+        return [
+            'hero' => $this->getShop2HeroSection(),
+            'featuredProducts' => $this->getFeaturedProducts(),
+            'products' => $this->getProducts($filters),
+            'categories' => $this->getCategories(),
+            'brands' => $this->getBrands(),
+            'filters' => $this->getEnhancedFiltersData(),
+            'popularProducts' => $this->getPopularProducts(),
+            'newArrivals' => $this->getNewArrivals(),
+            'dealOfTheDay' => $this->getDealOfTheDay(),
+            'testimonials' => $this->getTestimonials(),
+            'banner' => $this->getBannerSection(),
+            'trendingProducts' => $this->getTrendingProducts(),
+            'recentlyViewed' => $this->getRecentlyViewedProducts(),
+            'stats' => $this->getShopStats(),
+        ];
+    }
+
     public function getProductDetailData(string $slug): array
     {
         return [
@@ -47,6 +67,27 @@ final class ShopService extends BaseService
                 ['label' => 'Brands', 'value' => '50+'],
                 ['label' => 'Categories', 'value' => '25+'],
                 ['label' => 'Customers', 'value' => '50K+'],
+            ]
+        ];
+    }
+
+    private function getShop2HeroSection(): array
+    {
+        return [
+            'title' => 'Gourmet Food Market',
+            'subtitle' => 'Premium Ingredients',
+            'description' => 'Discover our carefully curated selection of premium ingredients and specialty foods from around the world.',
+            'image' => '/images/shop/hero-2.jpg',
+            'cta' => [
+                'text' => 'Shop Now',
+                'link' => '#products'
+            ],
+            'background_pattern' => true,
+            'stats' => [
+                ['label' => 'Products', 'value' => '1500+', 'icon' => 'ShoppingBag'],
+                ['label' => 'Brands', 'value' => '100+', 'icon' => 'Store'],
+                ['label' => 'Satisfied Customers', 'value' => '75K+', 'icon' => 'Users'],
+                ['label' => 'Countries', 'value' => '30+', 'icon' => 'Globe'],
             ]
         ];
     }
@@ -366,6 +407,35 @@ final class ShopService extends BaseService
         ];
     }
 
+    private function getEnhancedFiltersData(): array
+    {
+        $baseFilters = $this->getFiltersData();
+        
+        // Add additional filters specific to Shop2
+        return array_merge($baseFilters, [
+            'discount' => [
+                ['id' => 1, 'label' => 'On Sale', 'value' => 'sale'],
+                ['id' => 2, 'label' => '10% Off & More', 'value' => '10-plus'],
+                ['id' => 3, 'label' => '25% Off & More', 'value' => '25-plus'],
+                ['id' => 4, 'label' => '50% Off & More', 'value' => '50-plus'],
+            ],
+            'availability' => [
+                ['id' => 1, 'label' => 'In Stock', 'value' => 'in-stock'],
+                ['id' => 2, 'label' => 'Out of Stock', 'value' => 'out-of-stock'],
+            ],
+            'shipping' => [
+                ['id' => 1, 'label' => 'Free Shipping', 'value' => 'free'],
+                ['id' => 2, 'label' => 'Same Day Delivery', 'value' => 'same-day'],
+                ['id' => 3, 'label' => 'Express Shipping', 'value' => 'express'],
+            ],
+            'featured' => [
+                ['id' => 1, 'label' => 'Bestsellers', 'value' => 'bestseller'],
+                ['id' => 2, 'label' => 'New Arrivals', 'value' => 'new'],
+                ['id' => 3, 'label' => 'Staff Picks', 'value' => 'staff-pick'],
+            ],
+        ]);
+    }
+
     private function getPopularProducts(): array
     {
         // Normally you'd query the database for this
@@ -574,6 +644,154 @@ final class ShopService extends BaseService
             [
                 'question' => 'Is the packaging recyclable?',
                 'answer' => 'Yes, our packaging is 100% recyclable and made from sustainable materials.',
+            ],
+        ];
+    }
+
+    private function getTrendingProducts(): array
+    {
+        return [
+            [
+                'id' => 12,
+                'name' => 'Black Truffle Oil',
+                'slug' => 'black-truffle-oil',
+                'price' => 32.99,
+                'sale_price' => null,
+                'on_sale' => false,
+                'discount_percentage' => 0,
+                'image' => '/images/shop/products/truffle-oil.jpg',
+                'rating' => 4.9,
+                'reviews_count' => 85,
+                'category' => 'Oils & Vinegars',
+                'brand' => 'Luxury Tastes',
+                'is_featured' => true,
+                'in_stock' => true,
+                'stock_quantity' => 25,
+                'description' => 'Premium black truffle oil, perfect for finishing dishes.',
+                'is_new' => false,
+                'is_bestseller' => true,
+                'is_trending' => true,
+                'tags' => ['truffle', 'oil', 'gourmet'],
+            ],
+            [
+                'id' => 13,
+                'name' => 'Saffron Threads',
+                'slug' => 'saffron-threads',
+                'price' => 24.99,
+                'sale_price' => 19.99,
+                'on_sale' => true,
+                'discount_percentage' => 20,
+                'image' => '/images/shop/products/saffron.jpg',
+                'rating' => 4.8,
+                'reviews_count' => 63,
+                'category' => 'Spices & Seasonings',
+                'brand' => 'Spice World',
+                'is_featured' => false,
+                'in_stock' => true,
+                'stock_quantity' => 15,
+                'description' => 'Premium grade saffron threads from Spain.',
+                'is_new' => false,
+                'is_bestseller' => false,
+                'is_trending' => true,
+                'tags' => ['saffron', 'spice', 'spanish'],
+            ],
+            [
+                'id' => 14,
+                'name' => 'Aged Balsamic Vinegar',
+                'slug' => 'aged-balsamic-vinegar',
+                'price' => 28.99,
+                'sale_price' => null,
+                'on_sale' => false,
+                'discount_percentage' => 0,
+                'image' => '/images/shop/products/balsamic-aged.jpg',
+                'rating' => 4.7,
+                'reviews_count' => 55,
+                'category' => 'Oils & Vinegars',
+                'brand' => 'Italian Delights',
+                'is_featured' => false,
+                'in_stock' => true,
+                'stock_quantity' => 30,
+                'description' => '12-year aged balsamic vinegar from Modena, Italy.',
+                'is_new' => true,
+                'is_bestseller' => false,
+                'is_trending' => true,
+                'tags' => ['balsamic', 'vinegar', 'italian'],
+            ],
+        ];
+    }
+
+    private function getRecentlyViewedProducts(): array
+    {
+        // In a real app, this would be fetched from user session/history
+        return [
+            [
+                'id' => 15,
+                'name' => 'Himalayan Pink Salt',
+                'slug' => 'himalayan-pink-salt',
+                'price' => 9.99,
+                'sale_price' => null,
+                'on_sale' => false,
+                'discount_percentage' => 0,
+                'image' => '/images/shop/products/pink-salt.jpg',
+                'rating' => 4.5,
+                'reviews_count' => 42,
+                'category' => 'Spices & Seasonings',
+                'brand' => 'Sea Essentials',
+                'is_featured' => false,
+                'in_stock' => true,
+                'stock_quantity' => 100,
+                'description' => 'Pure Himalayan pink salt, rich in minerals.',
+                'viewed_at' => '2023-11-24T14:32:15',
+            ],
+            [
+                'id' => 16,
+                'name' => 'Organic Maple Syrup',
+                'slug' => 'organic-maple-syrup',
+                'price' => 18.99,
+                'sale_price' => 15.99,
+                'on_sale' => true,
+                'discount_percentage' => 16,
+                'image' => '/images/shop/products/maple-syrup.jpg',
+                'rating' => 4.6,
+                'reviews_count' => 38,
+                'category' => 'Condiments',
+                'brand' => 'Organic Farms',
+                'is_featured' => false,
+                'in_stock' => true,
+                'stock_quantity' => 45,
+                'description' => 'Pure organic maple syrup harvested in Vermont.',
+                'viewed_at' => '2023-11-24T13:15:42',
+            ],
+        ];
+    }
+
+    private function getShopStats(): array
+    {
+        return [
+            'total_products' => 1500,
+            'products_in_stock' => 1350,
+            'brands_count' => 120,
+            'categories_count' => 35,
+            'average_rating' => 4.7,
+            'total_reviews' => 15420,
+            'delivery_options' => [
+                'standard' => [
+                    'name' => 'Standard Delivery',
+                    'time' => '2-4 days',
+                    'price' => 4.99,
+                ],
+                'express' => [
+                    'name' => 'Express Delivery',
+                    'time' => '1-2 days',
+                    'price' => 9.99,
+                ],
+                'same_day' => [
+                    'name' => 'Same Day Delivery',
+                    'time' => 'Today',
+                    'price' => 14.99,
+                    'available_cities' => ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix'],
+                ],
+                'free_threshold' => 50,
             ],
         ];
     }
