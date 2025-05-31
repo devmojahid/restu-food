@@ -30,7 +30,7 @@ import { Badge } from '@/Components/ui/badge';
 import { Progress } from '@/Components/ui/progress';
 import { useToast } from '@/Components/ui/use-toast';
 
-import ChefHero from './Partials/ChefHero';
+import Hero from './Partials/Hero';
 import ChefSpecialties from './Partials/ChefSpecialties';
 import ChefGallery from './Partials/ChefGallery';
 import ChefExperience from './Partials/ChefExperience';
@@ -140,9 +140,9 @@ const Show = ({
 
     return (
         <Layout>
-            <Head title={`Chef ${chef.name} | ${chef.cuisine} Cuisine`} />
+            <Head title={`Chef ${chef?.name} | ${chef?.cuisine} Cuisine`} />
             
-            <ChefHero chef={chef} />
+            <Hero chef={chef} />
             
             <div className="container mx-auto px-4 pt-6 pb-16">
                 {/* Breadcrumbs */}
@@ -156,7 +156,7 @@ const Show = ({
                     </Link>
                     <ChevronRight className="w-4 h-4 mx-2" />
                     <span className="text-gray-700 dark:text-gray-300 font-medium">
-                        {chef.name}
+                        {chef?.name}
                     </span>
                 </div>
                 
@@ -175,23 +175,23 @@ const Show = ({
                             <TabsContent value="about" className="mt-6">
                                 <div className="space-y-8">
                                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-                                        <h2 className="text-2xl font-bold mb-4">About Chef {chef.name}</h2>
+                                        <h2 className="text-2xl font-bold mb-4">About Chef {chef?.name}</h2>
                                         <p className="text-gray-600 dark:text-gray-300 whitespace-pre-line">
-                                            {chef.long_bio || chef.bio}
+                                            {chef?.long_bio || chef?.bio}
                                         </p>
                                         
                                         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            {chef.skills && chef.skills.length > 0 && (
+                                            {chef?.skills && chef?.skills?.length > 0 && (
                                                 <div>
                                                     <h3 className="text-lg font-semibold mb-4">Expertise & Skills</h3>
                                                     <div className="space-y-4">
-                                                        {chef.skills.map((skill, index) => (
+                                                        {chef?.skills?.map((skill, index) => (
                                                             <div key={index}>
                                                                 <div className="flex justify-between mb-1">
-                                                                    <span className="text-sm font-medium">{skill.name}</span>
-                                                                    <span className="text-sm text-gray-500">{skill.level}%</span>
+                                                                    <span className="text-sm font-medium">{skill?.name}</span>
+                                                                    <span className="text-sm text-gray-500">{skill?.level}%</span>
                                                                 </div>
-                                                                <Progress value={skill.level} className="h-2" />
+                                                                <Progress value={skill?.level} className="h-2" />
                                                             </div>
                                                         ))}
                                                     </div>
@@ -203,28 +203,28 @@ const Show = ({
                                                 <ul className="space-y-3">
                                                     <li className="flex items-start">
                                                         <MapPin className="w-5 h-5 text-primary mr-3 mt-0.5" />
-                                                        <span>{chef.location || 'Location not specified'}</span>
+                                                        <span>{chef?.location || 'Location not specified'}</span>
                                                     </li>
                                                     <li className="flex items-start">
                                                         <Clock className="w-5 h-5 text-primary mr-3 mt-0.5" />
-                                                        <span>{chef.experience || 'Experience not specified'}</span>
+                                                        <span>{chef?.experience || 'Experience not specified'}</span>
                                                     </li>
-                                                    {chef.languages && (
+                                                    {chef?.languages && (
                                                         <li className="flex items-start">
                                                             <FileText className="w-5 h-5 text-primary mr-3 mt-0.5" />
-                                                            <span>Languages: {chef.languages.join(', ')}</span>
+                                                            <span>Languages: {chef?.languages?.join(', ')}</span>
                                                         </li>
                                                     )}
-                                                    {chef.availability && (
+                                                    {chef?.availability && (
                                                         <li className="flex items-start">
                                                             <Calendar className="w-5 h-5 text-primary mr-3 mt-0.5" />
-                                                            <span>{chef.availability}</span>
+                                                            <span>{chef?.availability}</span>
                                                         </li>
                                                     )}
-                                                    {chef.booking_fee && (
+                                                    {chef?.booking_fee && (
                                                         <li className="flex items-start">
                                                             <Award className="w-5 h-5 text-primary mr-3 mt-0.5" />
-                                                            <span>Booking Fee: {chef.booking_fee}</span>
+                                                            <span>Booking Fee: {chef?.booking_fee}</span>
                                                         </li>
                                                     )}
                                                 </ul>
@@ -270,7 +270,7 @@ const Show = ({
                                     <p className="text-sm text-gray-500 mb-1">Starting at</p>
                                     <div className="flex items-baseline">
                                         <span className="text-3xl font-bold text-primary">
-                                            {chef.booking_fee || '$250/hr'}
+                                            {chef?.booking_fee || '$250/hr'}
                                         </span>
                                     </div>
                                 </div>
@@ -306,52 +306,52 @@ const Show = ({
                                 
                                 <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                                     <h3 className="text-sm font-semibold mb-3">Contact Information</h3>
-                                    {chef.contact_email && (
+                                    {chef?.contact_email && (
                                         <div className="flex items-center mb-2">
                                             <Mail className="w-4 h-4 text-gray-500 mr-2" />
-                                            <a href={`mailto:${chef.contact_email}`} className="text-sm text-blue-600 hover:text-blue-800">
-                                                {chef.contact_email}
+                                            <a href={`mailto:${chef?.contact_email}`} className="text-sm text-blue-600 hover:text-blue-800">
+                                                {chef?.contact_email}
                                             </a>
                                         </div>
                                     )}
                                 </div>
                                 
                                 {/* Social Media Links */}
-                                {social && Object.keys(social).length > 0 && (
+                                {social && Object.keys(social)?.length > 0 && (
                                     <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                                        <h3 className="text-sm font-semibold mb-3">Follow Chef {chef.name}</h3>
+                                        <h3 className="text-sm font-semibold mb-3">Follow Chef {chef?.name}</h3>
                                         <div className="flex flex-wrap gap-2">
-                                            {social.instagram && (
+                                            {social?.instagram && (
                                                 <Button variant="outline" size="icon" asChild className="rounded-full">
-                                                    <a href={`https://instagram.com/${social.instagram}`} target="_blank" rel="noopener noreferrer">
+                                                    <a href={`https://instagram.com/${social?.instagram}`} target="_blank" rel="noopener noreferrer">
                                                         <Instagram className="w-4 h-4" />
                                                     </a>
                                                 </Button>
                                             )}
-                                            {social.twitter && (
+                                            {social?.twitter && (
                                                 <Button variant="outline" size="icon" asChild className="rounded-full">
-                                                    <a href={`https://twitter.com/${social.twitter}`} target="_blank" rel="noopener noreferrer">
+                                                    <a href={`https://twitter.com/${social?.twitter}`} target="_blank" rel="noopener noreferrer">
                                                         <Twitter className="w-4 h-4" />
                                                     </a>
                                                 </Button>
                                             )}
-                                            {social.facebook && (
+                                            {social?.facebook && (
                                                 <Button variant="outline" size="icon" asChild className="rounded-full">
-                                                    <a href={`https://facebook.com/${social.facebook}`} target="_blank" rel="noopener noreferrer">
+                                                    <a href={`https://facebook.com/${social?.facebook}`} target="_blank" rel="noopener noreferrer">
                                                         <Facebook className="w-4 h-4" />
                                                     </a>
                                                 </Button>
                                             )}
-                                            {social.youtube && (
+                                            {social?.youtube && (
                                                 <Button variant="outline" size="icon" asChild className="rounded-full">
-                                                    <a href={`https://youtube.com/${social.youtube}`} target="_blank" rel="noopener noreferrer">
+                                                    <a href={`https://youtube.com/${social?.youtube}`} target="_blank" rel="noopener noreferrer">
                                                         <Youtube className="w-4 h-4" />
                                                     </a>
                                                 </Button>
                                             )}
-                                            {social.website && (
+                                            {social?.website && (
                                                 <Button variant="outline" size="icon" asChild className="rounded-full">
-                                                    <a href={social.website} target="_blank" rel="noopener noreferrer">
+                                                    <a href={social?.website} target="_blank" rel="noopener noreferrer">
                                                         <ExternalLink className="w-4 h-4" />
                                                     </a>
                                                 </Button>

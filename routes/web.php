@@ -646,7 +646,7 @@ Route::name('frontend.')->group(function () {
     
     // Chef Routes
     Route::get('/chef', [PageController::class, 'chef'])->name('chef');
-    Route::get('/chef/{slug}', [PageController::class, 'chefDetail'])->name('chef.detail');
+    Route::get('/chef/{slug}', [PageController::class, 'chefDetail'])->name('chef.show');
     
     Route::get('/electronics', [ElectronicsController::class, 'index'])->name('electronics');
     Route::get('/offers', [OfferController::class, 'index'])->name('offers');
