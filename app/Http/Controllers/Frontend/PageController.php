@@ -18,6 +18,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests\ContactFormRequest;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ContactFormMail;
+use App\Services\Frontend\PartnerService;
 
 final class PageController extends Controller
 {
@@ -28,7 +29,8 @@ final class PageController extends Controller
         private readonly Restaurant2Service $restaurant2Service,
         private readonly RestaurantDetailService $restaurantDetailService,
         private readonly RestaurantDetail2Service $restaurantDetail2Service,
-        private readonly BlogService $blogService
+        private readonly BlogService $blogService,
+        private readonly PartnerService $partnerService
     ) {}
 
     public function about(): Response
@@ -186,5 +188,61 @@ final class PageController extends Controller
             'awards' => $data['awards'] ?? null,
             'events' => $data['events'] ?? null,
         ]);
+    }
+
+    public function becomeRestaurant(): Response
+    {
+        try {
+            return Inertia::render('Frontend/Partners/BecomeRestaurant', [
+                'data' => $this->partnerService->getRestaurantPartnerData(),
+            ]);
+        } catch (\Throwable $e) {
+            return Inertia::render('Frontend/Partners/BecomeRestaurant', [
+                'data' => [],
+                'error' => 'Failed to load restaurant partner data. Please try again later.'
+            ]);
+        }
+    }
+
+    public function kitchenStaff(): Response
+    {
+        try {
+            return Inertia::render('Frontend/Partners/KitchenStaff', [
+                'data' => $this->partnerService->getKitchenStaffData(),
+            ]);
+        } catch (\Throwable $e) {
+            return Inertia::render('Frontend/Partners/KitchenStaff', [
+                'data' => [],
+                'error' => 'Failed to load kitchen staff data. Please try again later.'
+            ]);
+        }
+    }
+
+    public function deliveryStaff(): Response
+    {
+        try {
+            return Inertia::render('Frontend/Partners/DeliveryStaff', [
+                'data' => $this->partnerService->getDeliveryStaffData(),
+            ]);
+        } catch (\Throwable $e) {
+            return Inertia::render('Frontend/Partners/DeliveryStaff', [
+                'data' => [],
+                'error' => 'Failed to load delivery staff data. Please try again later.'
+            ]);
+        }
+    }
+
+    public function becomeVendor(): Response
+    {
+        try {
+            return Inertia::render('Frontend/Partners/BecomeVendor', [
+                'data' => $this->partnerService->getVendorData(),
+            ]);
+        } catch (\Throwable $e) {
+            return Inertia::render('Frontend/Partners/BecomeVendor', [
+                'data' => [],
+                'error' => 'Failed to load vendor data. Please try again later.'
+            ]);
+        }
     }
 } 

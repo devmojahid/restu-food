@@ -647,6 +647,12 @@ Route::name('frontend.')->group(function () {
     Route::post('/offers/{id}/claim', [OfferController::class, 'claim'])->name('offers.claim');
     Route::get('/contact', [PageController::class, 'contact'])->name('contact');
     
+    // Partner pages
+    Route::get('/become-restaurant', [PageController::class, 'becomeRestaurant'])->name('become-restaurant');
+    Route::get('/kitchen-staff', [PageController::class, 'kitchenStaff'])->name('kitchen-staff');
+    Route::get('/delivery-staff', [PageController::class, 'deliveryStaff'])->name('delivery-staff');
+    Route::get('/become-vendor', [PageController::class, 'becomeVendor'])->name('become-vendor');
+
     // Food Menu 2 Routes
     Route::prefix('food-menu')->name('food-menu.')->group(function () {
         Route::get('/', [FoodMenu2Controller::class, 'index'])->name('index');
@@ -744,6 +750,8 @@ Route::name('frontend.')->group(function () {
     Route::post('/wishlist2/move-to-cart', [WishlistController::class, 'moveToCart2'])->name('wishlist2.move_to_cart');
     Route::post('/wishlist2/manage-collection', [WishlistController::class, 'manageCollection2'])->name('wishlist2.manage_collection');
     Route::delete('/wishlist2/clear', [WishlistController::class, 'clearWishlist2'])->name('wishlist2.clear');
+    
+    Route::post('/contact', [PageController::class, 'submitContact'])->name('contact.submit');
 });
 
 // Add these routes inside your auth middleware group
