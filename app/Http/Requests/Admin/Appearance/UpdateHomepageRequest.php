@@ -67,31 +67,25 @@ class UpdateHomepageRequest extends FormRequest
             'selected_top_categories' => 'nullable|array',
             'selected_top_categories.*' => 'exists:categories,id',
 
-            // Why Choose Us Section
-            'why_choose_us_enabled' => 'boolean',
-            'why_choose_us_title' => 'nullable|string|max:200',
-            'why_choose_us_text' => 'nullable|string|max:500',
-            'why_choose_us_image' => 'nullable|image|max:2048',
-            'why_choose_us_layout' => 'nullable|string|in:side-by-side,stacked',
-            'why_choose_us_image_position' => 'nullable|string|in:left,right',
-            'why_choose_us_features' => 'nullable|array',
-            'why_choose_us_features.*.title' => 'nullable|string|max:100',
-            'why_choose_us_features.*.text' => 'nullable|string|max:500',
-            'why_choose_us_features.*.icon' => 'nullable|string|max:50',
+            // Features Dishes Section
+            'features_dishes_enabled' => 'boolean',
+            'features_dishes_title' => 'nullable|string|max:200',
+            'features_dishes_count' => 'nullable|integer|min:1|max:20',
+            'features_dishes_show_filter' => 'boolean',
+            'features_dishes_show_description' => 'boolean',
+            'features_dishes_columns' => 'nullable|integer',
+            'selected_features_dishes' => 'nullable|array',
+            'selected_features_dishes.*' => 'exists:products,id',
 
-
-            // Client Feedback Section
-            'client_feedback_enabled' => 'boolean',
-            'client_feedback_title' => 'nullable|string|max:200',
-            'client_feedback_subtitle' => 'nullable|string|max:500',
-            'client_feedback_layout' => 'nullable|string|in:grid,carousel,masonry',
-            'client_feedback_columns' => 'nullable|integer|in:2,3,4',
-            'feedbacks' => 'nullable|array',
-            'feedbacks.*.name' => 'nullable|string|max:100',
-            'feedbacks.*.rating' => 'nullable|integer|between:1,5',
-            'feedbacks.*.review' => 'nullable|string|max:1000',
-            'feedbacks.*.avatar' => 'nullable|image|max:1024',
-            'feedbacks.*.date' => 'nullable|date',
+            // Popular Dishes Section
+            'popular_dishes_enabled' => 'boolean',
+            'popular_dishes_title' => 'nullable|string|max:200',
+            'popular_dishes_count' => 'nullable|integer|min:1|max:20',
+            'popular_dishes_show_filter' => 'boolean',
+            'popular_dishes_show_description' => 'boolean',
+            'popular_dishes_columns' => 'nullable|integer',
+            'selected_popular_dishes' => 'nullable|array',
+            'selected_popular_dishes.*' => 'exists:products,id',
 
             // Global Settings
             'layout_width' => 'nullable|string|in:contained,full',
@@ -147,15 +141,19 @@ class UpdateHomepageRequest extends FormRequest
         $booleanFields = [
             'hero_enabled',
             'top_categories_enabled', 
-            'why_choose_us_enabled',
-            'client_feedback_enabled',
             'top_restaurants_enabled',
             'top_restaurants_show_description',
+            // Top Categories Section
             'top_categories_show_filter',
             'top_categories_show_description',
-            'why_choose_us_enabled',
-            'why_choose_us_show_description',
-            'client_feedback_enabled',
+            // Features Dishes Section
+            'features_dishes_enabled',
+            'features_dishes_show_filter',
+            'features_dishes_show_description',
+            // Popular Dishes Section
+            'popular_dishes_enabled',
+            'popular_dishes_show_filter',
+            'popular_dishes_show_description',
         ];
 
         foreach ($booleanFields as $field) {

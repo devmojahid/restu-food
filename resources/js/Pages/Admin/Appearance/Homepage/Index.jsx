@@ -10,6 +10,8 @@ import WhyChooseUsSection from "./Sections/WhyChooseUsSection";
 import HeroSection from "./Sections/HeroSection";
 import GlobalSettingsSection from "./Sections/GlobalSettingsSection";
 import FeaturedRestaurantsSection from "./Sections/FeaturedRestaurantsSection";
+import FeaturesDishesSection from "./Sections/FeaturesDishesSection";
+import PopularDishesSection from "./Sections/PopularDishesSection";
 import GuideModal from "./Partials/GuideModal";
 import { Alert, AlertDescription, AlertTitle } from "@/Components/ui/alert";
 import { AlertCircle, CheckCircle2, RefreshCw, LayoutTemplate, Eye, Settings, Brush, Clock, HelpCircle } from "lucide-react";
@@ -19,7 +21,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 const SECTIONS = [
   { id: 'hero', label: 'Hero Section', default: true },
   { id: 'featured_restaurants', label: 'Featured Restaurants' },
+  { id: 'features_dishes', label: 'Features Dishes' },
   { id: 'top_categories', label: 'Top Categories' },
+  { id: 'popular_dishes', label: 'Popular Dishes' },
   { id: 'why_choose_us', label: 'Why Choose Us' },
   { id: 'client_feedback', label: 'Client Feedback' },
   { id: 'global_settings', label: 'Global Settings' },
@@ -337,6 +341,12 @@ const HomepageEditor = ({ homepageOptions = {}, defaults = {}, dynamicData = {},
                   )}
                   {section.id === 'top_categories' && (
                     <TopCategoriesSection />
+                  )}
+                  {section.id === 'features_dishes' && (
+                    <FeaturesDishesSection />
+                  )}
+                  {section.id === 'popular_dishes' && (
+                    <PopularDishesSection />
                   )}
                   {section.id === 'why_choose_us' && (
                     <WhyChooseUsSection />
