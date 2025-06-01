@@ -207,6 +207,11 @@ export const routes = {
                 name: "Homepage",
                 path: "/app/appearance/homepage",
                 icon: "Home"
+            },
+            aboutpage: {
+                name: "Aboutpage",
+                path: "/app/appearance/aboutpage",
+                icon: "Home"
             }
         }
     },
