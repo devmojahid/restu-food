@@ -86,8 +86,6 @@ class UpdateHomepageRequest extends FormRequest
             'client_feedback_subtitle' => 'nullable|string|max:500',
             'client_feedback_layout' => 'nullable|string|in:grid,carousel,masonry',
             'client_feedback_columns' => 'nullable|integer|in:2,3,4',
-            'client_feedback_show_rating' => 'boolean',
-            'client_feedback_show_date' => 'boolean',
             'feedbacks' => 'nullable|array',
             'feedbacks.*.name' => 'nullable|string|max:100',
             'feedbacks.*.rating' => 'nullable|integer|between:1,5',
@@ -98,11 +96,7 @@ class UpdateHomepageRequest extends FormRequest
             // Global Settings
             'layout_width' => 'nullable|string|in:contained,full',
             'section_spacing' => 'nullable|string|in:small,medium,large',
-            'animations_enabled' => 'boolean',
-            'scroll_animations' => 'boolean',
             'color_scheme' => 'nullable|string|in:light,dark,system',
-            'primary_color' => 'nullable|string|regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/',
-            'secondary_color' => 'nullable|string|regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/',
             'font_heading' => 'nullable|string|in:inter,roboto,poppins,montserrat,open-sans',
             'font_body' => 'nullable|string|in:inter,roboto,poppins,open-sans',
         ];
@@ -120,8 +114,6 @@ class UpdateHomepageRequest extends FormRequest
             'hero_background_overlay.between' => 'Background overlay must be between 0 and 1.',
             'hero_text_alignment.in' => 'Text alignment must be left, center, or right.',
             'feedbacks.*.rating.between' => 'Rating must be between 1 and 5',
-            'primary_color.regex' => 'Invalid color format. Use hex color code (e.g., #FF0000)',
-            'secondary_color.regex' => 'Invalid color format. Use hex color code (e.g., #00FF00)',
             'hero_slides.*.title.required_with' => 'Slide title is required',
         ];
     }
