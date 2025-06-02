@@ -82,6 +82,22 @@ final class Product extends Model
             ->orderByPivot('sort_order');
     }
 
+    
+    public function getThumbnailAttribute(): ?File
+    {
+        return $this->getFileFrom(self::COLLECTION_THUMBNAIL);
+    }
+
+    public function getGalleryAttribute(): Collection
+    {
+        return $this->getFilesFrom(self::COLLECTION_GALLERY);
+    }
+
+    public function getCurrentPrice(): float
+    {
+        return $this->convertPrice($this->price);
+    }
+
     public function variants(): HasMany
     {
         return $this->hasMany(ProductVariant::class)->orderBy('created_at');
@@ -334,20 +350,6 @@ final class Product extends Model
         return $this->hasMany(ProductSpecificAttribute::class)->orderBy('sort_order');
     }
 
-    public function getThumbnailAttribute(): ?File
-    {
-        return $this->getFileFrom(self::COLLECTION_THUMBNAIL);
-    }
-
-    public function getGalleryAttribute(): Collection
-    {
-        return $this->getFilesFrom(self::COLLECTION_GALLERY);
-    }
-
-    public function getCurrentPrice(): float
-    {
-        return $this->convertPrice($this->price);
-    }
 
     public function getFormattedPrice(): string
     {

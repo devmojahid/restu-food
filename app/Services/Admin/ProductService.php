@@ -132,16 +132,20 @@ final class ProductService
                     );
                 }
             }
-
-            // Handle variations
+            // Handle variations - FIXED VERSION
             if (isset($data['variations'])) {
-                // Get existing variation IDs
-                $existingVariationIds = $product->variants()->pluck('id')->toArray();
-                $updatedVariationIds = collect($data['variations'])->pluck('id')->filter()->toArray();
+                // Get existing variations
+                $existingVariants = $product->variants()->get()->keyBy('id');
+                $submittedVariationIds = collect($data['variations'])
+                    ->filter(function ($variation) {
+                        return !empty($variation['id']);
+                    })
+                    ->pluck('id')
+                    ->toArray();
 
                 // Delete variations that are no longer present
                 $product->variants()
-                    ->whereNotIn('id', $updatedVariationIds)
+                    ->whereNotIn('id', $submittedVariationIds)
                     ->delete();
 
                 foreach ($data['variations'] as $variation) {
@@ -166,45 +170,57 @@ final class ProductService
                             ->toArray()
                     ];
 
-                    if (!empty($variation['id'])) {
+                    $variant = $existingVariants->get($variation['id']);
+                    if ($variant) {
                         // Update existing variation
-                        $variant = $product->variants()->find($variation['id']);
-                        if ($variant) {
+                        
                             $variant->update($variantData);
 
-                            // Only update thumbnail if new one is provided
-                            if (!empty($variation['thumbnail']) && is_array($variation['thumbnail'])) {
-                                $variant->handleFile($variation['thumbnail'], ProductVariant::COLLECTION_THUMBNAIL);
+                            // Handle thumbnail update - FIXED LOGIC
+                            // Only process thumbnail if it's explicitly provided and different
+                            if (isset($variation['thumbnail'])) {
+                                if (empty($variation['thumbnail'])) {
+                                    // Remove thumbnail if explicitly set to empty
+                                    $variant->clearFiles(ProductVariant::COLLECTION_THUMBNAIL);
+                                } elseif (is_array($variation['thumbnail']) && !empty($variation['thumbnail']['id'])) {
+                                    // Update thumbnail only if new file is provided
+                                    $variant->handleFile($variation['thumbnail'], ProductVariant::COLLECTION_THUMBNAIL);
+                                }
+                                // If thumbnail is not empty but not an array with id, keep existing thumbnail
                             }
-                        }
                     } else {
                         // Create new variation
                         $variant = $product->variants()->create($variantData);
 
                         // Handle thumbnail for new variation
-                        if (!empty($variation['thumbnail'])) {
+                        if (!empty($variation['thumbnail']) && is_array($variation['thumbnail'])) {
                             $variant->handleFile($variation['thumbnail'], ProductVariant::COLLECTION_THUMBNAIL);
                         }
                     }
                 }
             }
 
-            // Handle files only if they are provided in the update
-            if (array_key_exists('thumbnail', $data)) {
+            // Handle product files - FIXED VERSION
+            // Only update files if they are explicitly provided
+            if (isset($data['thumbnail'])) {
                 if (empty($data['thumbnail'])) {
                     $product->clearFiles(Product::COLLECTION_THUMBNAIL);
-                } elseif (is_array($data['thumbnail'])) {
+                } elseif (is_array($data['thumbnail']) && !empty($data['thumbnail']['id'])) {
                     $product->handleFile($data['thumbnail'], Product::COLLECTION_THUMBNAIL);
                 }
+                // If thumbnail is not empty but not a valid array, keep existing thumbnail
             }
+            // If thumbnail key doesn't exist in data, keep existing thumbnail
 
-            if (array_key_exists('gallery', $data)) {
+            if (isset($data['gallery'])) {
                 if (empty($data['gallery'])) {
                     $product->clearFiles(Product::COLLECTION_GALLERY);
-                } elseif (is_array($data['gallery'])) {
+                } elseif (is_array($data['gallery']) && !empty($data['gallery'])) {
                     $product->handleFile($data['gallery'], Product::COLLECTION_GALLERY);
                 }
+                // If gallery is not empty but not a valid array, keep existing gallery
             }
+            // If gallery key doesn't exist in data, keep existing gallery
 
             return $product->fresh(['categories', 'variants', 'specificAttributes']);
         });

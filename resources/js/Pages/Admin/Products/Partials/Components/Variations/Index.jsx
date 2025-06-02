@@ -45,8 +45,10 @@ export default function ProductVariations({
   const generateVariations = useCallback(() => {
     if (attributes.length === 0) return
 
-    const combinations = attributes.reduce((acc, attr) => {
-      if (!attr.variation) return acc
+    const variationAttributes = attributes.filter(attr => attr.variation)
+    if (variationAttributes.length === 0) return
+
+    const combinations = variationAttributes.reduce((acc, attr) => {
       const values = attr.values
       if (acc.length === 0) {
         return values.map(value => ({ [attr.name]: value }))
@@ -56,28 +58,34 @@ export default function ProductVariations({
       )
     }, [])
 
-    const newVariations = combinations.map((combo, index) => {
-      const existingVariation = variations.find(v => 
-        Object.entries(combo).every(([key, value]) => v[key] === value)
+    // Find new combinations that don't exist in current variations
+    const newCombinations = combinations.filter(combo => {
+      return !variations.some(variation => 
+        Object.entries(combo).every(([key, value]) => variation[key] === value)
       )
-      return {
-        id: existingVariation?.id || Date.now() + index,
-        ...combo,
-        sku: existingVariation?.sku || '',
-        price: existingVariation?.price || '',
-        sale_price: existingVariation?.sale_price || '',
-        stock: existingVariation?.stock || 0,
-        enabled: existingVariation?.enabled ?? true,
-        virtual: existingVariation?.virtual || false,
-        downloadable: existingVariation?.downloadable || false,
-        manage_stock: existingVariation?.manage_stock ?? true,
-        weight: existingVariation?.weight || '',
-        dimensions: existingVariation?.dimensions || { length: '', width: '', height: '' },
-        thumbnail: existingVariation?.thumbnail || null
-      }
     })
 
-    setVariations(newVariations)
+    // Create new variations only for new combinations
+    const newVariations = newCombinations.map((combo, index) => ({
+      id: Date.now() + index,
+      ...combo,
+      sku: '',
+      price: '',
+      sale_price: '',
+      stock: 0,
+      enabled: true,
+      virtual: false,
+      downloadable: false,
+      manage_stock: true,
+      weight: '',
+      dimensions: { length: '', width: '', height: '' },
+      thumbnail: null
+    }))
+
+    // Add new variations to existing ones
+    if (newVariations.length > 0) {
+      setVariations(prevVariations => [...prevVariations, ...newVariations])
+    }
   }, [attributes, variations])
 
   return (
@@ -115,4 +123,4 @@ export default function ProductVariations({
       </CardContent>
     </Card>
   )
-} 
+}

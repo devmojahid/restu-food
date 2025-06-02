@@ -207,16 +207,26 @@ final class ProductController extends Controller
 
     public function update(ProductRequest $request, Product $product): RedirectResponse
     {
-        try {
-            $this->productService->update($product, $request->validated());
+    try {
+        $data = $request->validated();
+        
+        // Only include file data if present in request
+        if ($request->has('thumbnail')) {
+            $data['thumbnail'] = $request->input('thumbnail');
+        }
+        if ($request->has('gallery')) {
+            $data['gallery'] = $request->input('gallery');
+        }
+        
+        $this->productService->update($product, $data);
 
-            return redirect()
-                ->route('app.products.index')
-                ->with('success', 'Product updated successfully.');
-        } catch (\Exception $e) {
-            Log::error('Error updating product: ' . $e->getMessage());
-            return back()
-                ->withInput()
+        return redirect()
+            ->route('app.products.index')
+            ->with('success', 'Product updated successfully.');
+    } catch (\Exception $e) {
+        Log::error('Error updating product: ' . $e->getMessage());
+        return back()
+            ->withInput()
                 ->with('error', 'Error updating product: ' . $e->getMessage());
         }
     }

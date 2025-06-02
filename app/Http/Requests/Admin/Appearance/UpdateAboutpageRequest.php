@@ -6,7 +6,7 @@ namespace App\Http\Requests\Admin\Appearance;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateHomepageRequest extends FormRequest
+class UpdateAboutpageRequest extends FormRequest
 {
     public function authorize(): bool
     {
