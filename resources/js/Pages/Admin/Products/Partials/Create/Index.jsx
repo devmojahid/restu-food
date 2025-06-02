@@ -97,7 +97,7 @@ const ErrorAlert = ({ errors }) => {
 // First, let's create a helper function to format categories for the select component
 const formatCategoriesForSelect = (categories = []) => {
   if (!Array.isArray(categories)) return [];
-  
+
   return categories.map(category => ({
     value: category.id.toString(),
     label: category.name,
@@ -119,6 +119,8 @@ export default function CreateProductForm({ restaurants, categories, globalAttri
 
   const { data, setData, post, processing, errors } = useForm(INITIAL_FORM_STATE);
 
+  console.log(data);
+
   // Auto-generate slug from name
   useEffect(() => {
     if (data.name && autoUpdateSlug) {
@@ -139,7 +141,7 @@ export default function CreateProductForm({ restaurants, categories, globalAttri
 
   const handleVariationsChange = (variationData) => {
     setVariationsData(variationData);
-    
+
     const mappedVariations = variationData.variations.map(variation => ({
       ...variation,
       thumbnail: variation.thumbnail || null,
@@ -153,13 +155,13 @@ export default function CreateProductForm({ restaurants, categories, globalAttri
   };
 
   return (
-    <form 
+    <form
       onSubmit={(e) => {
         e.preventDefault();
         if (e.target === e.currentTarget) {
           handleSubmit(e);
         }
-      }} 
+      }}
       className="space-y-8"
     >
       <ErrorAlert errors={errors} />
@@ -213,8 +215,8 @@ export default function CreateProductForm({ restaurants, categories, globalAttri
                     <SelectContent>
                       {restaurants?.length > 0 ? (
                         restaurants.map((restaurant) => (
-                          <SelectItem 
-                            key={restaurant.id} 
+                          <SelectItem
+                            key={restaurant.id}
                             value={restaurant.id.toString()}
                           >
                             {restaurant.name}
@@ -463,7 +465,7 @@ export default function CreateProductForm({ restaurants, categories, globalAttri
                     (You can select multiple)
                   </span>
                 </Label>
-                
+
                 <MultiSelect
                   options={categories.map(category => ({
                     value: category.id.toString(),

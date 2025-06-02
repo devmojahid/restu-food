@@ -100,6 +100,7 @@ final class ProductController extends Controller
 
     public function store(ProductRequest $request): RedirectResponse
     {
+        dd($request->all());
         try {
             $data = $request->validated();
             // Ensure variations data is properly structured

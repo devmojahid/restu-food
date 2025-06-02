@@ -65,11 +65,11 @@ const ErrorAlert = ({ errors }) => {
   );
 };
 
-export default function EditProductForm({ 
-  product, 
-  restaurants, 
-  categories, 
-  globalAttributes 
+export default function EditProductForm({
+  product,
+  restaurants,
+  categories,
+  globalAttributes
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [autoUpdateSlug, setAutoUpdateSlug] = useState(false);
@@ -100,6 +100,8 @@ export default function EditProductForm({
       backorders_allowed: product.stock_management?.backorders_allowed || false,
     },
   });
+
+  console.log(data);
 
   // Auto-generate slug from name if enabled
   useEffect(() => {
@@ -190,8 +192,8 @@ export default function EditProductForm({
                     <SelectContent>
                       {restaurants?.length > 0 ? (
                         restaurants.map((restaurant) => (
-                          <SelectItem 
-                            key={restaurant.id} 
+                          <SelectItem
+                            key={restaurant.id}
                             value={restaurant.id.toString()}
                           >
                             {restaurant.name}
@@ -440,7 +442,7 @@ export default function EditProductForm({
                     (You can select multiple)
                   </span>
                 </Label>
-                
+
                 <MultiSelect
                   options={categories.map(category => ({
                     value: category.id.toString(),
