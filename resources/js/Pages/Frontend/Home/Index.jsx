@@ -23,6 +23,8 @@ const Index = ({
     nearbyRestaurants = [],
     error
 }) => {
+    console.log(featuredDishes, 'featuredDishes');
+    console.log(popularDishes, 'popularDishes');
     return (
         <Layout>
             <Head title="Home" />

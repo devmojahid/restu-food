@@ -75,7 +75,7 @@ class UpdateHomepageRequest extends FormRequest
             'features_dishes_show_description' => 'boolean',
             'features_dishes_columns' => 'nullable|integer',
             'selected_features_dishes' => 'nullable|array',
-            'selected_features_dishes.*' => 'exists:products,id',
+            'selected_features_dishes.*' => 'exists:categories,id',
 
             // Popular Dishes Section
             'popular_dishes_enabled' => 'boolean',
@@ -85,7 +85,7 @@ class UpdateHomepageRequest extends FormRequest
             'popular_dishes_show_description' => 'boolean',
             'popular_dishes_columns' => 'nullable|integer',
             'selected_popular_dishes' => 'nullable|array',
-            'selected_popular_dishes.*' => 'exists:products,id',
+            'selected_popular_dishes.*' => 'exists:categories,id',
 
             // Global Settings
             'layout_width' => 'nullable|string|in:contained,full',
