@@ -23,7 +23,6 @@ const Index = ({
     nearbyRestaurants = [],
     error
 }) => {
-    console.log(featuredDishes, 'featuredDishes');
     console.log(popularDishes, 'popularDishes');
     return (
         <Layout>
@@ -64,7 +63,7 @@ const Index = ({
                     <LocationBasedSuggestions restaurants={nearbyRestaurants} />
                 )}
 
-                {popularDishes?.length > 0 && (
+                {popularDishes?.dishes?.length > 0 && (
                     <PopularDishes dishes={popularDishes} />
                 )}
 

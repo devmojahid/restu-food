@@ -667,6 +667,94 @@ final class HomeService extends BaseService
 
     private function getPopularDishes(): array
     {
+         // Cache key for settings
+         $cacheKey = 'popular_dishes_' . auth()->id();
+        
+         // return cache()->remember($cacheKey, 300, function () { 
+             $settings = $this->getHomepageSettings();
+ 
+             if (isset($settings['popular_dishes_enabled']) && !$settings['popular_dishes_enabled']) {
+                 return [];
+             }
+ 
+             $limit = $settings['popular_dishes_count'] ?? 8;
+             $title = $settings['popular_dishes_title'] ?? 'Popular Dishes';
+             $columns = $settings['popular_dishes_columns'] ?? 4;
+ 
+            //  $restaurants = Restaurant::select([
+            //          'id', 'name', 'slug', 'delivery_fee', 
+            //          'is_featured', 'created_at'
+            //      ])
+            //      ->with(['files'])
+            //      ->where('status', 'active')
+            //      ->where('is_featured', true)
+            //      ->orderBy('created_at', 'desc')
+            //      ->take($limit)
+            //      ->get();
+ 
+            //  $restaurantsData = $restaurants->map(function ($restaurant) {
+            //      $files = $restaurant->files->keyBy('collection');
+                 
+            //      return [
+            //          'id' => $restaurant->id,
+            //          'name' => $restaurant->name,
+            //          'slug' => $restaurant->slug,
+            //          'rating' => $restaurant->rating ?? 0,
+            //          'total_reviews' => $restaurant->total_reviews ?? 0,
+            //          'delivery_time' => $restaurant->delivery_time ?? 0,
+            //          'categories' => $restaurant->categories ?? [],
+            //          'is_featured' => $restaurant->is_featured ?? false,
+            //          'distance' => $restaurant->distance ?? 0,
+            //          'logo' => $files->get('logo') ? asset('storage/' . $files->get('logo')->path) : '/images/restaurants/default.jpg',
+            //          'image' => $files->get('banner') ? asset('storage/' . $files->get('banner')->path) : '/images/restaurants/default.jpg',
+            //          'gallery' => $restaurant->files->where('collection', 'gallery')
+            //              ->map(fn($file) => asset('storage/' . $file->path))
+            //              ->toArray(),
+            //      ];
+            //  })->toArray();
+
+            $selectedCategoryIds = $settings['selected_popular_dishes'] ?? [];
+
+            $dishes = Product::whereHas('categories', function ($query) use ($selectedCategoryIds) {
+                    $query->whereIn('categories.id', $selectedCategoryIds);
+                })
+                ->where('status', 'active')
+                ->orderBy('created_at', 'desc')
+                ->take($limit)
+                ->get();
+
+            $dishesData = $dishes->map(function ($dish) {
+                return [
+                    'id' => $dish->id,
+                    'name' => $dish->name,
+                    'slug' => $dish->slug,
+                    'description' => $dish->description,
+                    'price' => $dish->price,
+                    'image' => $dish->image,
+                    'restaurant' => [
+                        'name' => $dish->restaurant->name,
+                        'slug' => $dish->restaurant->slug
+                    ],
+                    'rating' => $dish->rating,
+                    'preparation_time' => $dish->preparation_time,
+                    'discount' => $dish->discount,
+                    'category' => $dish->categories->first()->name,
+                    'isNew' => $dish->isNew,
+                    'isPopular' => $dish->isPopular,
+                    'orders' => $dish->orders,
+                ];
+            })->toArray();
+
+            $data = [
+                'title' => $title,
+                'columns' => $columns,
+                'dishes' => $dishesData
+            ];
+             return $data;
+         // });
+    }
+    private function getPopularDishesOld(): array
+    {
         return [
             [
                 'id' => 1,

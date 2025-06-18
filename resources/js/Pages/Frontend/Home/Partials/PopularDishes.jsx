@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-    Star, 
-    Clock, 
+import {
+    Star,
+    Clock,
     ChevronRight,
     Heart,
     Timer,
@@ -17,7 +17,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Navigation } from 'swiper/modules';
 import { Badge } from '@/Components/ui/badge';
-import { 
+import {
     ShoppingBag,
     TrendingUp,
     Award,
@@ -81,7 +81,7 @@ const DishCard = ({ dish, index }) => {
                             animate={{ scale: isHovered ? 1.1 : 1 }}
                             transition={{ duration: 0.4 }}
                         />
-                        
+
                         {/* Enhanced Discount Badge */}
                         {dish.discount && (
                             <motion.div
@@ -120,7 +120,7 @@ const DishCard = ({ dish, index }) => {
                         {/* Enhanced Gradient Overlay */}
                         <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t 
                                     from-black/80 via-black/50 to-transparent" />
-                        
+
                         {/* Additional Info Overlay */}
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
@@ -160,7 +160,7 @@ const DishCard = ({ dish, index }) => {
                                            group-hover:text-primary transition-colors">
                                     {dish.name}
                                 </h3>
-                                <Link 
+                                <Link
                                     href={`/restaurants/${dish.restaurant.slug}`}
                                     className="text-sm text-gray-500 dark:text-gray-400 
                                            hover:text-primary transition-colors"
@@ -193,7 +193,7 @@ const DishCard = ({ dish, index }) => {
                                 </span>
                                 {dish.discount && (
                                     <span className="text-sm text-gray-500 line-through">
-                                        ${(dish.price * (1 + dish.discount/100)).toFixed(2)}
+                                        ${(dish.price * (1 + dish.discount / 100)).toFixed(2)}
                                     </span>
                                 )}
                             </div>
@@ -219,21 +219,23 @@ const DishCard = ({ dish, index }) => {
 };
 
 const PopularDishes = ({ dishes }) => {
+    const { title, columns, dishes: dishesData } = dishes;
+
     const [activeCategory, setActiveCategory] = useState('all');
-    const [filteredDishes, setFilteredDishes] = useState(dishes);
+    const [filteredDishes, setFilteredDishes] = useState(dishesData);
 
     // Extract unique categories from dishes
-    const categories = [...new Set(dishes?.map(dish => dish.category))];
+    const categories = [...new Set(dishesData?.map(dish => dish.category))];
 
     useEffect(() => {
         if (activeCategory === 'all') {
-            setFilteredDishes(dishes);
+            setFilteredDishes(dishesData);
         } else {
-            setFilteredDishes(dishes.filter(dish => dish.category === activeCategory));
+            setFilteredDishes(dishesData.filter(dish => dish.category === activeCategory));
         }
-    }, [activeCategory, dishes]);
+    }, [activeCategory, dishesData]);
 
-    if (!dishes?.length) {
+    if (!dishesData?.length) {
         return (
             <div className="text-center py-12">
                 <motion.div
@@ -261,14 +263,14 @@ const PopularDishes = ({ dishes }) => {
                         transition={{ duration: 0.5 }}
                     >
                         <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900 dark:text-white">
-                            Popular Dishes
+                            {title}
                         </h2>
                         <p className="text-gray-600 dark:text-gray-400 max-w-2xl">
                             Explore our most ordered dishes loved by thousands of customers
                         </p>
                     </motion.div>
 
-                    <Link 
+                    <Link
                         href="/menu"
                         className="inline-flex items-center space-x-2 text-primary hover:text-primary/90 
                                font-semibold transition-colors group mt-4 md:mt-0"
@@ -280,7 +282,7 @@ const PopularDishes = ({ dishes }) => {
 
                 {/* Category Filter */}
                 <div className="mb-8">
-                    <CategoryFilter 
+                    <CategoryFilter
                         categories={categories}
                         activeCategory={activeCategory}
                         onCategoryChange={setActiveCategory}
@@ -288,7 +290,7 @@ const PopularDishes = ({ dishes }) => {
                 </div>
 
                 {/* Enhanced Grid with Animation */}
-                <motion.div 
+                <motion.div
                     layout
                     className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
                 >
@@ -300,7 +302,7 @@ const PopularDishes = ({ dishes }) => {
                 </motion.div>
 
                 {/* Enhanced View All Button */}
-                <motion.div 
+                <motion.div
                     className="text-center mt-12"
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
