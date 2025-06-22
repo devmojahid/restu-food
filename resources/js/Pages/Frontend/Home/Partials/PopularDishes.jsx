@@ -25,30 +25,46 @@ import {
 } from 'lucide-react';
 import DishVariationsModal from '@/Components/Frontend/DishVariationsModal';
 
-const CategoryFilter = ({ categories, activeCategory, onCategoryChange }) => (
-    <div className="flex items-center space-x-4 overflow-x-auto pb-4 scrollbar-hide">
-        <Button
-            variant={activeCategory === 'all' ? 'default' : 'outline'}
-            size="sm"
-            className="rounded-full"
-            onClick={() => onCategoryChange('all')}
-        >
-            <Sparkles className="w-4 h-4 mr-2" />
-            All Dishes
-        </Button>
-        {categories.map(category => (
-            <Button
-                key={category}
-                variant={activeCategory === category ? 'default' : 'outline'}
-                size="sm"
-                className="rounded-full whitespace-nowrap"
-                onClick={() => onCategoryChange(category)}
+const CategoryFilter = ({ categories, activeCategory, onCategoryChange }) => {
+    const handleCategoryClick = (category) => {
+        onCategoryChange(category);
+    };
+
+    return (
+        <div className="flex items-center space-x-4 overflow-x-auto pb-4 scrollbar-hide">
+            <button
+                type="button"
+                className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeCategory === 'all'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'border border-input bg-background hover:bg-accent hover:text-accent-foreground'
+                    }`}
+                onClick={(e) => {
+                    e.preventDefault();
+                    handleCategoryClick('all');
+                }}
             >
-                {category}
-            </Button>
-        ))}
-    </div>
-);
+                <Sparkles className="w-4 h-4 mr-2" />
+                All Dishes
+            </button>
+            {categories.map(category => (
+                <button
+                    key={category}
+                    type="button"
+                    className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${activeCategory === category
+                        ? 'bg-primary text-primary-foreground'
+                        : 'border border-input bg-background hover:bg-accent hover:text-accent-foreground'
+                        }`}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        handleCategoryClick(category);
+                    }}
+                >
+                    {category}
+                </button>
+            ))}
+        </div>
+    );
+};
 
 const DishCard = ({ dish, index }) => {
     const [isHovered, setIsHovered] = useState(false);
@@ -289,17 +305,12 @@ const PopularDishes = ({ dishes }) => {
                     />
                 </div>
 
-                {/* Enhanced Grid with Animation */}
-                <motion.div
-                    layout
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
-                >
-                    <AnimatePresence>
-                        {filteredDishes.map((dish, index) => (
-                            <DishCard key={dish.id} dish={dish} index={index} />
-                        ))}
-                    </AnimatePresence>
-                </motion.div>
+                {/* Fixed Grid - Removed layout and AnimatePresence to prevent scroll jump */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    {filteredDishes.map((dish, index) => (
+                        <DishCard key={`${dish.id}-${activeCategory}`} dish={dish} index={index} />
+                    ))}
+                </div>
 
                 {/* Enhanced View All Button */}
                 <motion.div
@@ -322,4 +333,4 @@ const PopularDishes = ({ dishes }) => {
     );
 };
 
-export default PopularDishes; 
+export default PopularDishes;

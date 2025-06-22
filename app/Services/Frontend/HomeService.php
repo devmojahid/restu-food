@@ -715,7 +715,7 @@ final class HomeService extends BaseService
 
             $selectedCategoryIds = $settings['selected_popular_dishes'] ?? [];
 
-            $dishes = Product::whereHas('categories', function ($query) use ($selectedCategoryIds) {
+            $dishes = Product::with(['restaurant'])->whereHas('categories', function ($query) use ($selectedCategoryIds) { 
                     $query->whereIn('categories.id', $selectedCategoryIds);
                 })
                 ->where('status', 'active')
@@ -730,7 +730,7 @@ final class HomeService extends BaseService
                     'slug' => $dish->slug,
                     'description' => $dish->description,
                     'price' => $dish->price,
-                    'image' => $dish->image,
+                    'image' => $dish->thumbnail?->url,
                     'restaurant' => [
                         'name' => $dish->restaurant->name,
                         'slug' => $dish->restaurant->slug
@@ -744,6 +744,7 @@ final class HomeService extends BaseService
                     'orders' => $dish->orders,
                 ];
             })->toArray();
+
 
             $data = [
                 'title' => $title,
