@@ -297,7 +297,7 @@ final class RestaurantService extends BaseService
             ],
             [
                 'id' => 6,
-                'name' => 'Indian Curry House',
+                'name' => 'Indian Curry House 1',
                 'slug' => 'indian-curry-house',
                 'image' => '/images/restaurants/indian-curry.jpg',
                 'rating' => 4.6,
@@ -359,7 +359,7 @@ final class RestaurantService extends BaseService
     public function getRestaurantPageData(): array
     {
         // Use caching for better performance
-        return Cache::remember('restaurant_page_data', 3600, function () {
+        // return Cache::remember('restaurant_page_data', 3600, function () {
             return [
                 'hero' => $this->getHeroSection(),
                 'restaurants' => $this->getRestaurants(),
@@ -368,7 +368,7 @@ final class RestaurantService extends BaseService
                 'filters' => $this->getFilters(),
                 'stats' => $this->getStats(),
             ];
-        });
+        // });
     }
 
     private function getHeroSection(): array
@@ -414,6 +414,47 @@ final class RestaurantService extends BaseService
     }
 
     private function getRestaurants(): array
+{
+    // Get user location for distance calculation
+    $userLat = session('user_latitude', config('app.default_latitude'));
+    $userLng = session('user_longitude', config('app.default_longitude'));
+
+    $userLat = $userLat !== null ? (float) $userLat : 0.0;
+    $userLng = $userLng !== null ? (float) $userLng : 0.0;
+
+    return Restaurant::with(['files']) // Remove 'cuisineTypes' until relationship exists
+        ->active() // Using scope
+        // ->withAvg('reviews', 'rating')  // Uncomment when reviews relationship is fixed
+        // ->withCount('reviews')
+        // ->orderBy('reviews_avg_rating', 'desc')
+        ->get()
+        ->map(function ($restaurant) use ($userLat, $userLng) {
+            return [
+                'id' => $restaurant->id,
+                'name' => $restaurant->name,
+                'slug' => $restaurant->slug,
+                'image' => $restaurant->cover_image_url, // Using accessor
+                'logo' => $restaurant->logo_url, // Using accessor
+                'rating' => 0, // Default until reviews relationship is fixed
+                'total_reviews' => 0, // Default until reviews relationship is fixed
+                'delivery_time' => $restaurant->estimated_delivery_time,
+                'price_range' => $restaurant->price_range_display ?? '$', // Using accessor with fallback
+                'categories' => [], // Empty array until cuisineTypes relationship exists
+                'minimum_order' => $restaurant->minimum_order,
+                'delivery_fee' => $restaurant->delivery_fee,
+                'is_featured' => $restaurant->is_featured,
+                'is_new' => $restaurant->created_at->gt(now()->subDays(30)),
+                'is_open' => $restaurant->is_open, // Using accessor
+                'distance' => $restaurant->calculateDistanceFrom($userLat, $userLng), // Using method
+                'gallery' => $restaurant->files->where('collection', 'gallery')
+                    ->map(fn($file) => asset('storage/' . $file->path))
+                    ->toArray(),
+            ];
+        })
+        ->toArray();
+}
+
+    private function getRestaurantsDummy(): array
     {
 
         return [
@@ -489,7 +530,7 @@ final class RestaurantService extends BaseService
             ],
             [
                 'id' => 6,
-                'name' => 'Indian Curry House',
+                'name' => 'Indian Curry House 2 ',
                 'slug' => 'indian-curry-house',
                 'image' => '/images/restaurants/indian-curry.jpg',
                 'rating' => 4.6,
@@ -651,17 +692,33 @@ final class RestaurantService extends BaseService
     private function calculateDistance(Restaurant $restaurant): float
     {
         // Get user's location from session or default location
-        $userLat = session('user_latitude', config('app.default_latitude'));
-        $userLng = session('user_longitude', config('app.default_longitude'));
+        $userLat = session('user_latitude', config('app.default_latitude')) ?? 0;
+        $userLng = session('user_longitude', config('app.default_longitude')) ?? 0;
+
+        // Check if user coordinates are valid
+        if ($userLat === null || $userLng === null) {
+            return 0.0; // or throw an exception, or return a default value
+        }
+
+        // Check if restaurant coordinates are valid
+        if ($restaurant->latitude === null || $restaurant->longitude === null) {
+            return 0.0; // or throw an exception, or return a default value
+        }
+
+        // Ensure coordinates are numeric
+        $userLat = (float) $userLat;
+        $userLng = (float) $userLng;
+        $restaurantLat = (float) $restaurant->latitude;
+        $restaurantLng = (float) $restaurant->longitude;
 
         // Calculate distance using Haversine formula
         $earthRadius = 6371; // Earth's radius in kilometers
 
-        $latDelta = deg2rad($restaurant->latitude - $userLat);
-        $lngDelta = deg2rad($restaurant->longitude - $userLng);
+        $latDelta = deg2rad($restaurantLat - $userLat);
+        $lngDelta = deg2rad($restaurantLng - $userLng);
 
         $a = sin($latDelta / 2) * sin($latDelta / 2) +
-            cos(deg2rad($userLat)) * cos(deg2rad($restaurant->latitude)) *
+            cos(deg2rad($userLat)) * cos(deg2rad($restaurantLat)) *
             sin($lngDelta / 2) * sin($lngDelta / 2);
 
         $c = 2 * atan2(sqrt($a), sqrt(1 - $a));

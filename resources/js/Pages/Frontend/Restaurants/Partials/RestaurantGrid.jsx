@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-    Star, 
-    Clock, 
-    MapPin, 
+import {
+    Star,
+    Clock,
+    MapPin,
     Heart,
     DollarSign,
     Utensils,
@@ -27,6 +27,7 @@ import { useToast } from "@/Components/ui/use-toast";
 import { RestaurantGridSkeleton } from '@/Components/Frontend/RestaurantSkeleton';
 
 const RestaurantCard = ({ restaurant, view = 'grid', index }) => {
+    console.log(restaurant);
     const { toast } = useToast();
     const isGrid = view === 'grid';
 
@@ -48,7 +49,7 @@ const RestaurantCard = ({ restaurant, view = 'grid', index }) => {
             className="group bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl 
                      transition-all duration-300 overflow-hidden"
         >
-            <Link href={`/restaurants/${restaurant.slug}`}>
+            <Link href={`/restaurant-detail/${restaurant.slug}`}>
                 <div className="relative h-48 overflow-hidden">
                     <img
                         src={restaurant.image}
@@ -87,7 +88,7 @@ const RestaurantCard = ({ restaurant, view = 'grid', index }) => {
                     <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t 
                                 from-black/60 to-transparent" />
                 </div>
-                
+
                 <div className="p-6">
                     <div className="flex items-start justify-between mb-4">
                         <div>
@@ -167,7 +168,7 @@ const RestaurantCard = ({ restaurant, view = 'grid', index }) => {
             className="group bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-lg 
                      transition-all duration-300 overflow-hidden"
         >
-            <Link 
+            <Link
                 href={`/restaurants/${restaurant.slug}`}
                 className="flex items-start space-x-4 p-4"
             >
@@ -254,7 +255,7 @@ const RestaurantCard = ({ restaurant, view = 'grid', index }) => {
 };
 
 const EmptyState = () => (
-    <motion.div 
+    <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="text-center py-16"
@@ -276,13 +277,13 @@ const RestaurantGrid = ({ restaurants, view, searchQuery, activeFilters }) => {
 
     useEffect(() => {
         setIsLoading(true);
-        
+
         // Simulate API delay
         const timer = setTimeout(() => {
             const filtered = restaurants?.filter(restaurant => {
                 if (searchQuery) {
                     const query = searchQuery.toLowerCase();
-                    if (!restaurant.name.toLowerCase().includes(query) && 
+                    if (!restaurant.name.toLowerCase().includes(query) &&
                         !restaurant.categories.some(cat => cat.toLowerCase().includes(query))) {
                         return false;
                     }
@@ -346,8 +347,8 @@ const RestaurantGrid = ({ restaurants, view, searchQuery, activeFilters }) => {
 
             <div className={cn(
                 "grid gap-6",
-                view === 'grid' 
-                    ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2" 
+                view === 'grid'
+                    ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2"
                     : "grid-cols-1"
             )}>
                 <AnimatePresence mode="wait">

@@ -574,7 +574,7 @@ final class HomeService extends BaseService
             ],
             [
                 'id' => 6,
-                'name' => 'Indian Curry House',
+                'name' => 'Indian Curry House getFeaturedRestaurantsOld',
                 'slug' => 'indian-curry-house',
                 'image' => '/images/restaurants/indian-curry.jpg',
                 'rating' => 4.6,

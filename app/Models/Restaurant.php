@@ -98,4 +98,134 @@ final class Restaurant extends Model
     {
         return $this->hasMany(KitchenStaffInquiry::class);
     }
+
+    // reviews
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    // Accessors for dynamic properties
+    public function getIsOpenAttribute(): bool
+    {
+        if (!$this->opening_hours) {
+            return false;
+        }
+
+        $currentDay = strtolower(now()->format('l')); // monday, tuesday, etc.
+        $currentTime = now()->format('H:i');
+
+        $todayHours = $this->opening_hours[$currentDay] ?? null;
+
+        if (!$todayHours || $todayHours === null) {
+            return false;
+        }
+
+        $openTime = $todayHours['open'] ?? null;
+        $closeTime = $todayHours['close'] ?? null;
+
+        if (!$openTime || !$closeTime) {
+            return false;
+        }
+
+        return $currentTime >= $openTime && $currentTime <= $closeTime;
+    }
+
+    public function getRatingAttribute(): float
+    {
+        return round($this->reviews()->avg('rating') ?? 0, 1);
+    }
+
+    public function getTotalReviewsAttribute(): int
+    {
+        return $this->reviews()->count();
+    }
+
+    public function getCategoriesAttribute(): array
+    {
+        if ($this->relationLoaded('cuisineTypes')) {
+            return $this->cuisineTypes->pluck('name')->toArray();
+        }
+        
+        return $this->cuisineTypes()->pluck('name')->toArray();
+    }
+
+    public function getPriceRangeDisplayAttribute(): string
+    {
+        return $this->attributes['price_range'] ?? '$$';
+    }
+
+    public function getLogoUrlAttribute(): string
+    {
+        if ($this->relationLoaded('files')) {
+            $logoFile = $this->files->where('collection', 'logo')->first();
+            return $logoFile ? asset('storage/' . $logoFile->path) : '/images/restaurants/default.jpg';
+        }
+
+        $logoFile = $this->files()->where('collection', 'logo')->first();
+        return $logoFile ? asset('storage/' . $logoFile->path) : '/images/restaurants/default.jpg';
+    }
+
+    public function getCoverImageUrlAttribute(): string
+    {
+        if ($this->relationLoaded('files')) {
+            $bannerFile = $this->files->where('collection', 'banner')->first();
+            return $bannerFile ? asset('storage/' . $bannerFile->path) : '/images/restaurants/default.jpg';
+        }
+
+        $bannerFile = $this->files()->where('collection', 'banner')->first();
+        return $bannerFile ? asset('storage/' . $bannerFile->path) : '/images/restaurants/default.jpg';
+    }
+
+    // Method to calculate distance (can be called from controller)
+    public function calculateDistanceFrom(?float $userLat, ?float $userLng): float
+    {
+        // Check if user coordinates are valid
+        if ($userLat === null || $userLng === null) {
+            return 0.0;
+        }
+        
+        // Check if restaurant coordinates are valid
+        if ($this->latitude === null || $this->longitude === null) {
+            return 0.0;
+        }
+
+        // Ensure coordinates are floats
+        $userLat = (float) $userLat;
+        $userLng = (float) $userLng;
+        $restaurantLat = (float) $this->latitude;
+        $restaurantLng = (float) $this->longitude;
+
+        $earthRadius = 6371; // Earth's radius in kilometers
+
+        $latDelta = deg2rad($restaurantLat - $userLat);
+        $lngDelta = deg2rad($restaurantLng - $userLng);
+
+        $a = sin($latDelta / 2) * sin($latDelta / 2) +
+            cos(deg2rad($userLat)) * cos(deg2rad($restaurantLat)) *
+            sin($lngDelta / 2) * sin($lngDelta / 2);
+
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+        $distance = $earthRadius * $c;
+
+        return round($distance, 1);
+    }
+
+    // Scope for open restaurants
+    public function scopeOpen($query)
+    {
+        return $query->whereRaw('JSON_EXTRACT(opening_hours, CONCAT("$.", LOWER(DAYNAME(NOW())))) IS NOT NULL');
+    }
+
+    // Scope for featured restaurants
+    public function scopeFeatured($query)
+    {
+        return $query->where('is_featured', true);
+    }
+
+    // Scope for active restaurants
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
 }

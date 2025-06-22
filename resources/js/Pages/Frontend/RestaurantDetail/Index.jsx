@@ -108,7 +108,7 @@ const Index = ({
                     onValueChange={setActiveTab}
                     className="mt-8"
                 >
-                    <div className="border-b border-gray-200 dark:border-gray-800 sticky top-16 bg-white dark:bg-gray-900 z-20 pb-0">
+                    <div className="border-b border-gray-200 dark:border-gray-800 top-16 bg-white dark:bg-gray-900 z-20 pb-0">
                         <div className="container mx-auto px-4">
                             <TabsList className="h-12 bg-transparent rounded-none -mb-px space-x-8">
                                 <TabsTrigger

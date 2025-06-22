@@ -1,9 +1,9 @@
 import React, { useCallback } from "react";
 import { useForm } from '@inertiajs/react';
 import StatsCard from "@/Components/Admin/StatsCard";
-import { 
-    Store, Clock, Truck, DollarSign, Users, Star, 
-    TrendingUp, ShoppingBag, Utensils, MapPin 
+import {
+    Store, Clock, Truck, DollarSign, Users, Star,
+    TrendingUp, ShoppingBag, Utensils, MapPin
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
 import {
@@ -59,29 +59,6 @@ const RestaurantStats = ({ stats = {}, filters = { range: '30', ranges: [] } }) 
 
     return (
         <div className="space-y-6">
-            {/* Time Range Selector */}
-            <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                    Restaurant Statistics
-                </h2>
-                <Select
-                    value={data.range}
-                    onValueChange={handleRangeChange}
-                    disabled={processing}
-                >
-                    <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Select time range" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {filters.ranges?.map((range) => (
-                            <SelectItem key={range.value} value={range.value}>
-                                {range.label}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
-
             {/* Primary Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatsCard
@@ -119,7 +96,7 @@ const RestaurantStats = ({ stats = {}, filters = { range: '30', ranges: [] } }) 
             </div>
 
             {/* Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
                 {/* Revenue Chart */}
                 <Card>
                     <CardHeader>
@@ -132,19 +109,19 @@ const RestaurantStats = ({ stats = {}, filters = { range: '30', ranges: [] } }) 
                                     <AreaChart data={currentStats.revenueChart}>
                                         <defs>
                                             <linearGradient id="revenue" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
-                                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
+                                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                                             </linearGradient>
                                         </defs>
                                         <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis 
-                                            dataKey="date" 
+                                        <XAxis
+                                            dataKey="date"
                                             tickFormatter={(value) => new Date(value).toLocaleDateString()}
                                         />
-                                        <YAxis 
+                                        <YAxis
                                             tickFormatter={formatCurrency}
                                         />
-                                        <Tooltip 
+                                        <Tooltip
                                             formatter={(value) => formatCurrency(value)}
                                             labelFormatter={(label) => new Date(label).toLocaleDateString()}
                                         />
@@ -178,7 +155,7 @@ const RestaurantStats = ({ stats = {}, filters = { range: '30', ranges: [] } }) 
                                 <ResponsiveContainer width="100%" height="100%">
                                     <LineChart data={currentStats.orderChart}>
                                         <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis 
+                                        <XAxis
                                             dataKey="date"
                                             tickFormatter={(value) => new Date(value).toLocaleDateString()}
                                         />

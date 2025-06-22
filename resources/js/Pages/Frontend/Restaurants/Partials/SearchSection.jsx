@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-    Search, 
-    Grid, 
+import {
+    Search,
+    Grid,
     LayoutList,
     MapPin,
     X,
@@ -94,8 +94,8 @@ const SearchSection = ({ searchQuery, setSearchQuery, view, setView }) => {
     // Handle click outside
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (searchRef.current && 
-                !searchRef.current.contains(event.target) && 
+            if (searchRef.current &&
+                !searchRef.current.contains(event.target) &&
                 !popoverRef.current?.contains(event.target)) {
                 setIsSearchOpen(false);
             }
@@ -112,7 +112,7 @@ const SearchSection = ({ searchQuery, setSearchQuery, view, setView }) => {
     // Handle search input focus
     const handleSearchFocus = () => {
         setSearchFocused(true);
-        setIsSearchOpen(true);
+        setIsSearchOpen(false);
     };
 
     // Handle search selection
@@ -129,7 +129,7 @@ const SearchSection = ({ searchQuery, setSearchQuery, view, setView }) => {
         if (debouncedSearch) {
             // Simulate API call for suggestions
             const results = popularCuisines
-                .filter(cuisine => 
+                .filter(cuisine =>
                     cuisine.name.toLowerCase().includes(debouncedSearch.toLowerCase())
                 )
                 .map(cuisine => ({
@@ -187,7 +187,7 @@ const SearchSection = ({ searchQuery, setSearchQuery, view, setView }) => {
                     <h3 className="text-sm font-medium mb-3">Popular Areas</h3>
                     <div className="space-y-2">
                         {[
-                            { 
+                            {
                                 name: 'Manhattan, NY',
                                 area: 'New York City',
                                 restaurants: '234',
@@ -196,7 +196,7 @@ const SearchSection = ({ searchQuery, setSearchQuery, view, setView }) => {
                                 badge: 'Popular',
                                 badgeColor: 'text-orange-600 bg-orange-50'
                             },
-                            { 
+                            {
                                 name: 'Brooklyn, NY',
                                 area: 'New York City',
                                 restaurants: '156',
@@ -245,7 +245,7 @@ const SearchSection = ({ searchQuery, setSearchQuery, view, setView }) => {
                                                     )}
                                                 </div>
                                             </div>
-                                            
+
                                             <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
                                                 <span>{item.restaurants} restaurants</span>
                                                 <span className="w-1 h-1 rounded-full bg-gray-300" />
@@ -306,8 +306,8 @@ const SearchSection = ({ searchQuery, setSearchQuery, view, setView }) => {
             return (
                 <Sheet open={isLocationOpen} onOpenChange={setIsLocationOpen}>
                     <SheetTrigger asChild>
-                        <Button 
-                            variant="outline" 
+                        <Button
+                            variant="outline"
                             className="w-full flex items-center gap-3 h-[52px] rounded-full
                                    border border-gray-200 dark:border-gray-700
                                    bg-white dark:bg-gray-800 px-4"
@@ -320,8 +320,8 @@ const SearchSection = ({ searchQuery, setSearchQuery, view, setView }) => {
                             <ChevronDown className="w-4 h-4 text-gray-400" />
                         </Button>
                     </SheetTrigger>
-                    <SheetContent 
-                        side="bottom" 
+                    <SheetContent
+                        side="bottom"
                         className="h-[85vh] p-0 rounded-t-[1.5rem]"
                     >
                         <LocationContent />
@@ -333,8 +333,8 @@ const SearchSection = ({ searchQuery, setSearchQuery, view, setView }) => {
         return (
             <Popover open={isLocationOpen} onOpenChange={setIsLocationOpen}>
                 <PopoverTrigger asChild>
-                    <Button 
-                        variant="outline" 
+                    <Button
+                        variant="outline"
                         className={cn(
                             "w-full md:w-auto flex items-center space-x-2 py-6 rounded-xl border-2",
                             "hover:border-primary/50 transition-all duration-300",
@@ -361,8 +361,8 @@ const SearchSection = ({ searchQuery, setSearchQuery, view, setView }) => {
                         )} />
                     </Button>
                 </PopoverTrigger>
-                <PopoverContent 
-                    className="w-[400px] p-0" 
+                <PopoverContent
+                    className="w-[400px] p-0"
                     align="start"
                     sideOffset={5}
                 >
@@ -373,10 +373,10 @@ const SearchSection = ({ searchQuery, setSearchQuery, view, setView }) => {
     };
 
     return (
-        <motion.div 
+        <motion.div
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="sticky top-20 z-40 bg-white dark:bg-gray-900 shadow-sm"
+            className="top-20 z-40 bg-white dark:bg-gray-900 shadow-sm"
         >
             <div className="container mx-auto">
                 <div className="p-4">
@@ -407,7 +407,7 @@ const SearchSection = ({ searchQuery, setSearchQuery, view, setView }) => {
                                                h-8 w-8 hover:bg-transparent"
                                         onClick={() => {
                                             setSearchQuery('');
-                                            setIsSearchOpen(true);
+                                            setIsSearchOpen(false);
                                         }}
                                     >
                                         <X className="w-4 h-4" />
@@ -510,7 +510,7 @@ const SearchSection = ({ searchQuery, setSearchQuery, view, setView }) => {
                         </div>
 
                         {/* Enhanced Location Selector */}
-                        <LocationSelector />
+                        {/* <LocationSelector /> */}
 
                         {/* View Toggle */}
                         <div className="hidden md:flex items-center p-1 bg-gray-100 
@@ -542,13 +542,11 @@ const SearchSection = ({ searchQuery, setSearchQuery, view, setView }) => {
                 </div>
 
                 {/* Enhanced Quick Filters with Better Mobile Support */}
-                <div className="px-4 pb-4 overflow-x-auto scrollbar-hide">
+                <div className="px-4 pb-4 overflow-x-auto scrollbar-hide hidden">
                     <div className="flex items-center gap-2 min-w-max">
                         {quickFilters.map((filter) => (
                             <motion.div
                                 key={filter.label}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
                             >
                                 <Button
                                     variant="outline"
