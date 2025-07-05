@@ -1,10 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Modules\Frontend\Http\Controllers\FrontendController;
-use Inertia\Inertia;
 
-use App\Http\Controllers\Frontend\{
+use Modules\Frontend\Http\Controllers\{
     HomeController,
     MenuController,
     OfferController,
@@ -24,12 +22,7 @@ use App\Http\Controllers\Frontend\{
     ShopController
 };
 
-use App\Http\Controllers\Frontend\RestaurantController as FrontendRestaurantController;
-
-
-Route::get('/test', function () {
-    return Inertia::module('Frontend::Index');
-});
+use Modules\Frontend\Http\Controllers\RestaurantController;
 
 // Frontend Routes
 Route::name('frontend.')->group(function () {
@@ -92,7 +85,7 @@ Route::name('frontend.')->group(function () {
     Route::post('/support/ticket', [SupportController::class, 'submitTicket'])->name('support.ticket');
     Route::post('/support/chat', [SupportController::class, 'startChat'])->name('support.chat');
     
-    Route::get('/restaurant/{restaurant}', [FrontendRestaurantController::class, 'show'])->name('restaurant.single');
+    Route::get('/restaurant/{restaurant}', [RestaurantController::class, 'show'])->name('restaurant.single');
     Route::get('/blogs', [PageController::class, 'blogs'])->name('blogs');
     Route::get('/blog/{slug}', [PageController::class, 'blogSingle'])->name('blog.single');
     
