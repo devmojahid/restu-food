@@ -10,6 +10,8 @@ use App\Models\Currency;
 use App\Observers\CurrencyObserver;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Console\Commands\MakeModulePageCommand;
+use App\Support\InertiaModules;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -18,7 +20,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Register InertiaModules as a singleton
+        $this->app->singleton(InertiaModules::class, function ($app) {
+            return new InertiaModules();
+        });
+        
+        // Register the make-module-page command
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                MakeModulePageCommand::class,
+            ]);
+        }
     }
 
     /**
@@ -26,6 +38,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        InertiaModules::registerMacros();
+
         URL::forceScheme('https');
         // Share errors with all views
         Inertia::share([
