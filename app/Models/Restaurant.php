@@ -102,7 +102,7 @@ final class Restaurant extends Model
     // reviews
     public function reviews(): HasMany
     {
-        return $this->hasMany(Review::class);
+        return $this->hasMany(Review::class)->where('restaurant_id', $this->id);
     }
 
     // Accessors for dynamic properties
@@ -141,14 +141,14 @@ final class Restaurant extends Model
         return $this->reviews()->count();
     }
 
-    public function getCategoriesAttribute(): array
-    {
-        if ($this->relationLoaded('cuisineTypes')) {
-            return $this->cuisineTypes->pluck('name')->toArray();
-        }
+    // public function getCategoriesAttribute(): array
+    // {
+    //     if ($this->relationLoaded('cuisineTypes')) {
+    //         return $this->cuisineTypes->pluck('name')->toArray();
+    //     }
         
-        return $this->cuisineTypes()->pluck('name')->toArray();
-    }
+    //     return $this->cuisineTypes()->pluck('name')->toArray();
+    // }
 
     public function getPriceRangeDisplayAttribute(): string
     {
@@ -228,4 +228,10 @@ final class Restaurant extends Model
     {
         return $query->where('status', 'active');
     }
+
+    // public function cuisineTypes()
+    // {
+    //     // return $this->hasMany(CuisineType::class);
+    //     return [];
+    // }
 }

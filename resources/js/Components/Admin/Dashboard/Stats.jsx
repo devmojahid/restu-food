@@ -1,9 +1,9 @@
 import React from 'react';
 import { Card } from '@/Components/ui/card';
-import { 
-  DollarSign, 
-  ShoppingBag, 
-  Users, 
+import {
+  DollarSign,
+  ShoppingBag,
+  Users,
   TrendingUp,
   TrendingDown,
   Activity
@@ -31,12 +31,11 @@ const DashboardStats = ({ stats }) => {
         return (
           <Card key={key} className="p-6">
             <div className="flex items-center justify-between">
-              <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                key === 'total_revenue' ? 'bg-blue-50 text-blue-600' :
-                key === 'total_orders' ? 'bg-green-50 text-green-600' :
-                key === 'active_customers' ? 'bg-purple-50 text-purple-600' :
-                'bg-orange-50 text-orange-600'
-              }`}>
+              <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${key === 'total_revenue' ? 'bg-blue-50 text-blue-600' :
+                  key === 'total_orders' ? 'bg-green-50 text-green-600' :
+                    key === 'active_customers' ? 'bg-purple-50 text-purple-600' :
+                      'bg-orange-50 text-orange-600'
+                }`}>
                 <Icon className="w-6 h-6" />
               </div>
               <div className="flex items-center space-x-1">
@@ -45,9 +44,8 @@ const DashboardStats = ({ stats }) => {
                 ) : (
                   <TrendingDown className="w-4 h-4 text-red-500" />
                 )}
-                <span className={`text-sm font-medium ${
-                  isPositiveGrowth ? 'text-green-500' : 'text-red-500'
-                }`}>
+                <span className={`text-sm font-medium ${isPositiveGrowth ? 'text-green-500' : 'text-red-500'
+                  }`}>
                   {isPositiveGrowth ? '+' : ''}{stat.growth}%
                 </span>
               </div>
