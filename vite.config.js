@@ -2,8 +2,12 @@ import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import mkcert from 'vite-plugin-mkcert';
 import collectModuleAssetsPaths from './vite-module-loader.js';
+
+// Get __dirname equivalent for ES modules
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const host = 'restu-food.test';
 // const host = 'localhost';
@@ -28,7 +32,7 @@ async function getConfig() {
         resolve: {
             alias: {
                 '@': path.resolve(__dirname, './resources/js'),
-                'ziggy-js': resolve(__dirname, 'vendor/tightenco/ziggy'),
+                'ziggy-js': path.resolve(__dirname, 'vendor/tightenco/ziggy'),
             },
         },
         optimizeDeps: {

@@ -39,13 +39,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Admin\DeliveryLocationController;
 use App\Http\Controllers\DeliveryTrackingController;
-use App\Http\Controllers\Frontend\RestaurantController as FrontendRestaurantController;
-use App\Http\Controllers\Frontend\OrderTrackingController;
-use App\Http\Controllers\Frontend\LegalController;
-use App\Http\Controllers\Frontend\RewardsController;
-use App\Http\Controllers\Frontend\FoodMenu2Controller;
-use App\Http\Controllers\Frontend\ElectronicsController;
-use App\Http\Controllers\Frontend\ShopController;
+
 
 /*
 |--------------------------------------------------------------------------
