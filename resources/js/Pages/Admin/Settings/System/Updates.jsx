@@ -8,7 +8,7 @@ import { Progress } from "@/Components/ui/progress";
 import { Badge } from "@/Components/ui/badge";
 import { ScrollArea } from "@/Components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/Components/ui/dialog";
-import { FileUploader } from "@/Components/Admin/Filesystem/FileUploader";
+import FileUploader from "@/Components/Admin/Filesystem/FileUploader";
 import {
   Download,
   Upload,
@@ -30,30 +30,30 @@ import {
 import { useToast } from "@/Components/ui/use-toast";
 import { cn } from "@/lib/utils";
 
-const UpdateStep = ({ 
-  title, 
-  description, 
-  icon: Icon, 
-  status, 
-  progress, 
+const UpdateStep = ({
+  title,
+  description,
+  icon: Icon,
+  status,
+  progress,
   onRun,
-  isRunning 
+  isRunning
 }) => {
   return (
     <div className="flex items-start gap-4 p-4 border rounded-lg bg-card">
       <div className={cn(
         "p-2 rounded-full",
         status === 'completed' ? 'bg-green-100' :
-        status === 'failed' ? 'bg-red-100' :
-        status === 'running' ? 'bg-blue-100' :
-        'bg-gray-100'
+          status === 'failed' ? 'bg-red-100' :
+            status === 'running' ? 'bg-blue-100' :
+              'bg-gray-100'
       )}>
         <Icon className={cn(
           "h-5 w-5",
           status === 'completed' ? 'text-green-600' :
-          status === 'failed' ? 'text-red-600' :
-          status === 'running' ? 'text-blue-600' :
-          'text-gray-600'
+            status === 'failed' ? 'text-red-600' :
+              status === 'running' ? 'text-blue-600' :
+                'text-gray-600'
         )} />
       </div>
       <div className="flex-1 space-y-2">
@@ -63,7 +63,7 @@ const UpdateStep = ({
             <p className="text-sm text-muted-foreground">{description}</p>
           </div>
           {status !== 'completed' && (
-            <Button 
+            <Button
               variant={status === 'failed' ? "destructive" : "secondary"}
               size="sm"
               onClick={onRun}
@@ -388,7 +388,7 @@ const SystemUpdates = ({ currentVersion, latestVersion, changelog, updateInfo })
             {/* Manual Update Options */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Manual Update</h3>
-              
+
               {/* Upload Update Package */}
               <div className="p-4 border rounded-lg bg-muted/50 space-y-4">
                 <div className="flex items-center justify-between">
@@ -478,7 +478,7 @@ const SystemUpdates = ({ currentVersion, latestVersion, changelog, updateInfo })
                 <p className="font-medium">Required Extensions</p>
                 <div className="grid grid-cols-2 gap-2">
                   {updateInfo.requirements.extensions.map((ext) => (
-                    <div 
+                    <div
                       key={ext.name}
                       className="flex items-center justify-between p-2 border rounded"
                     >
@@ -496,7 +496,7 @@ const SystemUpdates = ({ currentVersion, latestVersion, changelog, updateInfo })
                 <p className="font-medium">Directory Permissions</p>
                 <div className="grid grid-cols-2 gap-2">
                   {updateInfo.requirements.directories.map((dir) => (
-                    <div 
+                    <div
                       key={dir.path}
                       className="flex items-center justify-between p-2 border rounded"
                     >

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, ThumbsUp, Image as ImageIcon, Filter, ChevronDown, MessageSquareOff } from 'lucide-react';
+import { Star, ThumbsUp, Image as ImageIcon, Filter, ChevronDown, MessageSquare } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Progress } from '@/Components/ui/progress';
 import {
@@ -26,7 +26,7 @@ const ReviewsSection = ({ reviews = [] }) => {
     // Calculate review statistics safely
     const stats = {
         total: reviewsList.length,
-        average: reviewsList.length > 0 
+        average: reviewsList.length > 0
             ? (reviewsList.reduce((acc, review) => acc + (review?.rating || 0), 0) / reviewsList.length).toFixed(1)
             : '0.0',
         ratings: {
@@ -71,13 +71,13 @@ const ReviewsSection = ({ reviews = [] }) => {
                         Reviews
                     </h2>
                     <NoData
-                        icon={MessageSquareOff}
+                        icon={MessageSquare}
                         title="No Reviews Yet"
                         description="Be the first one to review this restaurant and help others make their choice!"
                     >
-                        <Button 
+                        <Button
                             variant="default"
-                            onClick={() => {/* Add your review logic */}}
+                            onClick={() => {/* Add your review logic */ }}
                         >
                             Write a Review
                         </Button>

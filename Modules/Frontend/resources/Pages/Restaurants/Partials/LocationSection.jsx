@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Clock, Navigation2, Phone, Globe, Mail, MapOff } from 'lucide-react';
+import { MapPin, Clock, Navigation2, Phone, Globe, Mail, MapPinOff } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { cn } from '@/lib/utils';
 import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
@@ -44,12 +44,12 @@ const LocationSection = ({ location = {} }) => {
                         Location & Contact
                     </h2>
                     <NoData
-                        icon={MapOff}
+                        icon={MapPinOff}
                         title="Location Not Available"
                         description="The location information for this restaurant is currently unavailable. Please check back later."
                     >
-                        <Button 
-                            variant="outline" 
+                        <Button
+                            variant="outline"
                             onClick={() => window.history.back()}
                         >
                             Go Back
@@ -109,8 +109,8 @@ const LocationSection = ({ location = {} }) => {
                                 <p className="text-gray-600 dark:text-gray-400">
                                     {address.formatted || 'Address not available'}
                                 </p>
-                                <Button 
-                                    variant="link" 
+                                <Button
+                                    variant="link"
                                     className="px-0 text-primary"
                                     onClick={() => {
                                         if (coordinates.lat && coordinates.lng) {
@@ -139,7 +139,7 @@ const LocationSection = ({ location = {} }) => {
                                             <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
                                                 Phone
                                             </h3>
-                                            <a 
+                                            <a
                                                 href={`tel:${contact.phone}`}
                                                 className="text-gray-600 dark:text-gray-400 hover:text-primary"
                                             >
@@ -158,7 +158,7 @@ const LocationSection = ({ location = {} }) => {
                                             <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
                                                 Email
                                             </h3>
-                                            <a 
+                                            <a
                                                 href={`mailto:${contact.email}`}
                                                 className="text-gray-600 dark:text-gray-400 hover:text-primary"
                                             >
@@ -177,7 +177,7 @@ const LocationSection = ({ location = {} }) => {
                                             <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
                                                 Website
                                             </h3>
-                                            <a 
+                                            <a
                                                 href={contact.website}
                                                 target="_blank"
                                                 rel="noopener noreferrer"

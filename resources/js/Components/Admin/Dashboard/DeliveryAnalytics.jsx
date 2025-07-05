@@ -17,12 +17,12 @@ import {
   AreaChart
 } from 'recharts';
 import { format } from 'date-fns';
-import { 
-  TrendingUp, 
-  Clock, 
+import {
+  TrendingUp,
+  Clock,
   Bike,
   DollarSign,
-  Route,
+  MapPinOff,
   Star
 } from 'lucide-react';
 
@@ -42,17 +42,17 @@ const DeliveryAnalytics = ({ data, timeRange, onTimeRangeChange }) => {
           </p>
           {payload.map((entry, index) => (
             <div key={index} className="flex items-center space-x-2 text-sm">
-              <div 
+              <div
                 className="w-3 h-3 rounded-full"
                 style={{ backgroundColor: entry.color }}
               />
               <span className="text-gray-600 dark:text-gray-400">
                 {entry.name}: {
-                  entry.name.includes('Time') 
+                  entry.name.includes('Time')
                     ? formatTime(entry.value)
-                    : entry.name.includes('Earnings') 
-                    ? `$${entry.value}`
-                    : entry.value
+                    : entry.name.includes('Earnings')
+                      ? `$${entry.value}`
+                      : entry.value
                 }
               </span>
             </div>
@@ -66,16 +66,16 @@ const DeliveryAnalytics = ({ data, timeRange, onTimeRangeChange }) => {
   const gradients = (
     <defs>
       <linearGradient id="colorDeliveries" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
-        <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
+        <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
+        <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
       </linearGradient>
       <linearGradient id="colorEarnings" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8}/>
-        <stop offset="95%" stopColor="#82ca9d" stopOpacity={0}/>
+        <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8} />
+        <stop offset="95%" stopColor="#82ca9d" stopOpacity={0} />
       </linearGradient>
       <linearGradient id="colorTime" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="5%" stopColor="#ffc658" stopOpacity={0.8}/>
-        <stop offset="95%" stopColor="#ffc658" stopOpacity={0}/>
+        <stop offset="5%" stopColor="#ffc658" stopOpacity={0.8} />
+        <stop offset="95%" stopColor="#ffc658" stopOpacity={0} />
       </linearGradient>
     </defs>
   );
@@ -114,18 +114,18 @@ const DeliveryAnalytics = ({ data, timeRange, onTimeRangeChange }) => {
           <ComposedChart data={data?.performance}>
             {gradients}
             <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-            <XAxis 
-              dataKey="time" 
+            <XAxis
+              dataKey="time"
               tickFormatter={(time) => format(new Date(time), 'HH:mm')}
               stroke="#888888"
             />
-            <YAxis 
-              yAxisId="left" 
+            <YAxis
+              yAxisId="left"
               stroke="#888888"
             />
-            <YAxis 
-              yAxisId="right" 
-              orientation="right" 
+            <YAxis
+              yAxisId="right"
+              orientation="right"
               stroke="#888888"
             />
             <Tooltip content={<CustomTooltip />} />
@@ -160,12 +160,12 @@ const DeliveryAnalytics = ({ data, timeRange, onTimeRangeChange }) => {
           <AreaChart data={data?.timing}>
             {gradients}
             <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-            <XAxis 
-              dataKey="time" 
+            <XAxis
+              dataKey="time"
               tickFormatter={(time) => format(new Date(time), 'HH:mm')}
               stroke="#888888"
             />
-            <YAxis 
+            <YAxis
               tickFormatter={(value) => `${value}m`}
               stroke="#888888"
             />
@@ -216,9 +216,8 @@ const MetricCard = ({ title, value, icon: Icon, trend, change }) => (
   <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
     <div className="flex items-center justify-between mb-2">
       <Icon className="w-5 h-5 text-gray-400" />
-      <span className={`text-sm ${
-        trend === 'up' ? 'text-green-600' : 'text-red-600'
-      }`}>
+      <span className={`text-sm ${trend === 'up' ? 'text-green-600' : 'text-red-600'
+        }`}>
         {change}
       </span>
     </div>

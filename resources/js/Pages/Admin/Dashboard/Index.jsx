@@ -4,13 +4,13 @@ import { Head } from '@inertiajs/react';
 import DashboardStats from '@/Components/Admin/Dashboard/DashboardStats';
 import RevenueChart from '@/Components/Admin/Dashboard/RevenueChart';
 import OrdersOverview from '@/Components/Admin/Dashboard/OrdersOverview';
-import LiveOrders from '@/Components/Admin/Dashboard/LiveOrders';
-import RestaurantPerformance from '@/Components/Admin/Dashboard/RestaurantPerformance';
+// import LiveOrders from '@/Components/Admin/Dashboard/LiveOrders';
+// import RestaurantPerformance from '@/Components/Admin/Dashboard/RestaurantPerformance';
 import CustomerInsights from '@/Components/Admin/Dashboard/CustomerInsights';
-import DeliveryMetrics from '@/Components/Admin/Dashboard/DeliveryMetrics';
+// import DeliveryMetrics from '@/Components/Admin/Dashboard/DeliveryMetrics';
 import { Card } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
-import { 
+import {
   Calendar,
   BarChart3,
   TrendingUp,
@@ -74,8 +74,8 @@ const AdminDashboard = ({ dashboardData = {}, userRole, permissions }) => {
             </p>
           </div>
           <div className="flex items-center space-x-4">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={handleRefresh}
               className="flex items-center"
               disabled={isRefreshing}
@@ -83,9 +83,9 @@ const AdminDashboard = ({ dashboardData = {}, userRole, permissions }) => {
               <RefreshCcw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
-            <Button 
+            <Button
               variant="outline"
-              onClick={() => {/* Add export logic */}}
+              onClick={() => {/* Add export logic */ }}
             >
               <Download className="w-4 h-4 mr-2" />
               Export
@@ -164,17 +164,17 @@ const AdminDashboard = ({ dashboardData = {}, userRole, permissions }) => {
           </Card>
 
           {/* Live Orders */}
-          <Card>
+          {/* <Card>
             <LiveOrders orders={stats.live_orders} />
-          </Card>
+          </Card> */}
         </div>
 
         {/* Restaurant & Customer Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Restaurant Performance */}
-          <Card className="lg:col-span-2">
+          {/* <Card className="lg:col-span-2">
             <RestaurantPerformance data={stats.restaurant_performance} />
-          </Card>
+          </Card> */}
 
           {/* Customer Insights */}
           <Card>
@@ -184,7 +184,7 @@ const AdminDashboard = ({ dashboardData = {}, userRole, permissions }) => {
 
         {/* Delivery Metrics */}
         <Card>
-          <DeliveryMetrics data={stats.delivery_metrics} timeRange={timeRange} />
+          {/* <DeliveryMetrics data={stats.delivery_metrics} timeRange={timeRange} /> */}
         </Card>
       </div>
     </AdminLayout>

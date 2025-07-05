@@ -1,11 +1,11 @@
 import React from "react";
 import { Head, router } from "@inertiajs/react";
 import AdminLayout from "@/Layouts/Admin/AdminLayout";
-import { 
-  Home, Store, FileText, MapPin, Phone, Mail, Clock, 
+import {
+  Home, Store, FileText, MapPin, Phone, Mail, Clock,
   DollarSign, User, Building2, CreditCard, CheckCircle2,
   XCircle, AlertCircle, Calendar, Image, FileType,
-  Truck, Utensils, MapPinned, History, Settings,
+  Truck, Utensils, MapPinOff, History, Settings,
   CreditCard as PaymentIcon, Receipt, ClipboardList,
   ShieldCheck, Users, MessageSquare
 } from "lucide-react";
@@ -116,8 +116,8 @@ const DocumentPreview = ({ file }) => {
       <CardContent className="p-4">
         <div className="aspect-square rounded-lg bg-muted flex items-center justify-center mb-3 overflow-hidden">
           {isImage ? (
-            <img 
-              src={file.url} 
+            <img
+              src={file.url}
               alt={file.name}
               className="w-full h-full object-cover"
             />
@@ -128,9 +128,9 @@ const DocumentPreview = ({ file }) => {
         <p className="text-sm font-medium truncate">{file.name}</p>
         <p className="text-xs text-muted-foreground">{fileSize}</p>
         <div className="mt-2 flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="w-full"
             onClick={() => window.open(file.url, '_blank')}
           >
@@ -191,7 +191,7 @@ const ApplicationDetails = ({ application }) => {
     { id: "documents", label: "Documents", icon: FileType },
     { id: "delivery", label: "Delivery", icon: Truck },
     { id: "menu", label: "Menu", icon: Utensils },
-    { id: "location", label: "Location", icon: MapPinned },
+    { id: "location", label: "Location", icon: MapPinOff },
     { id: "history", label: "History", icon: History },
     { id: "settings", label: "Settings", icon: Settings },
   ];
@@ -200,7 +200,7 @@ const ApplicationDetails = ({ application }) => {
     try {
       setIsSubmitting(true);
       await router.post(route("app.restaurants.applications.approve", application.id));
-      
+
       toast({
         title: "Success",
         description: "Application approved successfully",
@@ -223,10 +223,10 @@ const ApplicationDetails = ({ application }) => {
       await router.post(route("app.restaurants.applications.reject", application.id), {
         reason: rejectionReason
       });
-      
+
       setRejectionDialog(false);
       setRejectionReason("");
-      
+
       toast({
         title: "Success",
         description: "Application rejected successfully",
@@ -303,10 +303,10 @@ const ApplicationDetails = ({ application }) => {
         {/* Tab Navigation */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           {/* Mobile Tab Navigation */}
-          <MobileTabSelect 
-            tabs={tabs} 
-            activeTab={activeTab} 
-            onTabChange={setActiveTab} 
+          <MobileTabSelect
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
           />
 
           {/* Desktop/Tablet Scrollable Tabs */}
@@ -336,7 +336,7 @@ const ApplicationDetails = ({ application }) => {
                   </TabsTrigger>
                 ))}
               </TabsList>
-              
+
               {/* Fade Indicators */}
               <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent pointer-events-none" />
               <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent pointer-events-none" />
@@ -355,24 +355,24 @@ const ApplicationDetails = ({ application }) => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 md:p-6">
-                  <InfoItem 
-                    icon={Store} 
-                    label="Restaurant Name" 
+                  <InfoItem
+                    icon={Store}
+                    label="Restaurant Name"
                     value={application.restaurant_name}
                   />
-                  <InfoItem 
-                    icon={Mail} 
-                    label="Email" 
+                  <InfoItem
+                    icon={Mail}
+                    label="Email"
                     value={application.restaurant_email}
                   />
-                  <InfoItem 
-                    icon={Phone} 
-                    label="Phone" 
+                  <InfoItem
+                    icon={Phone}
+                    label="Phone"
                     value={application.restaurant_phone}
                   />
-                  <InfoItem 
-                    icon={Utensils} 
-                    label="Cuisine Type" 
+                  <InfoItem
+                    icon={Utensils}
+                    label="Cuisine Type"
                     value={application.cuisine_type}
                   />
                 </CardContent>
@@ -387,24 +387,24 @@ const ApplicationDetails = ({ application }) => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 md:p-6">
-                  <InfoItem 
-                    icon={User} 
-                    label="Owner Name" 
+                  <InfoItem
+                    icon={User}
+                    label="Owner Name"
                     value={application.owner_name}
                   />
-                  <InfoItem 
-                    icon={Mail} 
-                    label="Owner Email" 
+                  <InfoItem
+                    icon={Mail}
+                    label="Owner Email"
                     value={application.owner_email}
                   />
-                  <InfoItem 
-                    icon={Phone} 
-                    label="Owner Phone" 
+                  <InfoItem
+                    icon={Phone}
+                    label="Owner Phone"
                     value={application.owner_phone}
                   />
-                  <InfoItem 
-                    icon={FileText} 
-                    label="ID Type" 
+                  <InfoItem
+                    icon={FileText}
+                    label="ID Type"
                     value={application.owner_id_type}
                   />
                 </CardContent>
@@ -419,24 +419,24 @@ const ApplicationDetails = ({ application }) => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 md:p-6">
-                  <InfoItem 
-                    icon={Building2} 
-                    label="Registration Number" 
+                  <InfoItem
+                    icon={Building2}
+                    label="Registration Number"
                     value={application.business_registration_number}
                   />
-                  <InfoItem 
-                    icon={Receipt} 
-                    label="Tax Number" 
+                  <InfoItem
+                    icon={Receipt}
+                    label="Tax Number"
                     value={application.tax_number}
                   />
-                  <InfoItem 
-                    icon={Clock} 
-                    label="Operating Hours" 
+                  <InfoItem
+                    icon={Clock}
+                    label="Operating Hours"
                     value={`${application.opening_time} - ${application.closing_time}`}
                   />
-                  <InfoItem 
-                    icon={DollarSign} 
-                    label="Minimum Order" 
+                  <InfoItem
+                    icon={DollarSign}
+                    label="Minimum Order"
                     value={application.minimum_order ? `$${application.minimum_order}` : "N/A"}
                   />
                 </CardContent>
@@ -465,29 +465,29 @@ const ApplicationDetails = ({ application }) => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 md:p-6">
-                  <InfoItem 
-                    icon={MapPin} 
-                    label="Street Address" 
+                  <InfoItem
+                    icon={MapPin}
+                    label="Street Address"
                     value={application.address}
                   />
-                  <InfoItem 
-                    icon={MapPin} 
-                    label="City" 
+                  <InfoItem
+                    icon={MapPin}
+                    label="City"
                     value={application.city}
                   />
-                  <InfoItem 
-                    icon={MapPin} 
-                    label="State/Province" 
+                  <InfoItem
+                    icon={MapPin}
+                    label="State/Province"
                     value={application.state}
                   />
-                  <InfoItem 
-                    icon={MapPin} 
-                    label="Postal Code" 
+                  <InfoItem
+                    icon={MapPin}
+                    label="Postal Code"
                     value={application.postal_code}
                   />
-                  <InfoItem 
-                    icon={MapPin} 
-                    label="Country" 
+                  <InfoItem
+                    icon={MapPin}
+                    label="Country"
                     value={application.country}
                   />
                 </CardContent>
@@ -502,24 +502,24 @@ const ApplicationDetails = ({ application }) => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 md:p-6">
-                  <InfoItem 
-                    icon={PaymentIcon} 
-                    label="Bank Name" 
+                  <InfoItem
+                    icon={PaymentIcon}
+                    label="Bank Name"
                     value={application.bank_name}
                   />
-                  <InfoItem 
-                    icon={PaymentIcon} 
-                    label="Account Name" 
+                  <InfoItem
+                    icon={PaymentIcon}
+                    label="Account Name"
                     value={application.bank_account_name}
                   />
-                  <InfoItem 
-                    icon={PaymentIcon} 
-                    label="Account Number" 
+                  <InfoItem
+                    icon={PaymentIcon}
+                    label="Account Number"
                     value={application.bank_account_number}
                   />
-                  <InfoItem 
-                    icon={Building2} 
-                    label="Branch" 
+                  <InfoItem
+                    icon={Building2}
+                    label="Branch"
                     value={application.bank_branch}
                   />
                 </CardContent>
@@ -584,11 +584,11 @@ const ApplicationDetails = ({ application }) => {
                         <DocumentPreview key={index} file={photo} />
                       ))
                     ) : (
-                        <div className="col-span-full text-center p-6 text-muted-foreground bg-muted rounded-lg">
-                          <Image className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                          <p>No restaurant photos uploaded</p>
-                        </div>
-                      )}
+                      <div className="col-span-full text-center p-6 text-muted-foreground bg-muted rounded-lg">
+                        <Image className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                        <p>No restaurant photos uploaded</p>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -615,19 +615,19 @@ const ApplicationDetails = ({ application }) => {
                       {application.delivery_available ? "Yes" : "No"}
                     </Badge>
                   </div>
-                  <InfoItem 
-                    icon={MapPin} 
-                    label="Delivery Radius" 
+                  <InfoItem
+                    icon={MapPin}
+                    label="Delivery Radius"
                     value={`${application.delivery_radius} km`}
                   />
-                  <InfoItem 
-                    icon={DollarSign} 
-                    label="Delivery Fee" 
+                  <InfoItem
+                    icon={DollarSign}
+                    label="Delivery Fee"
                     value={`$${application.delivery_fee}`}
                   />
-                  <InfoItem 
-                    icon={DollarSign} 
-                    label="Minimum Order" 
+                  <InfoItem
+                    icon={DollarSign}
+                    label="Minimum Order"
                     value={`$${application.minimum_order}`}
                   />
                 </CardContent>
@@ -643,14 +643,14 @@ const ApplicationDetails = ({ application }) => {
                 </CardHeader>
                 <CardContent className="p-4 md:p-6">
                   <div className="space-y-4">
-                    <InfoItem 
-                      icon={Clock} 
-                      label="Opening Time" 
+                    <InfoItem
+                      icon={Clock}
+                      label="Opening Time"
                       value={application.opening_time}
                     />
-                    <InfoItem 
-                      icon={Clock} 
-                      label="Closing Time" 
+                    <InfoItem
+                      icon={Clock}
+                      label="Closing Time"
                       value={application.closing_time}
                     />
                     <Separator />
@@ -713,24 +713,24 @@ const ApplicationDetails = ({ application }) => {
               </CardHeader>
               <CardContent className="p-4 md:p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <InfoItem 
-                    icon={ShieldCheck} 
-                    label="Email Verified" 
+                  <InfoItem
+                    icon={ShieldCheck}
+                    label="Email Verified"
                     value={application.verified_email ? "Yes" : "No"}
                   />
-                  <InfoItem 
-                    icon={ShieldCheck} 
-                    label="Phone Verified" 
+                  <InfoItem
+                    icon={ShieldCheck}
+                    label="Phone Verified"
                     value={application.verified_phone ? "Yes" : "No"}
                   />
-                  <InfoItem 
-                    icon={ShieldCheck} 
-                    label="Address Verified" 
+                  <InfoItem
+                    icon={ShieldCheck}
+                    label="Address Verified"
                     value={application.verified_address ? "Yes" : "No"}
                   />
-                  <InfoItem 
-                    icon={Users} 
-                    label="Terms Accepted" 
+                  <InfoItem
+                    icon={Users}
+                    label="Terms Accepted"
                     value={application.terms_accepted ? "Yes" : "No"}
                   />
                 </div>
@@ -740,8 +740,8 @@ const ApplicationDetails = ({ application }) => {
         </Tabs>
 
         {/* Rejection Dialog */}
-        <Dialog 
-          open={rejectionDialog} 
+        <Dialog
+          open={rejectionDialog}
           onOpenChange={(open) => {
             if (!open) {
               setRejectionDialog(false);

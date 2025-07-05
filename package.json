@@ -61,6 +61,7 @@
         "cmdk": "^1.0.0",
         "date-fns": "^2.30.0",
         "dompurify": "^3.1.7",
+        "embla-carousel-react": "^8.6.0",
         "framer-motion": "^10.16.4",
         "leaflet": "^1.9.4",
         "lodash": "^4.17.21",

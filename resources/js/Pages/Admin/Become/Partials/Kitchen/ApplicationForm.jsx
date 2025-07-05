@@ -35,7 +35,7 @@ import { Checkbox } from "@/Components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/Components/ui/select";
 import { useToast } from "@/Components/ui/use-toast";
 import AvailabilitySchedule from "@/Components/Admin/Kitchen/AvailabilitySchedule";
-import EnhancedDatePicker from "@/Components/ui/enhanced-date-picker";
+import { EnhancedDatePicker } from "@/Components/ui/enhanced-date-picker";
 
 const FILE_COLLECTIONS = {
   RESUME: {
@@ -75,14 +75,14 @@ const INITIAL_FORM_STATE = {
   phone: "",
   date_of_birth: "",
   gender: "",
-  
+
   // Address Information
   address: "",
   city: "",
   state: "",
   postal_code: "",
   country: "",
-  
+
   // Professional Information
   position_applied: "",
   years_of_experience: "",
@@ -90,34 +90,34 @@ const INITIAL_FORM_STATE = {
   previous_experience: "",
   highest_education: "",
   culinary_certificates: [],
-  
+
   // Availability
   availability_hours: {},
   full_time: true,
   part_time: false,
   expected_salary: "",
   available_from: "",
-  
+
   // Documents
   resume: null,
   photo: null,
   id_proof: null,
   certificates: [],
-  
+
   // References
   references: [],
-  
+
   // Health and Safety
   has_food_safety_certification: false,
   food_safety_certification_expiry: "",
   has_health_certification: false,
   health_certification_expiry: "",
-  
+
   // Emergency Contact
   emergency_contact_name: "",
   emergency_contact_phone: "",
   emergency_contact_relationship: "",
-  
+
   // Additional Information
   additional_notes: "",
   terms_accepted: false,
@@ -233,9 +233,9 @@ export default function KitchenStaffApplicationForm({ restaurants = [] }) {
           description="Choose the restaurant you want to work with"
         >
           <div className="col-span-2">
-            <FormField 
-              label="Restaurant" 
-              required 
+            <FormField
+              label="Restaurant"
+              required
               error={errors.restaurant_id}
             >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -476,9 +476,9 @@ export default function KitchenStaffApplicationForm({ restaurants = [] }) {
           description="Your work availability and preferences"
         >
           <div className="col-span-2">
-            <FormField 
-              label="Weekly Schedule" 
-              required 
+            <FormField
+              label="Weekly Schedule"
+              required
               error={errors.availability_hours}
             >
               <AvailabilitySchedule
@@ -563,9 +563,9 @@ export default function KitchenStaffApplicationForm({ restaurants = [] }) {
         >
           {Object.values(FILE_COLLECTIONS).map((collection) => (
             <div key={collection.name} className="col-span-2">
-              <FormField 
-                label={collection.title} 
-                required 
+              <FormField
+                label={collection.title}
+                required
                 error={errors[collection.name]}
               >
                 <FileUploader
@@ -597,21 +597,21 @@ export default function KitchenStaffApplicationForm({ restaurants = [] }) {
               <Switch
                 id="food_safety_cert"
                 checked={data.has_food_safety_certification}
-                onCheckedChange={(checked) => 
+                onCheckedChange={(checked) =>
                   setData("has_food_safety_certification", checked)
                 }
               />
             </div>
 
             {data.has_food_safety_certification && (
-              <FormField 
-                label="Certification Expiry Date" 
-                required 
+              <FormField
+                label="Certification Expiry Date"
+                required
                 error={errors.food_safety_certification_expiry}
               >
                 <DatePicker
                   value={data.food_safety_certification_expiry}
-                  onChange={(date) => 
+                  onChange={(date) =>
                     setData("food_safety_certification_expiry", date)
                   }
                 />
@@ -630,9 +630,9 @@ export default function KitchenStaffApplicationForm({ restaurants = [] }) {
           title="Emergency Contact"
           description="Contact person in case of emergency"
         >
-          <FormField 
-            label="Contact Name" 
-            required 
+          <FormField
+            label="Contact Name"
+            required
             error={errors.emergency_contact_name}
           >
             <Input
@@ -642,9 +642,9 @@ export default function KitchenStaffApplicationForm({ restaurants = [] }) {
             />
           </FormField>
 
-          <FormField 
-            label="Contact Phone" 
-            required 
+          <FormField
+            label="Contact Phone"
+            required
             error={errors.emergency_contact_phone}
           >
             <Input
@@ -655,14 +655,14 @@ export default function KitchenStaffApplicationForm({ restaurants = [] }) {
             />
           </FormField>
 
-          <FormField 
-            label="Relationship" 
-            required 
+          <FormField
+            label="Relationship"
+            required
             error={errors.emergency_contact_relationship}
           >
             <Input
               value={data.emergency_contact_relationship}
-              onChange={(e) => 
+              onChange={(e) =>
                 setData("emergency_contact_relationship", e.target.value)
               }
               placeholder="Relationship to emergency contact"
@@ -702,7 +702,7 @@ export default function KitchenStaffApplicationForm({ restaurants = [] }) {
       setActiveTab("restaurant");
       return;
     }
-    
+
     post(route("app.kitchen-staff.applications.store"), {
       preserveScroll: true,
       onSuccess: () => {
@@ -859,7 +859,7 @@ export default function KitchenStaffApplicationForm({ restaurants = [] }) {
               <div className="transform transition-all duration-300">
                 {(() => {
                   const currentTab = tabs.find((tab) => tab.id === activeTab);
-                  return currentTab?.content instanceof Function 
+                  return currentTab?.content instanceof Function
                     ? currentTab.content({ restaurants })
                     : currentTab?.content;
                 })()}
@@ -909,8 +909,8 @@ export default function KitchenStaffApplicationForm({ restaurants = [] }) {
               </Button>
 
               {activeTab === tabs[tabs.length - 1].id ? (
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   disabled={processing || !data.terms_accepted || !data.background_check_consent}
                   className="w-[120px] transition-all duration-200 hover:scale-105"
                 >

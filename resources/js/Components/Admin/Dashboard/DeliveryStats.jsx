@@ -1,13 +1,11 @@
 import React from 'react';
 import { Card } from '@/Components/ui/card';
-import { 
-  Bike, 
-  TrendingUp, 
-  Clock, 
-  Star,
+import {
+  Truck,
+  Clock,
   MapPin,
   DollarSign,
-  Route
+  MapPinOff  // Change this line
 } from 'lucide-react';
 
 const StatCard = ({ title, value, icon: Icon, trend, percentage, description, variant = 'default' }) => {
@@ -29,9 +27,8 @@ const StatCard = ({ title, value, icon: Icon, trend, percentage, description, va
               <p className="text-sm text-gray-500">{description}</p>
             )}
             {percentage && (
-              <p className={`text-sm flex items-center space-x-1 ${
-                trend === 'up' ? 'text-emerald-600' : 'text-rose-600'
-              }`}>
+              <p className={`text-sm flex items-center space-x-1 ${trend === 'up' ? 'text-emerald-600' : 'text-rose-600'
+                }`}>
                 <span>{trend === 'up' ? '↑' : '↓'}</span>
                 <span>{percentage}% from last period</span>
               </p>
@@ -65,7 +62,7 @@ const DeliveryStats = ({ stats }) => {
       <StatCard
         title="Total Distance"
         value={`${stats.total_distance_today} km`}
-        icon={Route}
+        icon={MapPinOffOff}
         description="Today's coverage"
         variant="success"
       />

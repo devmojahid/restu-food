@@ -1,22 +1,22 @@
 import React from 'react';
+import AdminLayout from "@/Layouts/Admin/AdminLayout";
 import { Head } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
 import ProductCard from '@/Components/ProductCard';
 import CurrencySwitcher from '@/Components/CurrencySwitcher';
 import CurrencyDisplay from '@/Components/CurrencyDisplay';
 
 const ProductsIndex = ({ products, currencies, currentCurrency }) => {
     return (
-        <AppLayout>
+        <AdminLayout>
             <Head title="Products" />
-            
+
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center mb-6">
                         <h1 className="text-2xl font-semibold">Products</h1>
-                        <CurrencySwitcher 
-                            currencies={currencies} 
-                            currentCurrency={currentCurrency} 
+                        <CurrencySwitcher
+                            currencies={currencies}
+                            currentCurrency={currentCurrency}
                         />
                     </div>
 
@@ -27,7 +27,7 @@ const ProductsIndex = ({ products, currencies, currentCurrency }) => {
                     </div>
                 </div>
             </div>
-        </AppLayout>
+        </AdminLayout>
     );
 };
 
