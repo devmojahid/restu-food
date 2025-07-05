@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Head } from '@inertiajs/react';
-import Layout from '@/Layouts/Frontend/Layout';
+import Layout from '../Frontend/Layout';
 import Hero from './Partials/Hero';
 import FeaturedProducts from './Partials/FeaturedProducts';
 import ProductGrid from './Partials/ProductGrid';
@@ -35,14 +35,14 @@ const Index = ({
         rating: null,
         sort: 'popular'
     });
-    
+
     const [searchQuery, setSearchQuery] = useState('');
     const [view, setView] = useState('grid'); // 'grid' or 'list'
-    
+
     return (
         <Layout>
             <Head title="Shop" />
-            
+
             {error && (
                 <div className="container mx-auto py-4">
                     <Alert variant="destructive">
@@ -51,21 +51,21 @@ const Index = ({
                     </Alert>
                 </div>
             )}
-            
+
             {/* Hero Section */}
             {hero && <Hero data={hero} />}
-            
+
             {/* Featured Products Slider */}
             {featuredProducts?.length > 0 && (
                 <FeaturedProducts products={featuredProducts} />
             )}
-            
+
             {/* Main Shop Content */}
             <div className="container mx-auto px-4 py-12">
                 <div className="flex flex-col lg:flex-row gap-8">
                     {/* Filters Sidebar */}
                     <div className="w-full lg:w-1/4">
-                        <Filters 
+                        <Filters
                             categories={categories}
                             brands={brands}
                             filters={filters}
@@ -73,10 +73,10 @@ const Index = ({
                             setActiveFilters={setActiveFilters}
                         />
                     </div>
-                    
+
                     {/* Product Grid */}
                     <div className="w-full lg:w-3/4">
-                        <ProductGrid 
+                        <ProductGrid
                             products={products}
                             view={view}
                             setView={setView}
@@ -87,23 +87,23 @@ const Index = ({
                     </div>
                 </div>
             </div>
-            
+
             {/* Deal of the Day */}
             {dealOfTheDay && <DealOfTheDay deal={dealOfTheDay} />}
-            
+
             {/* Popular Products Section */}
             {popularProducts?.length > 0 && (
                 <PopularProducts products={popularProducts} />
             )}
-            
+
             {/* Banner */}
             {banner && <Banner data={banner} />}
-            
+
             {/* New Arrivals Section */}
             {newArrivals?.length > 0 && (
                 <NewArrivals products={newArrivals} />
             )}
-            
+
             {/* Testimonials */}
             {testimonials?.length > 0 && (
                 <Testimonials testimonials={testimonials} />

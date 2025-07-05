@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
-import Layout from '@/Layouts/Frontend/Layout';
+import Layout from '../Frontend/Layout';
 import Hero from './Partials/Hero';
 import BlogGrid from './Partials/BlogGrid';
 import SearchSection from './Partials/SearchSection';
@@ -29,8 +29,8 @@ const Index = ({ posts, featured, categories, tags, stats, popularPosts, recentP
         }));
 
         if (newFilters.category) {
-            router.get(route('frontend.blogs'), { 
-                category: newFilters.category[0] 
+            router.get(route('frontend.blogs'), {
+                category: newFilters.category[0]
             }, {
                 preserveState: true,
                 preserveScroll: true,
@@ -47,12 +47,12 @@ const Index = ({ posts, featured, categories, tags, stats, popularPosts, recentP
                 <title>
                     {activeCategory ? `${activeCategory.name} - Blog` : 'Blog - Latest Articles and Updates'}
                 </title>
-                <meta 
-                    name="description" 
-                    content={activeCategory 
-                        ? `Browse articles in ${activeCategory.name}` 
+                <meta
+                    name="description"
+                    content={activeCategory
+                        ? `Browse articles in ${activeCategory.name}`
                         : "Discover our latest articles, recipes, and culinary insights."
-                    } 
+                    }
                 />
             </Head>
 
@@ -83,7 +83,7 @@ const Index = ({ posts, featured, categories, tags, stats, popularPosts, recentP
             <section className="py-12">
                 <div className="container mx-auto px-4">
                     {/* Search and Filters */}
-                    <SearchSection 
+                    <SearchSection
                         searchQuery={searchQuery}
                         setSearchQuery={setSearchQuery}
                         view={view}
@@ -95,7 +95,7 @@ const Index = ({ posts, featured, categories, tags, stats, popularPosts, recentP
                     <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-8 mt-8">
                         {/* Blog Posts Grid */}
                         <main>
-                            <BlogGrid 
+                            <BlogGrid
                                 posts={posts}
                                 view={view}
                                 searchQuery={debouncedSearch}
@@ -106,7 +106,7 @@ const Index = ({ posts, featured, categories, tags, stats, popularPosts, recentP
                         {/* Sidebar */}
                         <aside className="space-y-8">
                             {/* Categories */}
-                            <Categories 
+                            <Categories
                                 categories={categories}
                                 activeFilters={activeFilters}
                                 onFilterChange={handleFilterChange}

@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { Head } from '@inertiajs/react';
-import Layout from '@/Layouts/Frontend/Layout';
+import Layout from '../Frontend/Layout';
 import Hero from './Partials/Hero';
 import MenuGrid from './Partials/MenuGrid';
 import MenuFilters from './Partials/MenuFilters';
@@ -33,12 +33,12 @@ const Index = ({ categories, menuItems, filters, stats }) => {
     return (
         <Layout>
             <Head title="Menu" />
-            
+
             {/* Hero Section */}
             <Hero stats={stats} />
 
             {/* Search & Filter Section */}
-            <SearchSection 
+            <SearchSection
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
                 view={view}
@@ -52,8 +52,8 @@ const Index = ({ categories, menuItems, filters, stats }) => {
                     {isMobile && (
                         <Sheet>
                             <SheetTrigger asChild>
-                                <Button 
-                                    variant="outline" 
+                                <Button
+                                    variant="outline"
                                     className="mb-4 w-full flex items-center justify-center gap-2"
                                 >
                                     <SlidersHorizontal className="w-4 h-4" />
@@ -61,7 +61,7 @@ const Index = ({ categories, menuItems, filters, stats }) => {
                                 </Button>
                             </SheetTrigger>
                             <SheetContent side="left" className="w-[300px] sm:w-[400px]">
-                                <MenuFilters 
+                                <MenuFilters
                                     filters={filters}
                                     activeFilters={activeFilters}
                                     onFilterChange={handleFilterChange}
@@ -73,7 +73,7 @@ const Index = ({ categories, menuItems, filters, stats }) => {
                     {/* Desktop Filters Sidebar */}
                     {!isMobile && (
                         <div className="w-full lg:w-1/4">
-                            <MenuFilters 
+                            <MenuFilters
                                 filters={filters}
                                 activeFilters={activeFilters}
                                 onFilterChange={handleFilterChange}
@@ -83,7 +83,7 @@ const Index = ({ categories, menuItems, filters, stats }) => {
 
                     {/* Menu Grid */}
                     <div className="w-full lg:w-3/4">
-                        <MenuGrid 
+                        <MenuGrid
                             categories={categories}
                             menuItems={menuItems}
                             view={view}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Head } from '@inertiajs/react';
-import Layout from '@/Layouts/Frontend/Layout';
+import Layout from '../Frontend/Layout';
 import { motion } from 'framer-motion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/Components/ui/tabs';
 import Hero from './Partials/Hero';

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
-import Layout from '@/Layouts/Frontend/Layout';
+import Layout from '../Frontend/Layout';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-    Star, 
+import {
+    Star,
     Heart,
     Share2,
     Minus,
@@ -33,7 +33,7 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/thumbs';
-import { 
+import {
     Accordion,
     AccordionContent,
     AccordionItem,
@@ -69,7 +69,7 @@ const Show = ({ product = null, relatedProducts = [], reviews = [], faqs = [] })
     const [activeTab, setActiveTab] = useState('description');
     const [selectedVariant, setSelectedVariant] = useState(null);
     const { toast } = useToast();
-    
+
     // Handle missing product
     if (!product || product.id === 0) {
         return (
@@ -80,13 +80,13 @@ const Show = ({ product = null, relatedProducts = [], reviews = [], faqs = [] })
                         <AlertCircle className="h-4 w-4" />
                         <AlertDescription>Product not found or has been removed.</AlertDescription>
                     </Alert>
-                    
+
                     <div className="flex flex-col items-center justify-center py-12 text-center">
                         <ShoppingBag className="w-16 h-16 text-gray-400 mb-4" />
                         <h2 className="text-2xl font-bold mb-2">Product Not Found</h2>
                         <p className="text-gray-500 mb-6">The product you're looking for doesn't exist or has been removed.</p>
-                        <Link 
-                            href="/shop" 
+                        <Link
+                            href="/shop"
                             className="inline-flex items-center bg-primary text-white px-6 py-3 rounded-full"
                         >
                             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -125,7 +125,7 @@ const Show = ({ product = null, relatedProducts = [], reviews = [], faqs = [] })
             // In a real application, this would call an API endpoint
             // For demo purposes, we'll just simulate the API call
             await new Promise(resolve => setTimeout(resolve, 800));
-            
+
             toast({
                 title: "Added to Cart",
                 description: (
@@ -160,7 +160,7 @@ const Show = ({ product = null, relatedProducts = [], reviews = [], faqs = [] })
     return (
         <Layout>
             <Head title={product.name} />
-            
+
             {/* Breadcrumb navigation */}
             <div className="bg-gray-50 dark:bg-gray-900/50 py-3">
                 <div className="container mx-auto px-4">
@@ -179,7 +179,7 @@ const Show = ({ product = null, relatedProducts = [], reviews = [], faqs = [] })
                     </div>
                 </div>
             </div>
-            
+
             {/* Main content */}
             <div className="container mx-auto px-4 py-8">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-12">
@@ -191,7 +191,7 @@ const Show = ({ product = null, relatedProducts = [], reviews = [], faqs = [] })
                     >
                         <ProductGallery product={product} />
                     </motion.div>
-                    
+
                     {/* Product info - right column */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -199,8 +199,8 @@ const Show = ({ product = null, relatedProducts = [], reviews = [], faqs = [] })
                         transition={{ duration: 0.5, delay: 0.2 }}
                         className="flex flex-col h-full"
                     >
-                        <ProductInfo 
-                            product={product} 
+                        <ProductInfo
+                            product={product}
                             quantity={quantity}
                             onQuantityChange={handleQuantityChange}
                             onAddToCart={handleAddToCart}
@@ -213,7 +213,7 @@ const Show = ({ product = null, relatedProducts = [], reviews = [], faqs = [] })
                         />
                     </motion.div>
                 </div>
-                
+
                 {/* Product details tabs */}
                 <div className="mb-16">
                     <Tabs defaultValue="description" onValueChange={setActiveTab} className="w-full">
@@ -225,19 +225,19 @@ const Show = ({ product = null, relatedProducts = [], reviews = [], faqs = [] })
                             </TabsTrigger>
                             <TabsTrigger value="faqs">FAQs</TabsTrigger>
                         </TabsList>
-                        
+
                         <TabsContent value="description" className="mt-6">
                             <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
                                 <h3 className="text-xl font-semibold mb-4">Product Description</h3>
                                 <div className="prose dark:prose-invert max-w-none">
                                     <p className="mb-4">{product.long_description || product.description}</p>
-                                    
+
                                     {product.features && product.features.length > 0 && (
                                         <div className="mt-6">
                                             <h4 className="text-lg font-medium mb-3">Key Features</h4>
                                             <ul className="space-y-2">
                                                 {product.features.map((feature, index) => (
-                                                    <li 
+                                                    <li
                                                         key={index}
                                                         className="flex items-start"
                                                     >
@@ -249,19 +249,19 @@ const Show = ({ product = null, relatedProducts = [], reviews = [], faqs = [] })
                                         </div>
                                     )}
                                 </div>
-                                
+
                                 <ProductFeatures product={product} />
                             </div>
                         </TabsContent>
-                        
+
                         <TabsContent value="specifications">
                             <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
                                 <h3 className="text-xl font-semibold mb-4">Product Specifications</h3>
-                                
+
                                 {product.specifications ? (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         {Object.entries(product.specifications).map(([key, value], index) => (
-                                            <div 
+                                            <div
                                                 key={index}
                                                 className="border-b dark:border-gray-700 pb-3"
                                             >
@@ -273,7 +273,7 @@ const Show = ({ product = null, relatedProducts = [], reviews = [], faqs = [] })
                                 ) : (
                                     <p className="text-gray-500">No specifications available for this product.</p>
                                 )}
-                                
+
                                 {product.nutritional_info && (
                                     <div className="mt-8">
                                         <h4 className="text-lg font-medium mb-4">Nutritional Information</h4>
@@ -291,17 +291,17 @@ const Show = ({ product = null, relatedProducts = [], reviews = [], faqs = [] })
                                 )}
                             </div>
                         </TabsContent>
-                        
+
                         <TabsContent value="reviews">
                             <ReviewsSection reviews={reviews} productId={product.id} />
                         </TabsContent>
-                        
+
                         <TabsContent value="faqs">
                             <ProductFAQs faqs={faqs} productId={product.id} />
                         </TabsContent>
                     </Tabs>
                 </div>
-                
+
                 {/* Related products */}
                 {relatedProducts.length > 0 && (
                     <div className="mb-16">
@@ -315,9 +315,9 @@ const Show = ({ product = null, relatedProducts = [], reviews = [], faqs = [] })
                         <RelatedProducts products={relatedProducts} />
                     </div>
                 )}
-                
+
                 {/* Recently viewed products would go here */}
-                
+
                 {/* Back to shop button - Mobile Only */}
                 <div className="fixed bottom-0 left-0 right-0 p-4 bg-white dark:bg-gray-800 border-t dark:border-gray-700 lg:hidden z-10">
                     <div className="flex items-center justify-between">

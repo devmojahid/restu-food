@@ -1,6 +1,6 @@
 import React from 'react';
 import { Head, Link } from '@inertiajs/react';
-import Layout from '@/Layouts/Frontend/Layout';
+import Layout from '../Frontend/Layout';
 import { ArrowLeft, Coffee, Search } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { motion } from 'framer-motion';

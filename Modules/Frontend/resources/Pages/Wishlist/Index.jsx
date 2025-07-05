@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { router } from '@inertiajs/react';
 import { Alert, AlertDescription } from '@/Components/ui/alert';
 import { AlertCircle, Loader2 } from 'lucide-react';
-import Layout from '@/Layouts/Frontend/Layout';
+import Layout from '../Frontend/Layout';
 import Hero from './Partials/Hero';
 import WishlistItems from './Partials/WishlistItems';
 import WishlistCollections from './Partials/WishlistCollections';

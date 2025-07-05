@@ -1,6 +1,6 @@
 import React from 'react';
 import { Head } from '@inertiajs/react';
-import Layout from '@/Layouts/Frontend/Layout';
+import Layout from '../Frontend/Layout';
 import PartnerHero from './Partials/PartnerHero';
 import BenefitsSection from './Partials/BenefitsSection';
 import HowItWorksSection from './Partials/HowItWorksSection';

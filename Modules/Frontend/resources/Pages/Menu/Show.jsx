@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
-import Layout from '@/Layouts/Frontend/Layout';
+import Layout from '../Frontend/Layout';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-    Star, 
-    Clock, 
-    Info, 
+import {
+    Star,
+    Clock,
+    Info,
     Heart,
     Share2,
     Minus,
@@ -43,7 +43,7 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/thumbs';
-import { 
+import {
     Accordion,
     AccordionContent,
     AccordionItem,
@@ -111,7 +111,7 @@ const Show = ({ item, relatedItems, reviews }) => {
 
     const calculateTotalPrice = () => {
         let total = item.price * quantity;
-        
+
         // Add variation costs
         Object.values(selectedVariations).forEach(variation => {
             if (variation.price) {
@@ -139,7 +139,7 @@ const Show = ({ item, relatedItems, reviews }) => {
             };
 
             await addToCart(cartItem);
-            
+
             toast({
                 title: "Successfully Added! 🎉",
                 description: (
@@ -287,8 +287,8 @@ const Show = ({ item, relatedItems, reviews }) => {
                 <HoverCard key={ingredient.name}>
                     <HoverCardTrigger asChild>
                         <Button variant="outline" className="w-full justify-start gap-2">
-                            <img 
-                                src={ingredient.icon} 
+                            <img
+                                src={ingredient.icon}
                                 alt={ingredient.name}
                                 className="w-6 h-6 object-cover rounded-full"
                             />
@@ -410,11 +410,11 @@ const Show = ({ item, relatedItems, reviews }) => {
                     className="h-12 w-12"
                     onClick={handleWishlist}
                 >
-                    <Heart 
+                    <Heart
                         className={cn(
                             "w-5 h-5 transition-colors",
                             isWishlisted && "fill-current text-red-500"
-                        )} 
+                        )}
                     />
                 </Button>
                 <Button
@@ -465,11 +465,11 @@ const Show = ({ item, relatedItems, reviews }) => {
     return (
         <Layout>
             <Head title={item.name} />
-            
+
             <div className="container py-6 space-y-8">
                 {/* Rating Display */}
                 <RatingDisplay />
-                
+
                 {/* Main Content */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* Left Column - Image */}
@@ -479,21 +479,21 @@ const Show = ({ item, relatedItems, reviews }) => {
                             <Swiper
                                 spaceBetween={0}
                                 navigation={true}
-                                pagination={{ 
+                                pagination={{
                                     clickable: true,
-                                    dynamicBullets: true 
+                                    dynamicBullets: true
                                 }}
                                 thumbs={{ swiper: thumbsSwiper }}
                                 modules={[Navigation, Pagination, Thumbs]}
                                 className="aspect-square md:aspect-[4/3] group"
                             >
                                 <SwiperSlide>
-                                    <motion.div 
+                                    <motion.div
                                         className="relative w-full h-full group"
                                         whileHover={{ scale: 1.02 }}
                                         transition={{ duration: 0.3 }}
                                     >
-                                        <img 
+                                        <img
                                             src={item.image}
                                             alt={item.name}
                                             className="w-full h-full object-cover"
@@ -528,12 +528,12 @@ const Show = ({ item, relatedItems, reviews }) => {
                                 {/* Gallery Slides */}
                                 {item.gallery?.map((image, index) => (
                                     <SwiperSlide key={index}>
-                                        <motion.div 
+                                        <motion.div
                                             className="relative aspect-square"
                                             whileHover={{ scale: 1.02 }}
                                             transition={{ duration: 0.3 }}
                                         >
-                                            <img 
+                                            <img
                                                 src={image}
                                                 alt={`${item.name} view ${index + 1}`}
                                                 className="w-full h-full object-cover"

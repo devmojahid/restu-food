@@ -13,7 +13,7 @@ import {
     ArrowRight,
     CalendarClock
 } from 'lucide-react';
-import Layout from '@/Layouts/Frontend/Layout';
+import Layout from '../Frontend/Layout';
 import { Button } from "@/Components/ui/button";
 import {
     Card,

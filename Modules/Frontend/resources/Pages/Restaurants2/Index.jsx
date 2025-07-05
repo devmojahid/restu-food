@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
-import Layout from '@/Layouts/Frontend/Layout';
+import Layout from '../Frontend/Layout';
 import Hero from './Partials/Hero';
 import RestaurantGrid from './Partials/RestaurantGrid';
 import SearchSection from './Partials/SearchSection';

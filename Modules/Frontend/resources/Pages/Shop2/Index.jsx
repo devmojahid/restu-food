@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
-import Layout from '@/Layouts/Frontend/Layout';
+import Layout from '../Frontend/Layout';
 import Hero from './Partials/Hero';
 import FeaturedProducts from './Partials/FeaturedProducts';
 import ProductGrid from './Partials/ProductGrid';
@@ -51,44 +51,44 @@ const Index = ({
         shipping: [],
         featured: []
     });
-    
+
     const [searchQuery, setSearchQuery] = useState('');
     const [view, setView] = useState('grid'); // 'grid' or 'list'
     const [filtersOpen, setFiltersOpen] = useState(false);
     const isMobile = useMediaQuery('(max-width: 768px)');
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [filteredProductsCount, setFilteredProductsCount] = useState(products?.length || 0);
-    
+
     // Filter products client-side for demonstration
     useEffect(() => {
         if (!products?.length) return;
-        
+
         // Apply filters logic here (simplified for demo)
         let filtered = [...products];
-        
+
         if (activeFilters.category) {
             filtered = filtered.filter(p => p.category === activeFilters.category);
         }
-        
+
         if (activeFilters.brand) {
             filtered = filtered.filter(p => p.brand === activeFilters.brand);
         }
-        
+
         if (activeFilters.rating) {
             filtered = filtered.filter(p => p.rating >= activeFilters.rating);
         }
-        
+
         if (searchQuery) {
             const query = searchQuery.toLowerCase();
             filtered = filtered.filter(
-                p => p.name.toLowerCase().includes(query) || 
-                     p.description.toLowerCase().includes(query)
+                p => p.name.toLowerCase().includes(query) ||
+                    p.description.toLowerCase().includes(query)
             );
         }
-        
+
         setFilteredProductsCount(filtered.length);
     }, [products, activeFilters, searchQuery]);
-    
+
     // Clear all filters
     const handleClearFilters = () => {
         setActiveFilters({
@@ -105,11 +105,11 @@ const Index = ({
         });
         setSearchQuery('');
     };
-    
+
     return (
         <Layout>
             <Head title="Enhanced Shop" />
-            
+
             {error && (
                 <div className="container mx-auto py-4">
                     <Alert variant="destructive">
@@ -118,18 +118,18 @@ const Index = ({
                     </Alert>
                 </div>
             )}
-            
+
             {/* Hero Section */}
             {hero && <Hero data={hero} stats={stats} />}
-            
+
             {/* Stats Section */}
             {stats && <Stats data={stats} />}
-            
+
             {/* Featured Products Slider */}
             {featuredProducts?.length > 0 && (
                 <FeaturedProducts products={featuredProducts} />
             )}
-            
+
             {/* Main Shop Content */}
             <div className="bg-gray-50 dark:bg-gray-900/50 py-8 md:py-12" id="products">
                 <div className="container mx-auto px-4">
@@ -138,8 +138,8 @@ const Index = ({
                         <div className="mb-4">
                             <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
                                 <DrawerTrigger asChild>
-                                    <Button 
-                                        variant="outline" 
+                                    <Button
+                                        variant="outline"
                                         className="w-full flex items-center justify-between"
                                     >
                                         <div className="flex items-center">
@@ -155,7 +155,7 @@ const Index = ({
                                 </DrawerTrigger>
                                 <DrawerContent className="h-[85vh] pt-4">
                                     <ScrollArea className="h-full px-4">
-                                        <MobileFilters 
+                                        <MobileFilters
                                             categories={categories}
                                             brands={brands}
                                             filters={filters}
@@ -172,16 +172,16 @@ const Index = ({
                             </Drawer>
                         </div>
                     )}
-                    
+
                     <div className="flex flex-col lg:flex-row gap-8">
                         {/* Desktop Filters Sidebar */}
                         {!isMobile && (
-                            <motion.div 
+                            <motion.div
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 className="w-full lg:w-1/4"
                             >
-                                <Filters 
+                                <Filters
                                     categories={categories}
                                     brands={brands}
                                     filters={filters}
@@ -192,14 +192,14 @@ const Index = ({
                                 />
                             </motion.div>
                         )}
-                        
+
                         {/* Product Grid */}
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             className="w-full lg:w-3/4"
                         >
-                            <ProductGrid 
+                            <ProductGrid
                                 products={products}
                                 view={view}
                                 setView={setView}
@@ -213,33 +213,33 @@ const Index = ({
                     </div>
                 </div>
             </div>
-            
+
             {/* Deal of the Day */}
             {dealOfTheDay && <DealOfTheDay product={dealOfTheDay} />}
-            
+
             {/* Banner */}
             {banner && <Banner data={banner} />}
-            
+
             {/* Trending Products */}
             {trendingProducts?.length > 0 && (
                 <TrendingProducts products={trendingProducts} />
             )}
-            
+
             {/* Popular Products Section */}
             {popularProducts?.length > 0 && (
                 <PopularProducts products={popularProducts} />
             )}
-            
+
             {/* New Arrivals Section */}
             {newArrivals?.length > 0 && (
                 <NewArrivals products={newArrivals} />
             )}
-            
+
             {/* Recently Viewed */}
             {recentlyViewed?.length > 0 && (
                 <RecentlyViewed products={recentlyViewed} />
             )}
-            
+
             {/* Testimonials */}
             {testimonials?.length > 0 && (
                 <Testimonials testimonials={testimonials} />

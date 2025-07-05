@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Head, Link } from '@inertiajs/react';
-import Layout from '@/Layouts/Frontend/Layout';
+import Layout from '../Frontend/Layout';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-    Star, 
-    Award, 
+import {
+    Star,
+    Award,
     Calendar,
     Clock,
     MapPin,
@@ -56,7 +56,7 @@ const Show = ({
     const [activeTab, setActiveTab] = useState('about');
     const [isWishlisted, setIsWishlisted] = useState(false);
     const { toast } = useToast();
-    
+
     const handleShare = async () => {
         try {
             if (navigator.share) {
@@ -76,17 +76,17 @@ const Show = ({
             console.error('Error sharing:', error);
         }
     };
-    
+
     const toggleWishlist = () => {
         setIsWishlisted(!isWishlisted);
         toast({
             title: isWishlisted ? 'Removed from Wishlist' : 'Added to Wishlist',
-            description: isWishlisted 
-                ? `${chef?.name} has been removed from your wishlist` 
+            description: isWishlisted
+                ? `${chef?.name} has been removed from your wishlist`
                 : `${chef?.name} has been added to your wishlist`
         });
     };
-    
+
     const handleBookNow = () => {
         // Implementation for booking would go here
         toast({
@@ -115,7 +115,7 @@ const Show = ({
             </Layout>
         );
     }
-    
+
     if (!chef) {
         return (
             <Layout>
@@ -141,9 +141,9 @@ const Show = ({
     return (
         <Layout>
             <Head title={`Chef ${chef?.name} | ${chef?.cuisine} Cuisine`} />
-            
+
             <Hero chef={chef} />
-            
+
             <div className="container mx-auto px-4 pt-6 pb-16">
                 {/* Breadcrumbs */}
                 <div className="flex items-center text-sm text-gray-500 mb-6">
@@ -159,7 +159,7 @@ const Show = ({
                         {chef?.name}
                     </span>
                 </div>
-                
+
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-2">
                         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -171,7 +171,7 @@ const Show = ({
                                 <TabsTrigger value="reviews">Reviews</TabsTrigger>
                                 <TabsTrigger value="recipes">Recipes</TabsTrigger>
                             </TabsList>
-                            
+
                             <TabsContent value="about" className="mt-6">
                                 <div className="space-y-8">
                                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
@@ -179,7 +179,7 @@ const Show = ({
                                         <p className="text-gray-600 dark:text-gray-300 whitespace-pre-line">
                                             {chef?.long_bio || chef?.bio}
                                         </p>
-                                        
+
                                         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
                                             {chef?.skills && chef?.skills?.length > 0 && (
                                                 <div>
@@ -197,7 +197,7 @@ const Show = ({
                                                     </div>
                                                 </div>
                                             )}
-                                            
+
                                             <div>
                                                 <h3 className="text-lg font-semibold mb-4">Details</h3>
                                                 <ul className="space-y-3">
@@ -231,41 +231,41 @@ const Show = ({
                                             </div>
                                         </div>
                                     </div>
-                                    
+
                                     {awards?.length > 0 && (
                                         <ChefAwards awards={awards} />
                                     )}
                                 </div>
                             </TabsContent>
-                            
+
                             <TabsContent value="specialties" className="mt-6">
                                 <ChefSpecialties specialties={specialties} />
                             </TabsContent>
-                            
+
                             <TabsContent value="experience" className="mt-6">
                                 <ChefExperience experience={experience} />
                             </TabsContent>
-                            
+
                             <TabsContent value="gallery" className="mt-6">
                                 <ChefGallery gallery={gallery} />
                             </TabsContent>
-                            
+
                             <TabsContent value="reviews" className="mt-6">
                                 <ChefTestimonials testimonials={testimonials} />
                             </TabsContent>
-                            
+
                             <TabsContent value="recipes" className="mt-6">
                                 <ChefRecipes recipes={recipes} />
                             </TabsContent>
                         </Tabs>
                     </div>
-                    
+
                     <div className="lg:col-span-1">
                         <div className="sticky top-24 space-y-6">
                             {/* Booking Card */}
                             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
                                 <h2 className="text-xl font-bold mb-4">Book This Chef</h2>
-                                
+
                                 <div className="mb-6">
                                     <p className="text-sm text-gray-500 mb-1">Starting at</p>
                                     <div className="flex items-baseline">
@@ -274,27 +274,27 @@ const Show = ({
                                         </span>
                                     </div>
                                 </div>
-                                
+
                                 <div className="space-y-4">
-                                    <Button 
+                                    <Button
                                         className="w-full"
                                         size="lg"
                                         onClick={handleBookNow}
                                     >
                                         Book Now
                                     </Button>
-                                    
+
                                     <div className="flex items-center justify-between">
-                                        <Button 
-                                            variant="outline" 
+                                        <Button
+                                            variant="outline"
                                             className="flex-1 mr-2"
                                             onClick={toggleWishlist}
                                         >
                                             <Heart className={`w-4 h-4 mr-2 ${isWishlisted ? 'fill-current text-red-500' : ''}`} />
                                             Wishlist
                                         </Button>
-                                        <Button 
-                                            variant="outline" 
+                                        <Button
+                                            variant="outline"
                                             className="flex-1 ml-2"
                                             onClick={handleShare}
                                         >
@@ -303,7 +303,7 @@ const Show = ({
                                         </Button>
                                     </div>
                                 </div>
-                                
+
                                 <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                                     <h3 className="text-sm font-semibold mb-3">Contact Information</h3>
                                     {chef?.contact_email && (
@@ -315,7 +315,7 @@ const Show = ({
                                         </div>
                                     )}
                                 </div>
-                                
+
                                 {/* Social Media Links */}
                                 {social && Object.keys(social)?.length > 0 && (
                                     <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
@@ -360,7 +360,7 @@ const Show = ({
                                     </div>
                                 )}
                             </div>
-                            
+
                             {/* Booking Info */}
                             {bookingInfo && Object.keys(bookingInfo).length > 0 && (
                                 <BookingInfo data={bookingInfo} />
@@ -368,7 +368,7 @@ const Show = ({
                         </div>
                     </div>
                 </div>
-                
+
                 {/* Related Chefs */}
                 {relatedChefs?.length > 0 && (
                     <div className="mt-16">

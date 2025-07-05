@@ -1,6 +1,6 @@
 import React from 'react';
 import { Head } from '@inertiajs/react';
-import Layout from '@/Layouts/Frontend/Layout';
+import Layout from '../Frontend/Layout';
 import HeroSlider from './Partials/HeroSlider';
 import FeaturedProducts from './Partials/FeaturedProducts';
 import PopularCategories from './Partials/PopularCategories';

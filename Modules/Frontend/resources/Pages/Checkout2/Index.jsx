@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Head, useForm } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ArrowLeft, Check } from 'lucide-react';
-import Layout from '@/Layouts/Frontend/Layout';
+import Layout from '../Frontend/Layout';
 import Hero from './Partials/Hero';
 import CheckoutProgress from './Partials/CheckoutProgress';
 import DeliveryStep from './Partials/DeliveryStep';

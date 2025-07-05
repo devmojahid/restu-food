@@ -1,6 +1,6 @@
 import React from 'react';
 import { Head } from '@inertiajs/react';
-import Layout from '@/Layouts/Frontend/Layout';
+import Layout from '../Frontend/Layout';
 import Hero from './Partials/Hero';
 import Mission from './Partials/Mission';
 import Story from './Partials/Story';
@@ -13,23 +13,23 @@ import Partners from './Partials/Partners';
 import Testimonials from './Partials/Testimonials';
 import Careers from './Partials/Careers';
 
-const Index = ({ 
-    hero, 
-    mission, 
-    story, 
-    team, 
-    values, 
-    stats, 
-    awards, 
-    locations, 
-    partners, 
-    testimonials, 
-    careers 
+const Index = ({
+    hero,
+    mission,
+    story,
+    team,
+    values,
+    stats,
+    awards,
+    locations,
+    partners,
+    testimonials,
+    careers
 }) => {
     return (
         <Layout>
             <Head title="About Us" />
-            
+
             <div className="space-y-0">
                 <Hero data={hero} />
                 <Mission data={mission} />

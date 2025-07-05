@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { ShoppingCart, AlertCircle, ChevronRight } from 'lucide-react';
-import Layout from '@/Layouts/Frontend/Layout';
+import Layout from '../Frontend/Layout';
 
 import Hero from './Partials/Hero';
 import CartItems from './Partials/CartItems';

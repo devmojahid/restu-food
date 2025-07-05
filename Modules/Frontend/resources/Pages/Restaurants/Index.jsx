@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Head } from '@inertiajs/react';
-import Layout from '@/Layouts/Frontend/Layout';
+import Layout from '../Frontend/Layout';
 import Hero from './Partials/Hero';
 import RestaurantGrid from './Partials/RestaurantGrid';
 import Filters from './Partials/Filters';
@@ -9,12 +9,12 @@ import PopularCuisines from './Partials/PopularCuisines';
 import SearchSection from './Partials/SearchSection';
 import { motion } from 'framer-motion';
 
-const Index = ({ 
-    restaurants, 
-    featuredRestaurants, 
+const Index = ({
+    restaurants,
+    featuredRestaurants,
     popularCuisines,
     filters,
-    stats 
+    stats
 }) => {
     const [activeFilters, setActiveFilters] = useState({
         cuisine: [],
@@ -30,12 +30,12 @@ const Index = ({
     return (
         <Layout>
             <Head title="Restaurants" />
-            
+
             {/* Hero Section */}
             <Hero stats={stats} />
 
             {/* Search & Filter Section */}
-            <SearchSection 
+            <SearchSection
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
                 view={view}
@@ -47,7 +47,7 @@ const Index = ({
                 <div className="flex flex-col lg:flex-row gap-8">
                     {/* Filters Sidebar */}
                     <div className="w-full lg:w-1/4">
-                        <Filters 
+                        <Filters
                             filters={filters}
                             activeFilters={activeFilters}
                             setActiveFilters={setActiveFilters}
@@ -56,7 +56,7 @@ const Index = ({
 
                     {/* Restaurant Grid */}
                     <div className="w-full lg:w-3/4">
-                        <RestaurantGrid 
+                        <RestaurantGrid
                             restaurants={restaurants}
                             view={view}
                             searchQuery={searchQuery}

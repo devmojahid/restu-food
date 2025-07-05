@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Head } from '@inertiajs/react';
-import Layout from '@/Layouts/Frontend/Layout';
+import Layout from '../Frontend/Layout';
 import RestaurantHero from './Partials/RestaurantHero';
 import MenuSection from './Partials/MenuSection';
 import ReviewsSection from './Partials/ReviewsSection';
@@ -35,14 +35,14 @@ const Show = ({ restaurant = {} }) => {
     return (
         <Layout>
             <Head title={restaurantData.name} />
-            
+
             <div className="min-h-screen">
                 <RestaurantHero restaurant={restaurantData} />
-                
+
                 <div className="container mx-auto px-4 space-y-12 mb-24">
-                    <MenuSection 
-                        menu={restaurantData.menu} 
-                        offers={restaurantData.offers} 
+                    <MenuSection
+                        menu={restaurantData.menu}
+                        offers={restaurantData.offers}
                     />
                     <OffersSection offers={restaurantData.offers} />
                     <GallerySection gallery={restaurantData.gallery} />
@@ -63,9 +63,9 @@ const Show = ({ restaurant = {} }) => {
                 </div>
 
                 {/* Cart Sheet */}
-                <Cart 
-                    show={showCart} 
-                    onClose={() => setShowCart(false)} 
+                <Cart
+                    show={showCart}
+                    onClose={() => setShowCart(false)}
                     restaurant={restaurantData}
                 />
             </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Head, Link } from '@inertiajs/react';
-import Layout from '@/Layouts/Frontend/Layout';
+import Layout from '../Frontend/Layout';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Star,

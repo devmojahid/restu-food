@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Head } from '@inertiajs/react';
-import Layout from '@/Layouts/Frontend/Layout';
+import Layout from '../Frontend/Layout';
 import ShareButtons from './Partials/ShareButtons';
 import ReadingProgress from './Partials/ReadingProgress';
 import PostHeader from './Partials/PostHeader';
@@ -87,7 +87,7 @@ const Show = ({ post, relatedPosts, nextPost, previousPost, comments }) => {
             {/* Hero Section with Featured Image */}
             {post.featured_image && (
                 <div className="relative w-full h-[40vh] md:h-[60vh] overflow-hidden">
-                    <div 
+                    <div
                         className="absolute inset-0 bg-cover bg-center transform hover:scale-105 transition-transform duration-700"
                         style={{ backgroundImage: `url(${post.featured_image})` }}
                     >
@@ -144,8 +144,8 @@ const Show = ({ post, relatedPosts, nextPost, previousPost, comments }) => {
                                 {post.author && (
                                     <div className="flex items-center gap-2">
                                         {post.author.avatar && (
-                                            <img 
-                                                src={post.author.avatar} 
+                                            <img
+                                                src={post.author.avatar}
                                                 alt={post.author.name}
                                                 className="w-10 h-10 rounded-full object-cover"
                                             />
@@ -168,8 +168,8 @@ const Show = ({ post, relatedPosts, nextPost, previousPost, comments }) => {
                                 "prose prose-lg dark:prose-invert max-w-none",
                                 "prose-headings:scroll-mt-20"
                             )}>
-                                <PostContent 
-                                    content={post.content} 
+                                <PostContent
+                                    content={post.content}
                                     id="post-content"
                                 />
                             </div>
@@ -180,7 +180,7 @@ const Show = ({ post, relatedPosts, nextPost, previousPost, comments }) => {
                             )}
 
                             {/* Comments Section */}
-                            <PostComments 
+                            <PostComments
                                 comments={comments || []}
                                 currentUser={post.current_user}
                             />
@@ -189,7 +189,7 @@ const Show = ({ post, relatedPosts, nextPost, previousPost, comments }) => {
                         {/* Sidebar */}
                         <div className="space-y-8 lg:sticky lg:top-20">
                             {/* Share Buttons */}
-                            <ShareButtons 
+                            <ShareButtons
                                 url={window.location.href}
                                 title={post.title}
                                 description={post.excerpt}
@@ -204,8 +204,8 @@ const Show = ({ post, relatedPosts, nextPost, previousPost, comments }) => {
                                         {relatedPosts.slice(0, 3).map(relatedPost => (
                                             <div key={relatedPost.id} className="flex gap-4">
                                                 {relatedPost.image && (
-                                                    <img 
-                                                        src={relatedPost.image} 
+                                                    <img
+                                                        src={relatedPost.image}
                                                         alt={relatedPost.title}
                                                         className="w-20 h-20 object-cover rounded-lg"
                                                     />
