@@ -9,7 +9,6 @@ use App\Http\Controllers\Admin\{
     FileController,
     KitchenStaffApplicationController,
     ProductAttributeController,
-    ProductController,
     RestaurantController,
     ReviewController,
     RoleController,
@@ -129,67 +128,6 @@ Route::prefix('app')->name('app.')->middleware(['auth'])->group(function () {
             ->name('clone');
     });
 
-    /*
-    |--------------------------------------------------------------------------
-    | E-commerce Related Routes
-    |--------------------------------------------------------------------------
-    */
-    
-    // Main product routes - Move this AFTER the addons routes
-    Route::resource('products', ProductController::class);
-    Route::prefix('products')->name('products.')->group(function () {
-        // Add-ons Management - Move these routes BEFORE the resource route
-        Route::prefix('addons')->name('addons.')
-            ->middleware(['auth', 'role:Admin|Restaurant'])
-            ->group(function () {
-                Route::get('/', [ProductAddonController::class, 'index'])->name('index');
-                Route::post('/', [ProductAddonController::class, 'store'])->name('store');
-                Route::put('/{addon}', [ProductAddonController::class, 'update'])->name('update');
-                Route::delete('/{addon}', [ProductAddonController::class, 'destroy'])->name('destroy');
-                Route::post('/bulk-action', [ProductAddonController::class, 'bulkAction'])->name('bulk-action');
-                Route::put('/order', [ProductAddonController::class, 'updateOrder'])->name('order');
-            });
-    });
-
-    // Coupons Management
-    Route::group(['prefix' => 'coupons', 'as' => 'coupons.'], function () {
-        Route::get('/', [CouponController::class, 'index'])->name('index');
-        Route::post('/', [CouponController::class, 'store'])
-            // ->middleware('permission:coupon.create')
-            ->name('store');
-        Route::put('/{coupon}', [CouponController::class, 'update'])
-            // ->middleware('permission:coupon.edit')
-            ->name('update');
-        Route::delete('/{coupon}', [CouponController::class, 'destroy'])
-            // ->middleware('permission:coupon.delete')
-            ->name('destroy');
-        Route::put('/{coupon}/status', [CouponController::class, 'updateStatus'])
-            // ->middleware('permission:coupon.edit')
-            ->name('status');
-        Route::delete('/bulk-delete', [CouponController::class, 'bulkDelete'])
-            // ->middleware('permission:coupon.delete')
-            ->name('bulk-delete');
-        Route::put('/bulk-status', [CouponController::class, 'bulkUpdateStatus'])
-            // ->middleware('permission:coupon.edit')
-            ->name('bulk-status');
-        Route::post('/validate', [CouponController::class, 'validate'])
-            ->name('validate');
-        Route::get('/{coupon}/usage', [CouponController::class, 'usage'])
-            // ->middleware('permission:coupon.view')
-            ->name('usage');
-        Route::get('/{coupon}/settings', [CouponController::class, 'settings'])
-            // ->middleware('permission:coupon.edit')
-            ->name('settings');
-    });
-
-    // Reviews Management
-    Route::prefix('reviews')->name('reviews.')->group(function () {
-        Route::get('/', [ReviewController::class, 'index'])->name('index');
-        Route::post('/orders/{order}', [ReviewController::class, 'store'])->name('store');
-        Route::put('/{review}', [ReviewController::class, 'update'])->name('update');
-        Route::delete('/{review}', [ReviewController::class, 'destroy'])->name('destroy');
-    });
-    
 
     /*
     |--------------------------------------------------------------------------
@@ -318,51 +256,53 @@ Route::prefix('app')->name('app.')->middleware(['auth'])->group(function () {
         Route::put('orders/{order}/progress', [KitchenOrderController::class, 'updatePreparationProgress'])->name('orders.progress');
         Route::get('load', [KitchenOrderController::class, 'getKitchenLoad'])->name('load');
     });
+ 
+    // it should comment out later 
+    
+    // Route::middleware(['role:Admin|Restaurant'])->group(function () {
+    //     Route::prefix('products-management')->name('products-management.')->group(function () {
+    //         Route::get('/reports', [ProductController::class, 'reports'])->name('reports');
+    //         Route::get('/analytics', [ProductController::class, 'analytics'])->name('analytics');
+    //         Route::get('/stats', [ProductController::class, 'stats'])->name('stats');
+    //     });
+    // });
 
-    Route::middleware(['role:Admin|Restaurant'])->group(function () {
-        Route::prefix('products-management')->name('products-management.')->group(function () {
-            Route::get('/reports', [ProductController::class, 'reports'])->name('reports');
-            Route::get('/analytics', [ProductController::class, 'analytics'])->name('analytics');
-            Route::get('/stats', [ProductController::class, 'stats'])->name('stats');
-        });
-    });
-
-    // Product Attributes
-    Route::prefix('product-attributes')->name('product-attributes.')->group(function () {
-        Route::get('/', [ProductAttributeController::class, 'index'])->name('index');
-        Route::post('/', [ProductAttributeController::class, 'store'])
-            // ->middleware('permission:product-attributes.create')
-            ->name('store');
-        Route::get('/{attribute}', [ProductAttributeController::class, 'show'])
-            // ->middleware('permission:product-attributes.list')
-            ->name('show');
-        Route::get('/{attribute}/edit', [ProductAttributeController::class, 'edit'])
-            // ->middleware('permission:product-attributes.edit')
-            ->name('edit');
-        Route::put('/{attribute}', [ProductAttributeController::class, 'update'])
-            // ->middleware('permission:product-attributes.edit')
-            ->name('update');
-        Route::delete('/{attribute}', [ProductAttributeController::class, 'destroy'])
-            // ->middleware('permission:product-attributes.delete')
-            ->name('destroy');
-        Route::put('/reorder', [ProductAttributeController::class, 'updateOrder'])
-            // ->middleware('permission:product-attributes.edit')
-            ->name('reorder');
-        Route::put('/{attribute}/status', [ProductAttributeController::class, 'updateStatus'])
-            ->name('status');
-            // ->middleware('permission:product-attributes.edit');
-        Route::delete('/bulk-delete', [ProductAttributeController::class, 'bulkDelete'])
-            // ->middleware('permission:product-attributes.delete')
-            ->name('bulk-delete');
-        Route::put('/bulk-status', [ProductAttributeController::class, 'bulkUpdateStatus'])
-            // ->middleware('permission:product-attributes.edit')
-            ->name('bulk-status');
-        Route::get('/{attribute}/values', [ProductAttributeController::class, 'getValues'])
-            ->name('values');
-        Route::put('/{attribute}/values', [ProductAttributeController::class, 'updateValues'])
-            // ->middleware('permission:product-attributes.edit')
-            ->name('values.update');
-    });
+    // // Product Attributes
+    // Route::prefix('product-attributes')->name('product-attributes.')->group(function () {
+    //     Route::get('/', [ProductAttributeController::class, 'index'])->name('index');
+    //     Route::post('/', [ProductAttributeController::class, 'store'])
+    //         // ->middleware('permission:product-attributes.create')
+    //         ->name('store');
+    //     Route::get('/{attribute}', [ProductAttributeController::class, 'show'])
+    //         // ->middleware('permission:product-attributes.list')
+    //         ->name('show');
+    //     Route::get('/{attribute}/edit', [ProductAttributeController::class, 'edit'])
+    //         // ->middleware('permission:product-attributes.edit')
+    //         ->name('edit');
+    //     Route::put('/{attribute}', [ProductAttributeController::class, 'update'])
+    //         // ->middleware('permission:product-attributes.edit')
+    //         ->name('update');
+    //     Route::delete('/{attribute}', [ProductAttributeController::class, 'destroy'])
+    //         // ->middleware('permission:product-attributes.delete')
+    //         ->name('destroy');
+    //     Route::put('/reorder', [ProductAttributeController::class, 'updateOrder'])
+    //         // ->middleware('permission:product-attributes.edit')
+    //         ->name('reorder');
+    //     Route::put('/{attribute}/status', [ProductAttributeController::class, 'updateStatus'])
+    //         ->name('status');
+    //         // ->middleware('permission:product-attributes.edit');
+    //     Route::delete('/bulk-delete', [ProductAttributeController::class, 'bulkDelete'])
+    //         // ->middleware('permission:product-attributes.delete')
+    //         ->name('bulk-delete');
+    //     Route::put('/bulk-status', [ProductAttributeController::class, 'bulkUpdateStatus'])
+    //         // ->middleware('permission:product-attributes.edit')
+    //         ->name('bulk-status');
+    //     Route::get('/{attribute}/values', [ProductAttributeController::class, 'getValues'])
+    //         ->name('values');
+    //     Route::put('/{attribute}/values', [ProductAttributeController::class, 'updateValues'])
+    //         // ->middleware('permission:product-attributes.edit')
+    //         ->name('values.update');
+    // });
 
     // Add this inside your auth middleware group
     Route::get('/delivery/track/{orderId}', [DeliveryTrackingController::class, 'show'])

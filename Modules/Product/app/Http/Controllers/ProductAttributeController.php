@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers\Admin;
+namespace Modules\Product\app\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\ProductAttributeRequest;
+use Modules\Product\app\Http\Requests\ProductAttributeRequest;
 use App\Models\ProductAttribute;
-use App\Services\Admin\ProductAttributeService;
+use Modules\Product\app\Services\ProductAttributeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,8 +15,8 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\JsonResponse;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\ProductAttributesExport;
-use App\Imports\ProductAttributesImport;
+use Modules\Product\app\Exports\ProductAttributesExport;
+use Modules\Product\app\Imports\ProductAttributesImport;
 
 
 final class ProductAttributeController extends Controller

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Modules\SettingsManagement\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\CurrencyRequest;
+use Modules\Product\app\Http\Requests\CurrencyRequest;
 use App\Models\Currency;
 use Modules\SettingsManagement\Services\CurrencyService;
 use Illuminate\Http\JsonResponse;

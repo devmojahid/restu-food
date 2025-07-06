@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Services\Admin;
+namespace Modules\Product\app\Services;
 
 use App\Models\ProductAttribute;
 use Illuminate\Support\Facades\DB;
