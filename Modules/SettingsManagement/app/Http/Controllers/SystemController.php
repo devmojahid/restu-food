@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers\Admin;
+namespace Modules\SettingsManagement\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Services\Admin\SystemUpdateService;
+use Modules\SettingsManagement\Services\SystemUpdateService;    
 use Illuminate\Http\Request;
 use Inertia\Response;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
-use App\Services\Admin\SystemService;
+use Modules\SettingsManagement\Services\SystemService;
 
 final class SystemController extends Controller
 {
@@ -24,7 +24,7 @@ final class SystemController extends Controller
     {
         $healthData = $this->systemService->getSystemHealth();
         
-        return Inertia::render('Admin/Settings/System/Health', [
+        return Inertia::module('SettingsManagement::System/Health', [
             'healthData' => $healthData
         ]);
     }
@@ -33,7 +33,7 @@ final class SystemController extends Controller
     {
         $logs = $this->systemService->getErrorLogs();
         
-        return Inertia::render('Admin/Settings/System/Logs', [
+        return Inertia::module('SettingsManagement::System/Logs', [
             'logs' => $logs
         ]);
     }
@@ -42,7 +42,7 @@ final class SystemController extends Controller
     {
         $activities = $this->systemService->getActivityLogs();
         
-        return Inertia::render('Admin/Settings/System/Activity', [
+        return Inertia::module('SettingsManagement::System/Activity', [
             'activities' => $activities
         ]);
     }
@@ -62,7 +62,7 @@ final class SystemController extends Controller
         $updateInfo = $this->systemUpdateService->checkForUpdates($request->boolean('force', false));
         $requirements = $this->systemUpdateService->getSystemRequirements();
 
-        return Inertia::render('Admin/Settings/System/Updates', [
+        return Inertia::module('SettingsManagement::System/Updates', [ 
             'currentVersion' => config('app.version', '1.0.0'),
             'latestVersion' => $updateInfo['latest_version'],
             'changelog' => $updateInfo['changelog'],

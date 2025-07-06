@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Services\Admin;
+namespace Modules\SettingsManagement\Services;
 
 use App\Models\SystemUpdate;
 use App\Models\SystemUpdateLog;

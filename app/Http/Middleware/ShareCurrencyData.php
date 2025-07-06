@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Models\Currency;
-use App\Services\Admin\CurrencyService;
+use Modules\SettingsManagement\Services\CurrencyService; 
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;

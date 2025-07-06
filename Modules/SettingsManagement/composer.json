@@ -1,0 +1,30 @@
+{
+    "name": "mojahid/settingsmanagement",
+    "description": "",
+    "authors": [
+        {
+            "name": "Mojahid Islam",
+            "email": "raofahmedmojahid@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\SettingsManagement\\": "app/",
+            "Modules\\SettingsManagement\\Database\\Factories\\": "database/factories/",
+            "Modules\\SettingsManagement\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\SettingsManagement\\Tests\\": "tests/"
+        }
+    }
+}

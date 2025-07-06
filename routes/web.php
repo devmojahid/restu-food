@@ -5,7 +5,6 @@ use App\Http\Controllers\Admin\{
     BlogController,
     CategoryController,
     CouponController,
-    CurrencyController,
     DashboardController,
     DeliveryStaffApplicationController,
     FileController,
@@ -16,11 +15,8 @@ use App\Http\Controllers\Admin\{
     ReviewController,
     RoleController,
     UserController,
-    OptionsController,
-    ProductAddonCategoryController,
     ProductAddonController,
     RestaurantApplicationController,
-    SystemController,
     ZoneController,
     ThemeOptionsController
 };
@@ -34,26 +30,11 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\Restaurant\KitchenStaffController;
 
 use App\Http\Controllers\Admin\KitchenController;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
+
 use App\Http\Controllers\Admin\DeliveryLocationController;
 use App\Http\Controllers\DeliveryTrackingController;
 
-
-/*
-|--------------------------------------------------------------------------
-| Welcome/Landing Page Route
-|--------------------------------------------------------------------------
-*/
-// Route::get('/', function () {
-//     return Inertia::render('Welcome', [
-//         'canLogin' => Route::has('login'),
-//         'canRegister' => Route::has('register'),
-//         'laravelVersion' => Application::VERSION,
-//         'phpVersion' => PHP_VERSION,
-//     ]);
-// });
 
 /*
 |--------------------------------------------------------------------------
@@ -70,9 +51,6 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/users/{user}/meta', [UserController::class, 'updateMeta'])->name('users.meta.update');
     Route::put('/users/{user}/avatar', [UserController::class, 'updateAvatar'])->name('users.avatar.update');
     
-    // Currency Switching
-    Route::post('currency/switch', [\App\Http\Controllers\CurrencyController::class, 'switch'])
-        ->name('currency.switch');
 
     // Orders
     Route::post('/orders/create', [OrderController::class, 'create'])->name('orders.create');
@@ -301,113 +279,7 @@ Route::prefix('app')->name('app.')->middleware(['auth'])->group(function () {
     });
     
 
-    /*
-    |--------------------------------------------------------------------------
-    | Settings & Configuration Routes
-    |--------------------------------------------------------------------------
-    */
-    // Options Management
-    Route::group(['prefix' => 'options', 'as' => 'options.'], function () {
-        Route::get('/', [OptionsController::class, 'index'])->name('index');
-        Route::post('/', [OptionsController::class, 'store'])->name('store');
-        Route::delete('{key}', [OptionsController::class, 'destroy'])->name('destroy');
-    });
-
-    // Settings Management
-    Route::group(['prefix' => 'settings', 'as' => 'settings.'], function () {
-        // Route::get('/', [SettingsController::class, 'index'])->name('index');
-        // Route::get('/', [SettingsController::class, 'index'])->name('index');
-        Route::get('/', function () {
-            return Inertia::render('Admin/Settings/Index');
-        })->name('index');
-        Route::get('/store', function () {
-            return Inertia::render('Admin/Settings/Store/Index');
-        })->name('store');
-        // Route::post('/store/update', [SettingsController::class, 'storeUpdate'])->name('store.update');
-        // Route::get('/profile', [SettingsController::class, 'profile'])->name('profile');
-        Route::get('/profile', function () {
-            //
-        })->name('profile');
-        // Route::post('/profile/update', [SettingsController::class, 'profileUpdate'])->name('profile.update');
-        // Route::get('/email', [SettingsController::class, 'email'])->name('email');
-        Route::get('/email', [OptionsController::class, 'email'])->name('email');
-        // Route::post('/email/update', [SettingsController::class, 'emailUpdate'])->name('email.update');
-        // Route::get('/security', [SettingsController::class, 'security'])->name('security');
-        Route::get('/security', function () {
-            return Inertia::render('Admin/Settings/Security/Index');
-        })->name('security');
-        // Route::post('/security/update', [SettingsController::class, 'securityUpdate'])->name('security.update');
-        // Route::get('/localization', [SettingsController::class, 'localization'])->name('localization');
-        Route::get('/localization', function () {
-            //
-        })->name('localization');
-
-        Route::get('/theme', function () {
-            //
-        })->name('theme');
-        Route::get('/display', function () {
-            //
-        })->name('display');
-        Route::get('/payments', function () {
-            //
-        })->name('payments');
-        Route::get('/shipping', function () {
-            //
-        })->name('shipping');
-        Route::get('/taxes', function () {
-            //
-        })->name('taxes');
-        Route::get('/media', function () {
-            //
-        })->name('media');
-        Route::get('/seo', function () {
-            //
-        })->name('seo');
-        Route::get('/google', function () {
-            //
-        })->name('google');
-        Route::get('/social', function () {
-            //
-        })->name('social');
-        Route::get('/api', function () {
-            //
-        })->name('api');
-        Route::get('/cache', function () {
-            //
-        })->name('cache');
-        Route::get('/logs', function () {
-            //
-        })->name('logs');
-        Route::get('/notifications', function () {
-            //
-        })->name('notifications');
-        // Route::post('/localization/update', [SettingsController::class, 'localizationUpdate'])->name('localization.update');
-        // Add more routes as needed
-        Route::get('/auth', [OptionsController::class, 'auth'])->name('auth');
-
-        // System Administration Routes
-        Route::get('/system', function () {
-            return Inertia::render('Admin/Settings/System/Index');
-        })->name('system');
-        
-        Route::get('/system/health', [SystemController::class, 'health'])->name('system.health');
-        Route::get('/system/logs', [SystemController::class, 'logs'])->name('system.logs');
-        Route::get('/system/activity', [SystemController::class, 'activity'])->name('system.activity');
-        Route::post('/system/cache/clear', [SystemController::class, 'clearCache'])->name('system.cache.clear');
-        Route::get('/system/updates', [SystemController::class, 'updates'])->name('system.updates');
-    });
-
-    // Currency Settings
-    Route::prefix('settings')->name('settings.')->group(function () {
-        Route::get('currencies', [CurrencyController::class, 'index'])->name('currencies.index');
-        Route::post('currencies', [CurrencyController::class, 'store'])->name('currencies.store');
-        Route::put('currencies/{currency}', [CurrencyController::class, 'update'])->name('currencies.update');
-        Route::delete('currencies/{currency}', [CurrencyController::class, 'destroy'])->name('currencies.destroy');
-        Route::post('currencies/update-rates', [CurrencyController::class, 'updateRates'])->name('currencies.update-rates');
-        Route::put('currencies/{currency}/toggle', [CurrencyController::class, 'toggleStatus'])->name('currencies.toggle');
-        Route::post('currencies/bulk-action', [CurrencyController::class, 'bulkAction'])->name('currencies.bulk-action');
-        Route::post('currencies/convert', [CurrencyController::class, 'convert'])->name('currencies.convert');
-    });
+  
 
      // Zone Management Routes
      
@@ -646,16 +518,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('device/active/{deliveryId}', [DeliveryLocationController::class, 'getActiveDevices'])
             ->name('device.active');
     });
-});
-
-
-Route::prefix('app/settings/system')->name('app.settings.system.')->group(function () {
-    Route::get('/updates', [SystemController::class, 'updates'])->name('updates');
-    Route::post('/updates/perform', [SystemController::class, 'performUpdate'])->name('updates.perform');
-    Route::post('/updates/upload', [SystemController::class, 'uploadUpdate'])->name('updates.upload');
-    Route::post('/updates/step', [SystemController::class, 'runUpdateStep'])->name('updates.step');
-    Route::get('/updates/requirements', [SystemController::class, 'checkRequirements'])->name('updates.requirements');
-    Route::get('/updates/backup/{type}', [SystemController::class, 'downloadBackup'])->name('updates.backup');
 });
 
 // Route Redirects

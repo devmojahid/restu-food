@@ -1,0 +1,11 @@
+{
+    "name": "SettingsManagement",
+    "alias": "settingsmanagement",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\SettingsManagement\\Providers\\SettingsManagementServiceProvider"
+    ],
+    "files": []
+}

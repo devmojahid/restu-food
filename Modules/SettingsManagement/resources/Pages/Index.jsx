@@ -48,7 +48,7 @@ import { cn } from "@/lib/utils";
 import { Input } from "@/Components/ui/input";
 import { usePage } from "@inertiajs/react";
 
-const Index = ({ children , actions, className, contentClassName}) => {
+const Index = ({ children, actions, className, contentClassName }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [recentSettings, setRecentSettings] = useState([]);
@@ -181,17 +181,17 @@ const Index = ({ children , actions, className, contentClassName}) => {
           </main>
         </div>
         {/* Fixed Bottom Action Bar with Mobile Support */}
-      {actions && (
-        <div className="mt-8 max-xs:mt-28">
-        <div className="fixed bottom-0 right-0 left-0 lg:left-[256px] bg-background/80 backdrop-blur-sm border-t z-50">
-          <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-4">
-            <div className="flex flex-col-reverse sm:flex-row justify-end items-center gap-3">
-              {actions}
+        {actions && (
+          <div className="mt-8 max-xs:mt-28">
+            <div className="fixed bottom-0 right-0 left-0 lg:left-[256px] bg-background/80 backdrop-blur-sm border-t z-50">
+              <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-4">
+                <div className="flex flex-col-reverse sm:flex-row justify-end items-center gap-3">
+                  {actions}
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-        </div>
-      )}
+        )}
       </div>
     </AdminLayout>
   );
@@ -202,9 +202,9 @@ const getCurrentSection = (url) => {
   const section = url.split("/").pop();
   return section
     ? section
-        .split("-")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ")
+      .split("-")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ")
     : "";
 };
 
@@ -225,70 +225,11 @@ const sidebarNavItems = [
         tooltip: "Configure your store's basic information and contact details",
       },
       {
-        title: "Profile",
-        icon: <User size={18} />,
-        href: route("app.settings.profile"),
-        description: "Your account settings and preferences",
-        status: { label: "Active", variant: "success" },
-      },
-      {
         title: "Email Settings",
         icon: <Mail size={18} />,
         href: route("app.settings.email"),
         description: "Email configuration and templates",
         status: { label: "Setup Required", variant: "warning" },
-      },
-    ],
-  },
-  {
-    title: "Appearance",
-    badge: "UI",
-    items: [
-      {
-        title: "Theme",
-        icon: <Palette size={18} />,
-        href: route("app.settings.theme"),
-        description: "Customize your store's appearance",
-        status: { label: "Pro", variant: "default" },
-        tooltip: "Advanced theme customization options (Pro feature)",
-      },
-      {
-        title: "Display",
-        icon: <Monitor size={18} />,
-        href: route("app.settings.display"),
-        description: "Layout and display preferences",
-        status: { label: "Pro", variant: "default" },
-        tooltip: "Advanced display customization options (Pro feature)",
-      },
-    ],
-  },
-  {
-    title: "Commerce",
-    badge: "E-commerce",
-    items: [
-      {
-        title: "Payment Methods",
-        icon: <CreditCard size={18} />,
-        href: route("app.settings.payments"),
-        description: "Configure payment gateways",
-        status: { label: "Pro", variant: "default" },
-        tooltip: "Advanced payment methods customization options (Pro feature)",
-      },
-      {
-        title: "Shipping",
-        icon: <Truck size={18} />,
-        href: route("app.settings.shipping"),
-        description: "Shipping zones and methods",
-        status: { label: "Pro", variant: "default" },
-        tooltip: "Advanced shipping customization options (Pro feature)",
-      },
-      {
-        title: "Taxes",
-        icon: <BarChart size={18} />,
-        href: route("app.settings.taxes"),
-        description: "Tax rates and configurations",
-        status: { label: "Pro", variant: "default" },
-        tooltip: "Advanced tax customization options (Pro feature)",
       },
     ],
   },

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers\Admin;
+namespace Modules\SettingsManagement\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Services\Admin\OptionsService;
+use Modules\SettingsManagement\Services\OptionsService;
 use Illuminate\Http\Request;
 use Inertia\Response;
 use Inertia\Inertia;
@@ -43,12 +43,12 @@ final class OptionsController extends Controller
                 array_filter($emailOptions, fn($value) => !empty($value))
             );
 
-            return Inertia::render('Admin/Settings/Email/Index', [
+            return Inertia::module('SettingsManagement::Email/Index', [
                 'emailOptions' => $mergedOptions,
                 'defaults' => $defaults
             ]);
         } catch (\Exception $e) {            
-            return Inertia::render('Admin/Settings/Email/Index', [
+            return Inertia::module('SettingsManagement::Email/Index', [
                 'emailOptions' => $defaults,
                 'defaults' => $defaults,
                 'error' => 'Failed to load email settings'
@@ -110,7 +110,7 @@ final class OptionsController extends Controller
                 array_filter($authOptions, fn($value) => !empty($value))
             );
 
-            return Inertia::render('Admin/Settings/Auth/Index', [
+            return Inertia::module('SettingsManagement::Auth/Index', [
                 'authOptions' => $mergedOptions,
                 'defaults' => $defaults
             ]);
@@ -120,7 +120,7 @@ final class OptionsController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
             
-            return Inertia::render('Admin/Settings/Auth/Index', [
+            return Inertia::module('SettingsManagement::Auth/Index', [
                 'authOptions' => $defaults,
                 'defaults' => $defaults,
                 'error' => 'Failed to load authentication settings'
