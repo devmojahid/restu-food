@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers\Admin;
+namespace Modules\Blog\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\BlogRequest;
+use Modules\Blog\Http\Requests\BlogRequest;
 use App\Models\Blog;
-use App\Services\Admin\BlogService;
+use Modules\Blog\Services\BlogService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -26,7 +26,7 @@ final class BlogController extends Controller
         $filters = $this->getFilters($request);
         $blogs = $this->blogService->getPaginated($filters);
 
-        return Inertia::render('Admin/Blogs/Index', [
+        return Inertia::module('Blog::Index', [
             'blogs' => $blogs,
             'filters' => $filters,
         ]);
@@ -100,7 +100,7 @@ final class BlogController extends Controller
             ->values()
             ->all();
 
-        return Inertia::render('Admin/Blogs/Create', [
+        return Inertia::module('Blog::Create', [
             'categories' => $categories
         ]);
     }
@@ -120,7 +120,7 @@ final class BlogController extends Controller
                 'attachments' => $blog->getFiles(Blog::COLLECTION_ATTACHMENTS),
             ];
 
-            return Inertia::render('Admin/Blogs/Edit', [
+            return Inertia::module('Blog::Edit', [
                 'blog' => $blogData,
                 'maxFiles' => [
                     'thumbnail' => 1,
@@ -222,7 +222,7 @@ final class BlogController extends Controller
     public function preview(int $id): Response
     {
         $blog = $this->blogService->findOrFail($id);
-        return Inertia::render('Admin/Blogs/Preview', [
+        return Inertia::module('Blog::Preview', [
             'blog' => $blog
         ]);
     }

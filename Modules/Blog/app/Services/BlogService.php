@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Services\Admin;
+namespace Modules\Blog\Services;
 
 use App\Models\Blog;
 use App\Services\BaseService;

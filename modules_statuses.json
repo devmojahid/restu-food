@@ -1,4 +1,6 @@
 {
     "Frontend": true,
-    "SettingsManagement": true
+    "SettingsManagement": true,
+    "Blog": true,
+    "Product": true
 }

@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Admin\{
     BecomeController,
-    BlogController,
     CategoryController,
     CouponController,
     DashboardController,
@@ -66,20 +65,6 @@ Route::prefix('app')->name('app.')->middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
-    /*
-    |--------------------------------------------------------------------------
-    | Content Management Routes
-    |--------------------------------------------------------------------------
-    */
-    Route::resource('blogs', BlogController::class);
-    Route::prefix('blogs')->name('blogs.')->group(function () {
-        // Blog Management
-        Route::get('{blog}/preview', [BlogController::class, 'preview'])->name('preview');
-        Route::delete('bulk-delete', [BlogController::class, 'bulkDelete'])->name('bulk-delete');
-        Route::put('bulk-status', [BlogController::class, 'bulkUpdateStatus'])->name('bulk-status');
-    
-    });
 
     // Category Management with Permissions
     Route::group(['prefix' => 'categories', 'as' => 'categories.'], function () {
